@@ -14,7 +14,7 @@ This project is a simple 2D platformer game developed in Unity. The game feature
 
 ## Getting Started 🛠️
 To get started with the game, follow these steps:
-1. Clone the repository using `git clone https://github.com/yourusername/unity-game.git`
+1. Clone the repository using `git clone https://github.com/dacrab/unity-game.git`
 2. Open the project in Unity.
 3. Navigate to the main scene in the project.
 4. Press the play button in Unity to start the game.
