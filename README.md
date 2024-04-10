@@ -30,7 +30,7 @@ To get started with the game, follow these steps:
 - Fine-tuning controls for better responsiveness.
 
 ## Credits 🙌
-- Game developed by [DaCrab]
+- Game developed by [DaCrab](https://github.com/dacrab)
 - Unity game engine: [Unity Technologies](https://unity.com/)
 - Art assets from [Asset Store](https://assetstore.unity.com/)
 - Sound effects from [Freesound](https://freesound.org/)
