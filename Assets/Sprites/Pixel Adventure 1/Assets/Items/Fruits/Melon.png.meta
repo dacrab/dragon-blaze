@@ -75,6 +75,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -129,6 +130,18 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -509,6 +522,24 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Melon_0: 3776312371561069292
+      Melon_1: 2611220147007439301
+      Melon_10: -8731991674958125425
+      Melon_11: -7029448349843301362
+      Melon_12: -909351362157965132
+      Melon_13: 2938550379556323724
+      Melon_14: -1316238954007984859
+      Melon_15: 2641464298146962395
+      Melon_16: 4074361457694701065
+      Melon_2: 2353208620542727372
+      Melon_3: 8821371696964291164
+      Melon_4: 8382193064667267037
+      Melon_5: -3288833518496767930
+      Melon_6: 4593711905992766363
+      Melon_7: -2703723749527953725
+      Melon_8: 4404175151357073704
+      Melon_9: -4406734128596351014
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

@@ -102,6 +102,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -156,6 +157,18 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -725,6 +738,33 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Checkpoint (Flag Out) (64x64)_0: -4184586705055241392
+      Checkpoint (Flag Out) (64x64)_1: -8500414901909799154
+      Checkpoint (Flag Out) (64x64)_10: 5394087461009959248
+      Checkpoint (Flag Out) (64x64)_11: -5774344071365144885
+      Checkpoint (Flag Out) (64x64)_12: -3028704889039134381
+      Checkpoint (Flag Out) (64x64)_13: 2155129991389349994
+      Checkpoint (Flag Out) (64x64)_14: -776465599013193395
+      Checkpoint (Flag Out) (64x64)_15: -4370090337520481786
+      Checkpoint (Flag Out) (64x64)_16: -1711207211420887195
+      Checkpoint (Flag Out) (64x64)_17: -5278763548615814542
+      Checkpoint (Flag Out) (64x64)_18: -8342746687626132780
+      Checkpoint (Flag Out) (64x64)_19: -8069447969666600582
+      Checkpoint (Flag Out) (64x64)_2: 6600226083578749612
+      Checkpoint (Flag Out) (64x64)_20: -4297091758800071936
+      Checkpoint (Flag Out) (64x64)_21: -2206044501344538863
+      Checkpoint (Flag Out) (64x64)_22: -991047635057653830
+      Checkpoint (Flag Out) (64x64)_23: -5557025883363775598
+      Checkpoint (Flag Out) (64x64)_24: 5095064189951559428
+      Checkpoint (Flag Out) (64x64)_25: 6851063822677676398
+      Checkpoint (Flag Out) (64x64)_3: -1756668925505998823
+      Checkpoint (Flag Out) (64x64)_4: -6967806255545003447
+      Checkpoint (Flag Out) (64x64)_5: 7127308139407018228
+      Checkpoint (Flag Out) (64x64)_6: 7200103426585487352
+      Checkpoint (Flag Out) (64x64)_7: -541522737943073818
+      Checkpoint (Flag Out) (64x64)_8: -6807852688622114252
+      Checkpoint (Flag Out) (64x64)_9: 6265099083614238658
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

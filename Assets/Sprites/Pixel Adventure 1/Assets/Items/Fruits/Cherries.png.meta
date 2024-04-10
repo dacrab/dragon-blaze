@@ -75,6 +75,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -129,6 +130,18 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -509,6 +522,24 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Cherries_0: -4570538037665054336
+      Cherries_1: 1192583394799640888
+      Cherries_10: 3848886781296226410
+      Cherries_11: 7849828697117728527
+      Cherries_12: -9198102554489520265
+      Cherries_13: 3941576138836150160
+      Cherries_14: 5159470138463433966
+      Cherries_15: -447626866981707952
+      Cherries_16: -7347827468922994342
+      Cherries_2: -711454075617216784
+      Cherries_3: 5421872390997284277
+      Cherries_4: 5363950216444597340
+      Cherries_5: -8821299780031482609
+      Cherries_6: 1075779407821988168
+      Cherries_7: 8792570861257488375
+      Cherries_8: 3052119051097735194
+      Cherries_9: 7538113517902980163
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

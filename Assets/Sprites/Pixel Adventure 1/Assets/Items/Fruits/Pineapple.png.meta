@@ -75,6 +75,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -129,6 +130,18 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -509,6 +522,24 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Pineapple_0: 837517196756356485
+      Pineapple_1: 5853685913921513280
+      Pineapple_10: 3138868963988263443
+      Pineapple_11: -2586699502257965134
+      Pineapple_12: -308233894513228991
+      Pineapple_13: -3572505572473984507
+      Pineapple_14: 2685796208498767467
+      Pineapple_15: -5727045457883989075
+      Pineapple_16: 2286579587875889941
+      Pineapple_2: -9203941944909886899
+      Pineapple_3: 9123128501793527533
+      Pineapple_4: -2070215502844823636
+      Pineapple_5: 9146190884484061983
+      Pineapple_6: -3927142802335889705
+      Pineapple_7: -6132574039448135999
+      Pineapple_8: 7735609222263424191
+      Pineapple_9: -5292735610519781750
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

@@ -75,6 +75,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -129,6 +130,18 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -509,6 +522,24 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Bananas_0: -5728686177044832811
+      Bananas_1: -5786164333596270976
+      Bananas_10: 8303107455315256833
+      Bananas_11: -7266015010218627371
+      Bananas_12: -5455066603935629110
+      Bananas_13: -1347183766120132532
+      Bananas_14: 3310116166248368309
+      Bananas_15: 7601917565207802943
+      Bananas_16: -8288679156529735154
+      Bananas_2: 5546440197654754675
+      Bananas_3: -716424211456008518
+      Bananas_4: -5292413800997781641
+      Bananas_5: -7253148436187668049
+      Bananas_6: 8575041284972176386
+      Bananas_7: 3604655966176598788
+      Bananas_8: -6630629338061711003
+      Bananas_9: -8491821694155768140
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

@@ -75,6 +75,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -129,6 +130,18 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -509,6 +522,24 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Apple_0: 7293598183456022363
+      Apple_1: 3211865404380153573
+      Apple_10: 1535906679059638393
+      Apple_11: -6207369124864647917
+      Apple_12: 7209791866757004406
+      Apple_13: -1462588236305530756
+      Apple_14: 4023135878370671054
+      Apple_15: -337911150936919937
+      Apple_16: 9139289913481491577
+      Apple_2: 4808522734667448011
+      Apple_3: -8577097333041121892
+      Apple_4: 1419576285154770477
+      Apple_5: -7706788487438311687
+      Apple_6: 8638710384840876012
+      Apple_7: -4689406079702324653
+      Apple_8: -4804661220611782958
+      Apple_9: 542562350195365616
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
