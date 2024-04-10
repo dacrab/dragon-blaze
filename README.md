@@ -24,8 +24,8 @@ To get started with the game, follow these steps:
 
 ## Future Improvements 🚧
 - Adding more levels with increasing difficulty.
-- Implementing power-ups or collectibles.
-- Adding animations for the player and environment.
+- Uses for the coin.
+- Include interactive story-telling NPC's.
 - Integrating a scoring system or achievements.
 - Fine-tuning controls for better responsiveness.
 
