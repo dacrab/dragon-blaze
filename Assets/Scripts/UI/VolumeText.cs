@@ -15,7 +15,7 @@ public class VolumeText : MonoBehaviour
     {
         UpdateVolume();
     }
-    private void UpdateVolume()
+    public void UpdateVolume()
     {
         float volumeValue = PlayerPrefs.GetFloat(volumeName) * 100;
         txt.text = textIntro + volumeValue.ToString();

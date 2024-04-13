@@ -7,31 +7,41 @@ public class SoundManager : MonoBehaviour
     private AudioSource musicSource;
 
     private void Awake()
+{
+    soundSource = GetComponent<AudioSource>();
+    musicSource = transform.GetChild(0).GetComponent<AudioSource>();
+
+    // Ensure only one instance of SoundManager exists
+    if (instance == null)
     {
-        soundSource = GetComponent<AudioSource>();
-        musicSource = transform.GetChild(0).GetComponent<AudioSource>();
-
-        // Ensure only one instance of SoundManager exists
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else if (instance != this)
-        {
-            // Destroy duplicate instances
-            Destroy(gameObject);
-        }
-
-        // Assign initial volumes
-        ChangeMusicVolume(0);
-        ChangeSoundVolume(0);
+        instance = this;
+        DontDestroyOnLoad(gameObject);
     }
+    else if (instance != this)
+    {
+        // Destroy duplicate instances
+        Destroy(gameObject);
+    }
+
+    // Assign initial volumes
+    ChangeMusicVolume(0);
+    ChangeSoundVolume(0);
+
+    // Debug log to check the state of the instance variable
+    Debug.Log("SoundManager instance: " + instance);
+}
+
 
     // Play a sound clip once
     public void PlaySound(AudioClip _sound)
     {
         soundSource.PlayOneShot(_sound);
+    }
+
+    // Play a sound clip with a specified volume
+    public void PlaySoundWithVolume(AudioClip _sound, float volume)
+    {
+        soundSource.PlayOneShot(_sound, volume);
     }
 
     // Change the volume of sound effects
