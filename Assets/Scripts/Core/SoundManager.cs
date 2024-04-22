@@ -1,10 +1,15 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SoundManager : MonoBehaviour
 {
     public static SoundManager instance { get; private set; }
     private AudioSource soundSource;
     private AudioSource musicSource;
+
+    //Ref to the sliders
+    public Slider musicSlider;
+    public Slider soundSlider;
 
     private void Awake()
 {
@@ -15,22 +20,27 @@ public class SoundManager : MonoBehaviour
     if (instance == null)
     {
         instance = this;
-        DontDestroyOnLoad(gameObject);
     }
     else if (instance != this)
     {
         // Destroy duplicate instances
         Destroy(gameObject);
     }
+        //Assing values from PlayerPrefs
+        float initialMusicVolume = PlayerPrefs.GetFloat("musicVolume", 0.5f);
+        float initialSoundVolume = PlayerPrefs.GetFloat("soundVolume", 0.5f);
+        musicSource.volume = initialMusicVolume;
+        soundSource.volume = initialSoundVolume;
 
-    // Assign initial volumes
-    ChangeMusicVolume(0);
-    ChangeSoundVolume(0);
+        //Add listeners for the sliders
+        musicSlider.onValueChanged.AddListener(delegate { ChangeMusicVolume(musicSlider.value); });
+        soundSlider.onValueChanged.AddListener(delegate { ChangeSoundVolume(soundSlider.value); });
 
-    // Debug log to check the state of the instance variable
-    Debug.Log("SoundManager instance: " + instance);
+    // Assign slider values
+    musicSlider.value = initialMusicVolume;
+    soundSlider.value = initialSoundVolume; 
+
 }
-
 
     // Play a sound clip once
     public void PlaySound(AudioClip _sound)
@@ -45,15 +55,16 @@ public class SoundManager : MonoBehaviour
     }
 
     // Change the volume of sound effects
-    public void ChangeSoundVolume(float _change)
+    public void ChangeSoundVolume(float _volume)
     {
-        ChangeSourceVolume(1, "soundVolume", _change, soundSource);
-    }
+        soundSource.volume = _volume;
+        PlayerPrefs.SetFloat("soundVolume", _volume);    }
 
     // Change the volume of background music
-    public void ChangeMusicVolume(float _change)
+    public void ChangeMusicVolume(float _volume)
     {
-        ChangeSourceVolume(0.3f, "musicVolume", _change, musicSource);
+        musicSource.volume = _volume;
+        PlayerPrefs.SetFloat("musicVolume", _volume);    
     }
 
     // Change the volume of a specific AudioSource
