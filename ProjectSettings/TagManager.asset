@@ -10,6 +10,7 @@ TagManager:
   - PowerUp
   - platform
   - Coin
+  - NPC
   layers:
   - Default
   - TransparentFX
