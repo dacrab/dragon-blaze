@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 using System.Collections;
+using static PlayerMovement;
 
 public class DialogueController : MonoBehaviour
 {
@@ -69,7 +70,6 @@ public class DialogueController : MonoBehaviour
             paragraphs.Enqueue(dialogueText.paragraphs[i]);
         }
     }
-
     private void EndConversation()
     {
         //Clear the queue
@@ -111,6 +111,7 @@ public class DialogueController : MonoBehaviour
         StopCoroutine(typeDialogueCoroutine);
 
         //Finish displaying the text
+        NPCDialogueText.maxVisibleCharacters = p.Length;
         NPCDialogueText.text = p;
         
         //Update isTyping bool

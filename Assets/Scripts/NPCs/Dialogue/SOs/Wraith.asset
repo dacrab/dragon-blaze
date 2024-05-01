@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da2a1b298e309274d865cda28f80eb76, type: 3}
+  m_Name: Wraith
+  m_EditorClassIdentifier: 
+  speakerName: Wraith
+  paragraphs:
+  - Hail, Emberon, chosen of flame. Our world's harmony was shattered by the Shadow
+    Wraith, a darkness that seeks to consume all. It unleashed a curse that dimmed
+    the Guardians' light, trapping their essence in crystals scattered across the
+    land.
+  - Wanderer of flames, listen well, for our tale begins in tragedy. Long ago, our
+    world was a tapestry of thriving lands, each guarded by a benevolent Guardian.
+    Peace reigned until the Shadow Wraith emerged, seeking to corrupt the heart of
+    our realm. It cast a spell, dark as night, and one by one, the Guardians fell,
+    their essence trapped in crystals.

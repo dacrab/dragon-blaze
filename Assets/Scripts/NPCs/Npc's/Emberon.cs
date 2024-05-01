@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Wraith : NPC, ITalkable
+public class Emberon : NPC , ITalkable
 {
     [SerializeField] private DialogueText dialogueText;
     [SerializeField] private DialogueController dialogueController;

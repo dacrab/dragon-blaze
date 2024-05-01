@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerMovement : MonoBehaviour
+
+public class PlayerMovement : MonoBehaviour 
 {
     //=========INVISIBILITY========
     [Header("Invisibility PowerUp")]
@@ -63,7 +64,6 @@ public class PlayerMovement : MonoBehaviour
     private float fallingTimer = 0f; //Track falling time
     private UIManager uiManagerInstance; //Reference to the UIManager for the Game Over 
     private bool gameOverTriggered = false; //Flag to track if the GameOver has been triggered
-
     public void AddScore(int value) //Reference to the UIManager class
     {
         score += value;
@@ -182,7 +182,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!IsGrounded() && !IsOnWall())
+        {
+            if (!IsGrounded() && !IsOnWall())
         {
             fallingTimer += Time.deltaTime; //Increase the falling timer when not grounded
 
@@ -235,6 +236,7 @@ public class PlayerMovement : MonoBehaviour
             }
             else
                 coyoteCounter -= Time.deltaTime; //Start decreasing coyote counter when not on the ground
+        }
         }
     }
 
@@ -293,7 +295,6 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, new Vector2(transform.localScale.x, 0), 0.1f, wallLayer);
         return raycastHit.collider != null;
     }
-
     public bool canAttack()
     {
         return Mathf.Approximately(horizontalInput, 0) && IsGrounded() && !IsOnWall();
