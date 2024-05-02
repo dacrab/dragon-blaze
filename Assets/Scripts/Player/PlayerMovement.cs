@@ -64,6 +64,9 @@ public class PlayerMovement : MonoBehaviour
     private float fallingTimer = 0f; //Track falling time
     private UIManager uiManagerInstance; //Reference to the UIManager for the Game Over 
     private bool gameOverTriggered = false; //Flag to track if the GameOver has been triggered
+    private Rigidbody2D rb;
+
+
     public void AddScore(int value) //Reference to the UIManager class
     {
         score += value;

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Emberon : NPC , ITalkable
+public class Emberon : NPC, ITalkable
 {
     [SerializeField] private DialogueText dialogueText;
     [SerializeField] private DialogueController dialogueController;

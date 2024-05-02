@@ -19,10 +19,6 @@ public class CameraController : MonoBehaviour
     {
         // Room camera movement
         transform.position = Vector3.SmoothDamp(transform.position, new Vector3(currentRoomPosX, transform.position.y, transform.position.z), ref roomCameraVelocity, roomCameraSpeed);
-
-        // Follow player
-        // transform.position = new Vector3(player.position.x + lookAhead, transform.position.y, transform.position.z);
-        // lookAhead = Mathf.Lerp(lookAhead, (aheadDistance * player.localScale.x), Time.deltaTime * cameraSpeed);
     }
 
     // Move camera to a new room

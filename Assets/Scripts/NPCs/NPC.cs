@@ -1,10 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static PlayerMovement;
 
 public abstract class NPC : MonoBehaviour , IInteractable
 {
-    [SerializeField] private const float INTERACT_DISTANCE = 0.5f;
+    [SerializeField] private const float INTERACT_DISTANCE = 2f;
     [SerializeField] private SpriteRenderer _interactSprite;
     private Transform _playerTransform;
     private void Start()

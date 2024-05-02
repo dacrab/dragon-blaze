@@ -1,50 +1,49 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteInEditMode]
 public class ParallaxBackground : MonoBehaviour
 {
-    public ParallaxCamera parallaxCamera;
-    private List<ParallaxLayer> parallaxLayers = new List<ParallaxLayer>(); // List to store parallax layers
-
+    [SerializeField] private Vector2 parallaxEffectMultiplier;
+    [SerializeField] private bool infiniteHorizontal;
+    [SerializeField] private bool infiniteVertical;
+    private Transform cameraTransform;
+    private Vector3 lastcameraPosition;
+    private float textureUnitSizeX;
+    private float textureUnitSizeY;
     void Start()
     {
-        // If parallaxCamera is not assigned, try to find it from the main camera
-        if (parallaxCamera == null)
-            parallaxCamera = Camera.main.GetComponent<ParallaxCamera>();
-
-        // Subscribe to the onCameraTranslate event of the parallaxCamera
-        if (parallaxCamera != null)
-            parallaxCamera.onCameraTranslate += Move;
-
-        // Set up the parallax layers
-        SetLayers();
+        cameraTransform = Camera.main.transform;
+        lastcameraPosition = cameraTransform.position;
+        Sprite sprite =GetComponent<SpriteRenderer>().sprite;
+        Texture2D texture = sprite.texture;
+        textureUnitSizeX = texture.width / sprite.pixelsPerUnit;
+        textureUnitSizeY  = texture.height /  sprite.pixelsPerUnit;
     }
 
-    // Populate the parallaxLayers list with ParallaxLayer components from child objects
-    void SetLayers()
+    private void LateUpdate()
     {
-        parallaxLayers.Clear(); // Clear the list before populating
-
-        // Iterate through child objects and add ParallaxLayer components to the list
-        for (int i = 0; i < transform.childCount; i++)
+        Vector3 deltaMovement = cameraTransform.position - lastcameraPosition;
+        transform.position += new Vector3 (deltaMovement.x * parallaxEffectMultiplier.x , deltaMovement.y * parallaxEffectMultiplier.y);
+        lastcameraPosition = cameraTransform.position;
+        
+        //Horizontal Parallax
+        if (infiniteHorizontal)
         {
-            ParallaxLayer layer = transform.GetChild(i).GetComponent<ParallaxLayer>();
-
-            if (layer != null)
+         if (Mathf.Abs (cameraTransform.position.x  - transform.position.x) >= textureUnitSizeX)
             {
-                layer.name = "Layer-" + i; // Rename the layer for clarity
-                parallaxLayers.Add(layer); // Add the layer to the list
+                float offsetPositionX  =  (cameraTransform.position.x -  transform.position.x) % textureUnitSizeX;
+                transform.position =  new Vector3(cameraTransform.position.x + offsetPositionX , transform.position.y);
             }
         }
-    }
 
-    // Move all parallax layers by the given delta
-    void Move(float delta)
-    {
-        foreach (ParallaxLayer layer in parallaxLayers)
+
+        //Vertical Parallax
+        if (infiniteVertical)
         {
-            layer.Move(delta); // Move each layer by the given delta
+            if (Mathf.Abs (cameraTransform.position.y  - transform.position.y) >= textureUnitSizeY)
+                {
+                    float offsetPositionY  =  (cameraTransform.position.y -  transform.position.y) % textureUnitSizeY;
+                    transform.position =  new Vector3( transform.position.x ,cameraTransform.position.y + offsetPositionY );
+                }
         }
     }
 }
