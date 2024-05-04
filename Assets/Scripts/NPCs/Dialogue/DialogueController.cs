@@ -8,12 +8,15 @@ public class DialogueController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI NPCNameText;
     [SerializeField] private TextMeshProUGUI NPCDialogueText;
     [SerializeField] private float typeSpeed =10f;
+    [SerializeField] private AudioClip dialogueSound;
+    public PlayerMovement playerMovement;
     private Queue<string> paragraphs = new Queue<string>();
     private bool conversationEnded;
     private string p;
     private Coroutine typeDialogueCoroutine;
     private bool isTyping;
     private const float MAX_TYPE_TIME = 0.1f;
+
 
     public void DisplayNextParagraph(DialogueText dialogueText)
     {
@@ -54,11 +57,20 @@ public class DialogueController : MonoBehaviour
 
     private void StartConversation(DialogueText dialogueText)
     {
+        //Set animation to idle
+        playerMovement.setInteracting(true);
+
+        //Disables the PlayerMovement
+        playerMovement.enabled = false; 
+
+        //Plays sound at the start of the dialogue
+        SoundManager.instance.PlaySound(dialogueSound);
+
         //activate gameObject
         if (!gameObject.activeSelf)
         {
             gameObject.SetActive(true);
-        }
+        }        Time.timeScale = 1f;
 
         //Update the speakerName
         NPCNameText.text = dialogueText.speakerName;
@@ -71,6 +83,12 @@ public class DialogueController : MonoBehaviour
     }
     private void EndConversation()
     {
+        //swich the bool so the other animation can play
+        playerMovement.setInteracting(false);
+
+        //Re-Enable PlayerMovement
+        playerMovement.enabled = true;
+
         //Clear the queue
         paragraphs.Clear();
         
@@ -82,6 +100,7 @@ public class DialogueController : MonoBehaviour
         {
             gameObject.SetActive(false);
         }
+        Time.timeScale = 1f;
     }
    private IEnumerator TypeDialogueText(string p)
     {

@@ -34,12 +34,15 @@ public class UIManager : MonoBehaviour
     {
         gameOverScreen.SetActive(true);
         SoundManager.instance.PlaySound(gameOverSound);
+        Time.timeScale = 0;
     }
 
     //Restart level
     public void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+         Time.timeScale = 1;
+
     }
 
     //Main Menu

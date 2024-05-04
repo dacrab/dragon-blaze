@@ -64,8 +64,18 @@ public class PlayerMovement : MonoBehaviour
     private float fallingTimer = 0f; //Track falling time
     private UIManager uiManagerInstance; //Reference to the UIManager for the Game Over 
     private bool gameOverTriggered = false; //Flag to track if the GameOver has been triggered
-    private Rigidbody2D rb;
 
+    //===========INTERACTIONS=========
+    private bool isInteracting;
+
+
+    public void setInteracting(bool interacting)
+    {
+        isInteracting = interacting;
+        anim.SetBool("interacting" , isInteracting);
+        //If interacting, stop the animation
+        anim.SetBool("run" , !isInteracting);
+    }
 
     public void AddScore(int value) //Reference to the UIManager class
     {
@@ -210,8 +220,16 @@ public class PlayerMovement : MonoBehaviour
         else if (horizontalInput < -0.01f)
             transform.localScale = new Vector3(-1, 1, 1);
 
-        //Set animator parameters
+        if (isInteracting)
+        {
+            anim.SetBool("interacting", true);
+        }
+        else
+        {
         anim.SetBool("run", Mathf.Abs(horizontalInput) > 0.01f);
+        }
+
+        //Set animator parameters
         anim.SetBool("grounded", IsGrounded());
 
         //Jump
