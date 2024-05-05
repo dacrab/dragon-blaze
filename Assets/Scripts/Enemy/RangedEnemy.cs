@@ -2,6 +2,14 @@ using UnityEngine;
 
 public class RangedEnemy : MonoBehaviour
 {
+ 
+    [Header("Scale Flip Parameters")]
+    [SerializeField] private float flipSpeed; // Speed of the scale flip
+
+    private Transform playerTransform; // Reference to the player's transform
+    private bool playerAbove; // Flag to indicate if the player is above the enemy
+    private bool playerBehind; // Flag to indicate if the player is behind the enemy
+
     [Header("Attack Parameters")]
     [SerializeField] private float attackCooldown; // Cooldown time between attacks
     [SerializeField] private float range; // Attack range
@@ -30,14 +38,31 @@ public class RangedEnemy : MonoBehaviour
 
     private void Awake()
     {
+        // Get the player's transform
+        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+
         anim = GetComponent<Animator>();
         enemyPatrol = GetComponentInParent<EnemyPatrol>();
         playerMovement = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMovement>(); // Find and cache PlayerMovement script
     }
 
-    private void Update()
+private void Update()
     {
         cooldownTimer += Time.deltaTime;
+
+        // Check if player is above or behind the enemy
+        playerAbove = playerTransform.position.y > transform.position.y;
+        playerBehind = playerTransform.position.x < transform.position.x;
+
+        // Flip scale to face left or right based on player's position
+        if (playerBehind)
+        {
+            transform.localScale = new Vector3(-1f, 1f, 1f); // Face left
+        }
+        else
+        {
+            transform.localScale = new Vector3(1f, 1f, 1f); // Face right
+        }
 
         // Attack only when player in sight and player is visible
         if (PlayerInSight() && playerMovement.IsVisible()) // Check if player is visible using IsVisible method
@@ -83,7 +108,6 @@ public class RangedEnemy : MonoBehaviour
 
         return hit.collider != null;
     }
-
     // Draw attack range Gizmos
     private void OnDrawGizmos()
     {

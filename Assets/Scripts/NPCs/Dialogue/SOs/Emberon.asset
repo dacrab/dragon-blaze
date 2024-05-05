@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da2a1b298e309274d865cda28f80eb76, type: 3}
   m_Name: Emberon
   m_EditorClassIdentifier: 
-  speakerName: Emberon
+  speakerName: 'Blazeheart, the Fiery Emberon  '
   paragraphs:
-  - Emberon, your silent resolve speaks volumes. The flames of determination are
-    your armor, and your fiery breath, your sword. The final confrontation with the
-    Shadow Wraith looms near. Stand tall, for you are the ember that will ignite
-    the dawn of a new era.
+  - "Pyroth, heed my words. Your fireball blazes with ancestral strength, but true
+    power lies not in fury alone. The Trials of Fire await\u2014challenges that temper
+    your spirit. Let your heart burn brighter than your flames."
+  - "Your fireball\u2019s might is a beacon in these dark times, yet there is one
+    who seeks to snuff it out. Nocturne\u2019s chill is felt even here, amidst the
+    flames."

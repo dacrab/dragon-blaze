@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da2a1b298e309274d865cda28f80eb76, type: 3}
   m_Name: Lumina
   m_EditorClassIdentifier: 
-  speakerName: Lumina
+  speakerName: 'Lucida, the Guiding Lumina  '
   paragraphs:
-  - I am Lumina, keeper of the light. The darkness spread, and with each Guardian's
-    fall, the lands they protected withered. The crystals that hold their powers
-    are now lost in the five regions, guarded by the Wraith's minions. You must traverse
-    treacherous paths, from the Whispering Forests to the Shattered Peaks, to find
-    them.
+  - Welcome, Pyroth. I am Lucida, bearer of light. The Ember Gem awaits within the
+    Cavern of Whispers. Its glow will guide you through the labyrinth. Trust in its
+    brilliance, and you shall find your way.
+  - "The light of the Ember Gem can pierce through many shadows, but one shadow looms
+    larger than others. Nocturne\u2019s eclipse spreads far and wide, threatening
+    to dim even the brightest flame."

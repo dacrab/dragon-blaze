@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da2a1b298e309274d865cda28f80eb76, type: 3}
+  m_Name: Wraith(REVISITED)
+  m_EditorClassIdentifier: 
+  speakerName: 'Spectra, the Wise Wraith  '
+  paragraphs:
+  - The Ember Gem chose you, Pyroth. Its spectral glow mirrors your destiny. But
+    remember, light attracts shadows. As you wield this power, tread carefully, for
+    darkness seeks balance.
+  - "With the Ember Gem\u2019s power, you are one step closer to confronting the
+    darkness. Nocturne awaits, his power rooted in the very absence of light. Prepare
+    well, for the final battle draws near."
