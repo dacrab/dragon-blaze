@@ -25,9 +25,6 @@ public class PlayerRespawn : MonoBehaviour
 
         playerHealth.Respawn(); // Restore player health and reset animation
         transform.position = currentCheckpoint.position; // Move player to checkpoint location
-
-        // Move the camera to the checkpoint's room
-        Camera.main.GetComponent<CameraController>().MoveToNewRoom(currentCheckpoint.parent);
     }
 
     // OnTriggerEnter2D is called when the Collider2D other enters the trigger (2D physics only).

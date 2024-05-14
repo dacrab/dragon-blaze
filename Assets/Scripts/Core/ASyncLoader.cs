@@ -11,7 +11,6 @@ public class ASyncLoader : MonoBehaviour
 
     [Header("Slider")]
     [SerializeField] private Slider loadingSlider;
-
     public void LoadLevelBTN(string levelToLoad)
     {
         mainMenu.SetActive(false);
@@ -30,5 +29,4 @@ public class ASyncLoader : MonoBehaviour
             yield return null;
         }
     }
-
 }

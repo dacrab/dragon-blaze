@@ -320,4 +320,10 @@ public class PlayerMovement : MonoBehaviour
     {
         return Mathf.Approximately(horizontalInput, 0) && IsGrounded() && !IsOnWall();
     }
+
+    private void Start()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
 }

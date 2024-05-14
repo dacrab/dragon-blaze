@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class FallingPlatform : MonoBehaviour
 {
-    private float fallDelay = 1f; // Delay before the platform falls
-    private float destroyDelay = 2f; // Delay before the platform is destroyed after falling
+    [SerializeField]private float fallDelay = 1f; // Delay before the platform falls
+    [SerializeField]private float destroyDelay = 2f; // Delay before the platform is destroyed after falling
     [SerializeField] private Rigidbody2D rb; // Reference to the Rigidbody2D component
 
     // Called when this collider/rigidbody has begun touching another rigidbody/collider.

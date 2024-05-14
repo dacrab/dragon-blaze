@@ -35,6 +35,8 @@ public class UIManager : MonoBehaviour
         gameOverScreen.SetActive(true);
         SoundManager.instance.PlaySound(gameOverSound);
         Time.timeScale = 0;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     //Restart level
@@ -49,6 +51,8 @@ public class UIManager : MonoBehaviour
     public void MainMenu()
     {
         SceneManager.LoadScene(0);
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     //Quit game/exit play mode if in Editor
@@ -65,15 +69,24 @@ public class UIManager : MonoBehaviour
     #region Pause
     public void PauseGame(bool status)
     {
+        
         //If status == true pause | if status == false unpause
         pauseScreen.SetActive(status);
 
         //When pause status is true change timescale to 0 (time stops)
         //when it's false change it back to 1 (time goes by normally)
         if (status)
+        {
             Time.timeScale = 0;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
         else
+        {
             Time.timeScale = 1;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
     }
     public void SoundVolume()
     {
