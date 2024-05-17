@@ -1,43 +1,7 @@
 fileFormatVersion: 2
-guid: a375bfb3aa3adc340a899968ef23b6c8
+guid: 0ffb4c31b5f114527b1cee9634de7a19
 TextureImporter:
-  internalIDToNameTable:
-  - first:
-      213: 4396870622444339024
-    second: Arrows_pack_0
-  - first:
-      213: -8338238801746125624
-    second: Arrows_pack_1
-  - first:
-      213: -4033704821452922563
-    second: Arrows_pack_2
-  - first:
-      213: -8235653012269150192
-    second: Arrows_pack_3
-  - first:
-      213: -8734471884891011358
-    second: Arrows_pack_4
-  - first:
-      213: 2299762976014267228
-    second: Arrows_pack_5
-  - first:
-      213: -1681180870942741966
-    second: Arrows_pack_6
-  - first:
-      213: 7161065842277049063
-    second: Arrows_pack_7
-  - first:
-      213: -6681217904058273412
-    second: Arrows_pack_8
-  - first:
-      213: -1762234089068424233
-    second: Arrows_pack_9
-  - first:
-      213: 458943349695503207
-    second: Arrows_pack_10
-  - first:
-      213: 5151818306325336918
-    second: Arrows_pack_11
+  internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 12
   mipmaps:
@@ -69,7 +33,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -99,14 +63,14 @@ TextureImporter:
   textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
-  cookieLightType: 1
+  cookieLightType: 0
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -115,66 +79,6 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: Windows Store Apps
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: tvOS
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: iPhone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -204,10 +108,10 @@ TextureImporter:
       name: Arrows_pack_0
       rect:
         serializedVersion: 2
-        x: 189
-        y: 3549
-        width: 550
-        height: 166
+        x: 190
+        y: 3550
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -215,8 +119,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 05f35261982d40d30800000000000000
-      internalID: 4396870622444339024
+      spriteID: 336fc8f94cbe71bbe9b33135b4272751
+      internalID: -17707426
       vertices: []
       indices: 
       edges: []
@@ -225,10 +129,10 @@ TextureImporter:
       name: Arrows_pack_1
       rect:
         serializedVersion: 2
-        x: 1213
-        y: 3613
-        width: 550
-        height: 166
+        x: 1214
+        y: 3614
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -236,8 +140,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8cc1b89dcff984c80800000000000000
-      internalID: -8338238801746125624
+      spriteID: 8b327bde10cbaf9eba7adf325396b95a
+      internalID: 722929635
       vertices: []
       indices: 
       edges: []
@@ -246,10 +150,10 @@ TextureImporter:
       name: Arrows_pack_2
       rect:
         serializedVersion: 2
-        x: 2237
-        y: 3517
-        width: 550
-        height: 166
+        x: 2238
+        y: 3518
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -257,8 +161,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d31a48c16d66508c0800000000000000
-      internalID: -4033704821452922563
+      spriteID: dd43561f444834dc8b6a94305a5b5ed7
+      internalID: -314789560
       vertices: []
       indices: 
       edges: []
@@ -267,10 +171,10 @@ TextureImporter:
       name: Arrows_pack_3
       rect:
         serializedVersion: 2
-        x: 189
-        y: 2525
-        width: 550
-        height: 166
+        x: 190
+        y: 2526
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -278,8 +182,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 010525e383515bd80800000000000000
-      internalID: -8235653012269150192
+      spriteID: 815aef5a7447e447094687a37e6b06a6
+      internalID: 1247333728
       vertices: []
       indices: 
       edges: []
@@ -288,10 +192,10 @@ TextureImporter:
       name: Arrows_pack_4
       rect:
         serializedVersion: 2
-        x: 1213
-        y: 2589
-        width: 550
-        height: 166
+        x: 1214
+        y: 2590
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -299,8 +203,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2e64f60191ce8c680800000000000000
-      internalID: -8734471884891011358
+      spriteID: 6d806ea318fad0d349018a4c8a1501ba
+      internalID: -1093630413
       vertices: []
       indices: 
       edges: []
@@ -309,10 +213,10 @@ TextureImporter:
       name: Arrows_pack_5
       rect:
         serializedVersion: 2
-        x: 2237
-        y: 2493
-        width: 550
-        height: 166
+        x: 2238
+        y: 2494
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -320,8 +224,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c53fce4fd366aef10800000000000000
-      internalID: 2299762976014267228
+      spriteID: 4ac5ab1a5be9b91f2aa15357d78918c5
+      internalID: -654027522
       vertices: []
       indices: 
       edges: []
@@ -330,10 +234,10 @@ TextureImporter:
       name: Arrows_pack_6
       rect:
         serializedVersion: 2
-        x: 189
-        y: 1501
-        width: 550
-        height: 166
+        x: 190
+        y: 1502
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -341,8 +245,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 23aa648b7ee3ba8e0800000000000000
-      internalID: -1681180870942741966
+      spriteID: 530bdaf234deee206b105dfd18827cf8
+      internalID: -103906611
       vertices: []
       indices: 
       edges: []
@@ -351,10 +255,10 @@ TextureImporter:
       name: Arrows_pack_7
       rect:
         serializedVersion: 2
-        x: 1213
-        y: 1565
-        width: 550
-        height: 166
+        x: 1214
+        y: 1566
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -362,8 +266,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7e26b1e4177316360800000000000000
-      internalID: 7161065842277049063
+      spriteID: 45d09adc7556858bb9d11ffc4c7a4c97
+      internalID: 1715602488
       vertices: []
       indices: 
       edges: []
@@ -372,10 +276,10 @@ TextureImporter:
       name: Arrows_pack_8
       rect:
         serializedVersion: 2
-        x: 2237
-        y: 1469
-        width: 550
-        height: 166
+        x: 2238
+        y: 1470
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -383,8 +287,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c7170a107bb8743a0800000000000000
-      internalID: -6681217904058273412
+      spriteID: 506c28cff167b8780beb1d0c9ebd77c9
+      internalID: -1731513961
       vertices: []
       indices: 
       edges: []
@@ -393,10 +297,10 @@ TextureImporter:
       name: Arrows_pack_9
       rect:
         serializedVersion: 2
-        x: 189
-        y: 413
-        width: 550
-        height: 166
+        x: 190
+        y: 414
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -404,8 +308,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7d31ef5ce694b87e0800000000000000
-      internalID: -1762234089068424233
+      spriteID: c849f2678df28caaf8021a7e1870b25c
+      internalID: -1227930562
       vertices: []
       indices: 
       edges: []
@@ -414,10 +318,10 @@ TextureImporter:
       name: Arrows_pack_10
       rect:
         serializedVersion: 2
-        x: 1213
-        y: 477
-        width: 550
-        height: 166
+        x: 1214
+        y: 478
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -425,8 +329,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 76bd0a28b8e7e5600800000000000000
-      internalID: 458943349695503207
+      spriteID: c506aafce9027f4279dd8bace8cd2375
+      internalID: 858844791
       vertices: []
       indices: 
       edges: []
@@ -435,10 +339,10 @@ TextureImporter:
       name: Arrows_pack_11
       rect:
         serializedVersion: 2
-        x: 2237
-        y: 381
-        width: 550
-        height: 166
+        x: 2238
+        y: 382
+        width: 548
+        height: 164
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -446,8 +350,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 65350ef347fee7740800000000000000
-      internalID: 5151818306325336918
+      spriteID: 4bef60bca94c86655a9f63a5108812b9
+      internalID: 1619150502
       vertices: []
       indices: 
       edges: []
@@ -463,18 +367,18 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Arrows_pack_0: 4396870622444339024
-      Arrows_pack_1: -8338238801746125624
-      Arrows_pack_10: 458943349695503207
-      Arrows_pack_11: 5151818306325336918
-      Arrows_pack_2: -4033704821452922563
-      Arrows_pack_3: -8235653012269150192
-      Arrows_pack_4: -8734471884891011358
-      Arrows_pack_5: 2299762976014267228
-      Arrows_pack_6: -1681180870942741966
-      Arrows_pack_7: 7161065842277049063
-      Arrows_pack_8: -6681217904058273412
-      Arrows_pack_9: -1762234089068424233
+      Arrows_pack_0: -17707426
+      Arrows_pack_1: 722929635
+      Arrows_pack_10: 858844791
+      Arrows_pack_11: 1619150502
+      Arrows_pack_2: -314789560
+      Arrows_pack_3: 1247333728
+      Arrows_pack_4: -1093630413
+      Arrows_pack_5: -654027522
+      Arrows_pack_6: -103906611
+      Arrows_pack_7: 1715602488
+      Arrows_pack_8: -1731513961
+      Arrows_pack_9: -1227930562
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

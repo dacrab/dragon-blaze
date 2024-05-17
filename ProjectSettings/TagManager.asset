@@ -18,7 +18,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Background
   - 
   - Ground
   - Wall
@@ -59,4 +59,7 @@ TagManager:
     locked: 0
   - name: Ground
     uniqueID: 2649148703
+    locked: 0
+  - name: Particles
+    uniqueID: 1408017873
     locked: 0
