@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
@@ -10,9 +12,44 @@ public class UIManager : MonoBehaviour
     [Header("Pause")]
     [SerializeField] private GameObject pauseScreen;
 
-    public void Play()
+    [Header("Slider")]
+    [SerializeField] private Slider loadingSlider;
+
+    [Header("Menu Slider")]
+    [SerializeField] private GameObject loadingScreen;
+     [SerializeField] private GameObject mainMenu;
+
+
+
+    public void Play(string levelToLoad)
     {
-        SceneManager.LoadScene("Level1");
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = currentSceneIndex + 1;
+
+        // Check if the next scene index is beyond the total scene count
+        if (nextSceneIndex >= SceneManager.sceneCountInBuildSettings)
+        {
+            Debug.Log("You've reached the last level!");
+            return;
+        }
+
+        SceneManager.LoadScene(nextSceneIndex);
+        loadingScreen.SetActive(true);
+        mainMenu.SetActive(false);
+
+        StartCoroutine(LoadLevelASync(levelToLoad));
+    }
+    
+    
+    IEnumerator LoadLevelASync(string levelToLoad)
+    {
+        AsyncOperation loadOperation = SceneManager.LoadSceneAsync(levelToLoad);
+        while (!loadOperation.isDone)
+        {
+            float progressValue = Mathf.Clamp01(loadOperation.progress / 0.9f);
+            loadingSlider.value = progressValue;
+            yield return null;
+        }
     }
     private void Awake()
     {

@@ -11,6 +11,8 @@ TagManager:
   - platform
   - Coin
   - NPC
+  - FxTemporaire
+  - MagicStone
   layers:
   - Default
   - TransparentFX
