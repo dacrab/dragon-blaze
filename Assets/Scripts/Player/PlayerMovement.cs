@@ -72,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
     public void setInteracting(bool interacting)
     {
         isInteracting = interacting;
-        anim.SetBool("interacting" , isInteracting);
+        anim.SetBool("Idle" , isInteracting);
         //If interacting, stop the animation
         anim.SetBool("run" , !isInteracting);
     }

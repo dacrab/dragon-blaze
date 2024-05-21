@@ -6,6 +6,9 @@ public class EnemyPatrol : MonoBehaviour
     [SerializeField] private Transform leftEdge; // Left edge of the patrol area
     [SerializeField] private Transform rightEdge; // Right edge of the patrol area
 
+    public Transform LeftEdge => leftEdge;
+    public Transform RightEdge => rightEdge;
+
     [Header("Enemy")]
     [SerializeField] private Transform enemy; // Reference to the enemy's transform
 
@@ -20,6 +23,7 @@ public class EnemyPatrol : MonoBehaviour
 
     [Header("Enemy Animator")]
     [SerializeField] private Animator anim; // Reference to the enemy's animator component
+
 
     private void Awake()
     {
@@ -54,12 +58,14 @@ public class EnemyPatrol : MonoBehaviour
     // Method to handle changing direction and idle behavior
     private void DirectionChange()
     {
-        anim.SetBool("moving", false); // Set the "moving" parameter to false in the animator
+        anim.SetBool("moving", false); // Stop moving animation
         idleTimer += Time.deltaTime;
 
-        // If idle duration is exceeded, change direction
         if (idleTimer > idleDuration)
+        {
             movingLeft = !movingLeft;
+            idleTimer = 0; // Reset the idle timer only when direction changes
+        }
     }
 
     // Method to move the enemy in a specific direction

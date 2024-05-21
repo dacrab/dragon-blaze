@@ -170,11 +170,14 @@ MonoBehaviour:
   attackCooldown: 2
   range: 2
   damage: 1
+  moveSpeed: 3
   colliderDistance: 0.45
   boxCollider: {fileID: 9030981399802531918}
   playerLayer:
     serializedVersion: 2
     m_Bits: 1024
+  particleSystemPrefab: {fileID: 0}
+  deathParticleSystemPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
 --- !u!114 &7956649084885540522
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,57 +1,93 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using System.Collections;
 
 public class MagicStone : MonoBehaviour
 {
-    public SpriteRenderer interactIndicator; // Assign the UI indicator in the Inspector
-    private bool isPlayerInRange;
+    public UIManager uiManager; // Assign your UIManager in the Inspector
+    public SpriteRenderer indicatorSprite; // Assign your SpriteRenderer in the Inspector
+    public GameObject interactParticleSystemPrefab; // Assign your particle system prefab in the Inspector
+    public string levelToLoad; // Set this to the name of the level to load in the Inspector
+    private bool playerInTrigger = false;
+    private Vector3 playerPosition; // Store the player's position when they enter the trigger area
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void Start()
     {
-        if (collision.CompareTag("Player"))
+        // Ensure the SpriteRenderer is initially disabled
+        if (indicatorSprite != null)
+            indicatorSprite.enabled = false;
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.gameObject.CompareTag("Player"))
         {
-            interactIndicator.SetActive(true);
-            isPlayerInRange = true;
+            playerInTrigger = true;
+            playerPosition = other.gameObject.transform.position; // Store the player's position
+            if (indicatorSprite != null)
+                indicatorSprite.enabled = true; // Enable SpriteRenderer
         }
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    void OnTriggerStay2D(Collider2D other)
     {
-        if (collision.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
-            interactIndicator.SetActive(false);
-            isPlayerInRange = false;
+            playerPosition = other.gameObject.transform.position; // Continuously update player's position
         }
     }
 
-    private void Update()
+    void OnTriggerExit2D(Collider2D other)
     {
-        if (isPlayerInRange && Input.GetKeyDown(KeyCode.E))
+        if (other.gameObject.CompareTag("Player"))
         {
-            Interact();
+            playerInTrigger = false;
+
+            if (indicatorSprite != null)
+                indicatorSprite.enabled = false; // Disable SpriteRenderer
+
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
         }
     }
 
-    private void Interact()
+    void Update()
     {
-        // Call the function to play particle system and transition to loading screen
-        StartCoroutine(InteractSequence());
+        if (playerInTrigger && Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            StartCoroutine(PlayParticlesThenLoadLevel(playerPosition));
+        }
     }
 
-    private IEnumerator InteractSequence()
+    IEnumerator PlayParticlesThenLoadLevel(Vector3 position)
     {
-        // Play the particle system
-        // Assuming you have a ParticleSystem component attached to the magic stone
-        ParticleSystem ps = GetComponent<ParticleSystem>();
-        if (ps != null)
-        {
-            ps.Play();
-        }
+        PlayInteractParticleSystem(position); // Play the particle system at player position
 
         // Wait for the particle system to finish
-        yield return new WaitForSeconds(ps.main.duration);
+        yield return new WaitForSeconds(interactParticleSystemPrefab.GetComponent<ParticleSystem>().main.duration);
 
-        // Transition to the loading screen
-        UIManager.Instance.Play(); // Make sure you have a singleton pattern in UIManager
+        LoadLevel(); // Then load the level
+    }
+
+    private void LoadLevel()
+    {
+        if (uiManager != null)
+        {
+            uiManager.Play(levelToLoad); // This will handle the particle system and loading screen
+        }
+    }
+
+    private void PlayInteractParticleSystem(Vector3 position)
+    {
+        // Instantiate the particle system at the player's position
+        if (interactParticleSystemPrefab != null)
+        {
+            GameObject particleSystemInstance = Instantiate(interactParticleSystemPrefab, position, Quaternion.identity);
+            ParticleSystem ps = particleSystemInstance.GetComponent<ParticleSystem>();
+            if (ps != null)
+            {
+                ps.Play();
+            }
+        }
     }
 }

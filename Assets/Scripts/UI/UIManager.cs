@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -12,57 +12,41 @@ public class UIManager : MonoBehaviour
     [Header("Pause")]
     [SerializeField] private GameObject pauseScreen;
 
-    [Header("Slider")]
-    [SerializeField] private Slider loadingSlider;
-
-    [Header("Menu Slider")]
-    [SerializeField] private GameObject loadingScreen;
-     [SerializeField] private GameObject mainMenu;
-
-
-
-    public void Play(string levelToLoad)
+    [Header(" Level Transition")]
+    [SerializeField] private ParticleSystem particles;
+    public GameObject loadingScreen;
+    public Image loadingBar;
+    private float _target;
+    
+    public void Play(string sceneIndex)
     {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex + 1;
-
-        // Check if the next scene index is beyond the total scene count
-        if (nextSceneIndex >= SceneManager.sceneCountInBuildSettings)
-        {
-            Debug.Log("You've reached the last level!");
-            return;
-        }
-
-        SceneManager.LoadScene(nextSceneIndex);
-        loadingScreen.SetActive(true);
-        mainMenu.SetActive(false);
-
-        StartCoroutine(LoadLevelASync(levelToLoad));
+        StartCoroutine(LoadAsync(sceneIndex));
     }
-    
-    
-    IEnumerator LoadLevelASync(string levelToLoad)
+
+    IEnumerator LoadAsync(string sceneIndex)
     {
-        AsyncOperation loadOperation = SceneManager.LoadSceneAsync(levelToLoad);
-        while (!loadOperation.isDone)
+        loadingScreen.SetActive(true); // Activate loading screen
+        loadingBar.fillAmount = 0;
+        _target = 0;
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneIndex);
+
+        while (!operation.isDone)
         {
-            float progressValue = Mathf.Clamp01(loadOperation.progress / 0.9f);
-            loadingSlider.value = progressValue;
+            float progress = Mathf.Clamp01(operation.progress / 0.9f);
+            _target = progress;
+            loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, _target, 3 * Time.deltaTime);
             yield return null;
         }
     }
-    private void Awake()
-    {
-        gameOverScreen.SetActive(false);
-        pauseScreen.SetActive(false);
-    }
-    private void Update()
+
+    void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             //If pause screen already active unpause and viceversa
             PauseGame(!pauseScreen.activeInHierarchy);
         }
+        loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount , _target,3 *Time.deltaTime);
     }
 
     #region Game Over
@@ -114,7 +98,7 @@ public class UIManager : MonoBehaviour
         //when it's false change it back to 1 (time goes by normally)
         if (status)
         {
-            Time.timeScale = 0;
+            Time.timeScale = 0.01f;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
