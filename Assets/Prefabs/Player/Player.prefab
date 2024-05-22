@@ -136,7 +136,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.100152016, y: -0.5374851}
+  m_Offset: {x: 0.059131622, y: -0.52381176}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -147,7 +147,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.89713955, y: 1.3523817}
+  m_Size: {x: 0.6017952, y: 1.325035}
   m_EdgeRadius: 0
 --- !u!50 &339728066529960368
 Rigidbody2D:
@@ -184,7 +184,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultInvisibilityDuration: 5
   invisibleColor: {r: 1, g: 1, b: 1, a: 0.5}
-  playerSpriteRenderer: {fileID: 0}
+  playerSpriteRenderer: {fileID: 339728066529960370}
   defaultJumpMultiplier: 1.5
   defaultSpeedBoostMultiplier: 1.5
   defaultSpeedBoostDuration: 5
@@ -192,16 +192,17 @@ MonoBehaviour:
   jumpPower: 20
   coyoteTime: 0.25
   extraJumps: 1
-  wallJumpX: 30
-  wallJumpY: 15
+  wallJumpX: 1500
+  wallJumpY: 750
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
   wallLayer:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 768
   jumpSound: {fileID: 8300000, guid: 3c23de8f88fc9ba498b0d232fb269dff, type: 3}
   maxFallingTime: 3
+  deathParticlesPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
 --- !u!114 &339728066529960372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -270,6 +271,8 @@ MonoBehaviour:
   - {fileID: 339728066529960373}
   deathSound: {fileID: 8300000, guid: dd6d9531e2f11434f9add7e7e09cd332, type: 3}
   hurtSound: {fileID: 8300000, guid: 32ff513695816ae4fb9ecd5c1bc67120, type: 3}
+  hitParticleSystemPrefab: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}
+  deathParticleSystemPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
 --- !u!114 &6126100315396194484
 MonoBehaviour:
   m_ObjectHideFlags: 0

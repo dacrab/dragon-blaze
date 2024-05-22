@@ -254,12 +254,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (IsOnWall())
         {
-            body.gravityScale = 2;
-            body.velocity = Vector2.zero;
+            body.gravityScale = 0.5f; // Reduced gravity scale for slower fall
+            body.velocity = new Vector2(body.velocity.x, -1f); // Apply a small downward force
         }
         else
         {
-            body.gravityScale = 7;
+            body.gravityScale = 7; // Normal gravity scale
             body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
 
             if (IsGrounded())
@@ -328,6 +328,7 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, new Vector2(transform.localScale.x, 0), 0.1f, wallLayer);
         return raycastHit.collider != null;
     }
+
     public bool canAttack()
     {
         return Mathf.Approximately(horizontalInput, 0) && IsGrounded() && !IsOnWall();
