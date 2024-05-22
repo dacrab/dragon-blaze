@@ -18,18 +18,14 @@ public class Health : MonoBehaviour
     [SerializeField] private Behaviour[] components; // List of components to deactivate upon death
     private bool invulnerable; // Flag indicating if the player is invulnerable
 
-    [Header("Death Sound")]
+    [Header("Audio")]
     [SerializeField] private AudioClip deathSound; // Sound clip played upon death
     [SerializeField] private AudioClip hurtSound; // Sound clip played when taking damage
 
-    // Method to handle player death
-    private void Die()
-    {
-        // Disable the BoxCollider2D component to prevent further interactions
-        GetComponent<BoxCollider2D>().enabled = false;
-    }
+    [Header("Particle Systems")]
+    [SerializeField] private GameObject hitParticleSystemPrefab; // Particle system prefab for player hit effects
+    [SerializeField] private GameObject deathParticleSystemPrefab; // Particle system prefab for player death effects
 
-    // Awake is called when the script instance is being loaded
     private void Awake()
     {
         currentHealth = startingHealth; // Initialize current health to starting health
@@ -37,7 +33,6 @@ public class Health : MonoBehaviour
         spriteRend = GetComponent<SpriteRenderer>(); // Get reference to the SpriteRenderer component
     }
 
-    // Method to handle taking damage
     public void TakeDamage(float _damage)
     {
         if (invulnerable) return; // If the player is invulnerable, exit the method
@@ -51,6 +46,12 @@ public class Health : MonoBehaviour
             anim.SetTrigger("hurt");
             StartCoroutine(Invulnerability());
             SoundManager.instance.PlaySound(hurtSound); // Play the hurt sound
+
+            // Play particle system at player's position for hit effects
+            if (hitParticleSystemPrefab != null)
+            {
+                Instantiate(hitParticleSystemPrefab, transform.position, Quaternion.identity);
+            }
         }
         else
         {
@@ -58,24 +59,31 @@ public class Health : MonoBehaviour
             {
                 // If the player is dead, deactivate all attached component classes, trigger death animation, and play death sound
                 foreach (Behaviour component in components)
+                {
                     component.enabled = false;
+                }
 
                 anim.SetBool("grounded", true);
                 anim.SetTrigger("die");
 
                 dead = true; // Set the dead flag to true
                 SoundManager.instance.PlaySound(deathSound); // Play the death sound
+
+                // Play particle system at player's position for death effects
+                if (deathParticleSystemPrefab != null)
+                {
+                    Instantiate(deathParticleSystemPrefab, transform.position, Quaternion.identity);
+                }
             }
         }
     }
 
-    // Method to add health to the player
     public void AddHealth(float _value)
     {
-        currentHealth = Mathf.Clamp(currentHealth + _value, 0, startingHealth); // Add health within the range of 0 to startingHealth
+        // Add health within the range of 0 to startingHealth
+        currentHealth = Mathf.Clamp(currentHealth + _value, 0, startingHealth);
     }
 
-    // Coroutine for handling invulnerability frames
     private IEnumerator Invulnerability()
     {
         invulnerable = true; // Set the invulnerable flag to true
@@ -94,13 +102,11 @@ public class Health : MonoBehaviour
         invulnerable = false; // Set the invulnerable flag to false
     }
 
-    // Method to deactivate the game object
     private void Deactivate()
     {
         gameObject.SetActive(false); // Deactivate the game object
     }
 
-    // Method to respawn the player
     public void Respawn()
     {
         // Reset health, animation triggers, and flags
@@ -112,6 +118,11 @@ public class Health : MonoBehaviour
 
         // Activate all attached component classes
         foreach (Behaviour component in components)
+        {
             component.enabled = true;
+        }
+
+        // Enable the BoxCollider2D component to allow interactions again
+        GetComponent<BoxCollider2D>().enabled = true;
     }
 }

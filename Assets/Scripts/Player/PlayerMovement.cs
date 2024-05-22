@@ -68,6 +68,8 @@ public class PlayerMovement : MonoBehaviour
     //===========INTERACTIONS=========
     private bool isInteracting;
 
+    // Added for particle system
+    [SerializeField] private GameObject deathParticlesPrefab;
 
     public void setInteracting(bool interacting)
     {
@@ -91,6 +93,16 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             Debug.LogWarning("UIManager instance is not found!");
+        }
+
+        // Instantiate death particles at player's position
+        if (deathParticlesPrefab != null)
+        {
+            Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        else
+        {
+            Debug.LogWarning("Death Particle System Prefab is not assigned.");
         }
 
         score = 0;

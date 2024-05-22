@@ -58,6 +58,14 @@ public class MeleeEnemy : MonoBehaviour
 
         if (PlayerInSight())
         {
+            // Immediate attack when player is in sight
+            if (cooldownTimer >= attackCooldown)
+            {
+                cooldownTimer = 0;
+                anim.SetTrigger("meleeAttack");
+                DamagePlayer(); // Damage the player immediately upon attack
+            }
+
             FollowPlayer(); // Follow the player when in sight
         }
         else
@@ -120,12 +128,6 @@ public class MeleeEnemy : MonoBehaviour
             return true;
         }
         return false;
-    }
-
-    public void OnMeleeAttack()
-    {
-        if (PlayerInSight()) // Check again if player is in sight when actually attacking
-            DamagePlayer();
     }
 
     private void DamagePlayer()

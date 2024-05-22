@@ -55,7 +55,6 @@ public class UIManager : MonoBehaviour
     {
         gameOverScreen.SetActive(true);
         SoundManager.instance.PlaySound(gameOverSound);
-        Time.timeScale = 0;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
@@ -65,7 +64,6 @@ public class UIManager : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
          Time.timeScale = 1;
-
     }
 
     //Main Menu
