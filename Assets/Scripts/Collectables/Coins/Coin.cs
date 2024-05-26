@@ -2,48 +2,60 @@ using UnityEngine;
 
 public class Coin : MonoBehaviour
 {
-    [SerializeField] private int value = 1; // The value of the coin
-    private int storedValue; // The value stored when reaching a checkpoint
-    [SerializeField] private AudioClip pickupSound; // The sound to play when the coin is picked up
-    [SerializeField] private ParticleSystem pickupEffect; // The particle effect to play when the coin is picked up
+    [SerializeField] private int value = 1;
+    private int storedValue;
+    [SerializeField] private AudioClip pickupSound;
+    [SerializeField] private ParticleSystem pickupEffect;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.CompareTag("Player"))
         {
-            // Play the pickup sound
-            if (SoundManager.instance != null && pickupSound != null)
-            {
-                SoundManager.instance.PlaySound(pickupSound);
-            }
-
-            // Play the pickup particle effect
-            if (pickupEffect != null)
-            {
-                ParticleSystem effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
-                effect.Play();
-            }
-
-            // Add the value of the coin to the player's score
-            PlayerMovement playerMovement = other.gameObject.GetComponent<PlayerMovement>();
-            if (playerMovement != null)
-            {
-                playerMovement.AddScore(value);
-            }
-
-            // Destroy the coin
-            Destroy(gameObject);
+            CollectCoin();
         }
         else if (other.gameObject.CompareTag("Checkpoint"))
         {
-            // Store the current value of the coin when reaching a checkpoint
             storedValue = value;
         }
     }
 
+    private void CollectCoin()
+    {
+        if (GameManager.instance == null)
+        {
+            Debug.LogError("GameManager instance is null");
+            return;
+        }
+
+        Debug.Log("Collecting coin");
+
+        // Play the pickup sound
+        if (SoundManager.instance != null && pickupSound != null)
+        {
+            SoundManager.instance.PlaySound(pickupSound);
+        }
+
+        // Play the pickup particle effect
+        if (pickupEffect != null)
+        {
+            ParticleSystem effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
+            effect.Play();
+            Destroy(effect.gameObject, effect.main.duration);
+        }
+
+        // Add the value of the coin to the player's score
+        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
+        if (playerMovement != null)
+        {
+            playerMovement.AddScore(value);
+        }
+
+        // Destroy the coin
+        Destroy(gameObject);
+    }
+
     public void ResetValue()
     {
-        // Reset the value of the coin to the stored value
         value = storedValue;
     }
 }

@@ -99,7 +99,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24813ff3da8d71f4bbc1b66ab2dbc7b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 10
+  invisibilityImage: {fileID: 4138223980208024357, guid: 5100b75572e484e458e4340e2afe9454, type: 3}
 --- !u!61 &6750412038318893008
 BoxCollider2D:
   m_ObjectHideFlags: 0

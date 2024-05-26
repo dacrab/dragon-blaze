@@ -42,13 +42,29 @@ public class Enemy_Sideways : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
-            if (playerMovement != null && !playerMovement.IsVisible())
+            if (playerMovement != null)
             {
-                Health playerHealth = collision.GetComponent<Health>();
-                if (playerHealth != null)
+                bool isVisible = playerMovement.IsVisible();
+                if (isVisible)
                 {
-                    playerHealth.TakeDamage(damage);
+                    Health playerHealth = collision.GetComponent<Health>();
+                    if (playerHealth != null)
+                    {
+                        playerHealth.TakeDamage(damage);
+                    }
+                    else
+                    {
+                        Debug.Log("No Health Component found on the player.");
+                    }
                 }
+                else
+                {
+                    Debug.Log("Player is invisible. Enemy will not react.");
+                }
+            }
+            else
+            {
+                Debug.Log("No Player Movement Component found.");
             }
         }
     }

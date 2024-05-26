@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using UnityEngine.SceneManagement; // Make sure to include this for scene management
 
 public class MagicStone : MonoBehaviour
 {
@@ -13,7 +14,6 @@ public class MagicStone : MonoBehaviour
 
     void Start()
     {
-        // Ensure the SpriteRenderer is initially disabled
         if (indicatorSprite != null)
             indicatorSprite.enabled = false;
     }
@@ -23,17 +23,9 @@ public class MagicStone : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             playerInTrigger = true;
-            playerPosition = other.gameObject.transform.position; // Store the player's position
+            playerPosition = other.gameObject.transform.position;
             if (indicatorSprite != null)
-                indicatorSprite.enabled = true; // Enable SpriteRenderer
-        }
-    }
-
-    void OnTriggerStay2D(Collider2D other)
-    {
-        if (other.gameObject.CompareTag("Player"))
-        {
-            playerPosition = other.gameObject.transform.position; // Continuously update player's position
+                indicatorSprite.enabled = true;
         }
     }
 
@@ -42,10 +34,8 @@ public class MagicStone : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             playerInTrigger = false;
-
             if (indicatorSprite != null)
-                indicatorSprite.enabled = false; // Disable SpriteRenderer
-
+                indicatorSprite.enabled = false;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
@@ -61,25 +51,46 @@ public class MagicStone : MonoBehaviour
 
     IEnumerator PlayParticlesThenLoadLevel(Vector3 position)
     {
-        PlayInteractParticleSystem(position); // Play the particle system at player position
+        // Play the particle system at player position
+        PlayInteractParticleSystem(position);
 
         // Wait for the particle system to finish
         yield return new WaitForSeconds(interactParticleSystemPrefab.GetComponent<ParticleSystem>().main.duration);
 
-        LoadLevel(); // Then load the level
+        // Show loading screen (assuming UIManager handles this)
+        uiManager.ShowLoadingScreen(true);
+
+        // Save the game
+        SaveGame();
+
+        // Load the next level asynchronously
+        yield return StartCoroutine(LoadLevelAsync(levelToLoad));
+
+        // Hide loading screen after the level is loaded
+        uiManager.ShowLoadingScreen(false);
     }
 
-    private void LoadLevel()
+    private void SaveGame()
     {
-        if (uiManager != null)
+        if (GameManager.instance != null)
         {
-            uiManager.Play(levelToLoad); // This will handle the particle system and loading screen
+            GameManager.instance.SaveGame(); // Call SaveGame on the GameManager
+        }
+    }
+
+    IEnumerator LoadLevelAsync(string levelName)
+    {
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(levelName);
+
+        // Wait until the asynchronous scene fully loads
+        while (!asyncLoad.isDone)
+        {
+            yield return null;
         }
     }
 
     private void PlayInteractParticleSystem(Vector3 position)
     {
-        // Instantiate the particle system at the player's position
         if (interactParticleSystemPrefab != null)
         {
             GameObject particleSystemInstance = Instantiate(interactParticleSystemPrefab, position, Quaternion.identity);

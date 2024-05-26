@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class EnemyProjectile : EnemyDamage
 {
-    [SerializeField] private float speed;
+    public float speed; // Now publicly accessible
     [SerializeField] private float resetTime;
     private float lifetime;
     private Animator anim;
@@ -35,24 +35,17 @@ public class EnemyProjectile : EnemyDamage
             gameObject.SetActive(false);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private new void OnTriggerEnter2D(Collider2D collision)
     {
-        // Check if the collided object is the player and the player is visible
-        if (collision.CompareTag("Player"))
-        {
-            PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
-            if (playerMovement != null && playerMovement.IsVisible())
-            {
-                hit = true;
-                base.OnTriggerEnter2D(collision); // Execute logic from parent script first
-                coll.enabled = false;
+        hit = true;
+        coll.enabled = false;
 
-                if (anim != null)
-                    anim.SetTrigger("explode"); // When the object is a fireball, explode it
-                else
-                    gameObject.SetActive(false); // When this hits any object, deactivate arrow
-            }
-        }
+        if (anim != null)
+            anim.SetTrigger("explode");
+        else
+            gameObject.SetActive(false);
+
+        base.OnTriggerEnter2D(collision);
     }
 
     private void Deactivate()

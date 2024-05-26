@@ -26,7 +26,7 @@ TagManager:
   - Wall
   - Player
   - Enemy
-  - 
+  - NonCollidingWithPlatforms
   - 
   - 
   - 

@@ -1,27 +1,31 @@
 using UnityEngine;
-using TMPro;
+using TMPro; // Add this for TextMeshProUGUI
+using System.Collections; // Add this for IEnumerator
 
-public class ScoreDisplay : MonoBehaviour
+public class ScoreDisplay : MonoBehaviour // Make sure to inherit from MonoBehaviour
 {
-    public PlayerMovement player; // Reference to the PlayerMovement script
     public TextMeshProUGUI coinText;
-    private void Start()
+
+    private void OnEnable()
     {
-        coinText = GetComponent<TextMeshProUGUI>(); // Get the Text component attached to this GameObject
+        PlayerMovement.OnScoreChanged += UpdateScoreDisplay;  // Make sure this is the correct event
     }
 
-private void Update()
-{
-    int playerScore = player.GetScore(); // Get the player's score
+    private void OnDisable()
+    {
+        PlayerMovement.OnScoreChanged -= UpdateScoreDisplay;
+    }
 
-    // Display the score only if it's greater than 0
-    if (playerScore > 0)
+    private void UpdateScoreDisplay(int score)
     {
-        coinText.text = $": {playerScore}"; // Update the text dynamically
+        Debug.Log($"Received score update: {score}");
+        if (coinText != null)
+        {
+            coinText.text = $": {score}";
+        }
+        else
+        {
+            Debug.LogError("coinText is null");
+        }
     }
-    else
-    {
-        coinText.text = " "; // Hide the score when it's 0
-    }
-}
 }

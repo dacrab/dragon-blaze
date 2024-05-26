@@ -360,6 +360,18 @@ PrefabInstance:
       propertyPath: m_TagString
       value: MagicStone
       objectReference: {fileID: 0}
+    - target: {fileID: 3330476965187465481, guid: 367acab6b4839d34f847dc791e026c4d, type: 3}
+      propertyPath: uiManager
+      value: 
+      objectReference: {fileID: 4225182533168114474}
+    - target: {fileID: 3330476965187465481, guid: 367acab6b4839d34f847dc791e026c4d, type: 3}
+      propertyPath: levelToLoad
+      value: Level2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3330476965187465481, guid: 367acab6b4839d34f847dc791e026c4d, type: 3}
+      propertyPath: indicatorSprite
+      value: 
+      objectReference: {fileID: 2109026582}
     - target: {fileID: 7562180276227910608, guid: 367acab6b4839d34f847dc791e026c4d, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
@@ -20970,6 +20982,8 @@ MonoBehaviour:
   particles: {fileID: 0}
   loadingScreen: {fileID: 633191040}
   loadingBar: {fileID: 674498145}
+  continueButton: {fileID: 0}
+  newGameButton: {fileID: 0}
 --- !u!114 &4280132114167357164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23178,11 +23192,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8594955030401506640, guid: 83a0246fdfaa2820aa300557d2dccd18, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -61.780407
+      value: -60.274696
       objectReference: {fileID: 0}
     - target: {fileID: 8594955030401506640, guid: 83a0246fdfaa2820aa300557d2dccd18, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.54586995
+      value: 0.5326499
       objectReference: {fileID: 0}
     - target: {fileID: 8594955030401506640, guid: 83a0246fdfaa2820aa300557d2dccd18, type: 3}
       propertyPath: m_LocalPosition.z

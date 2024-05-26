@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2183321564951531329}
   - component: {fileID: 2183321564951531334}
-  - component: {fileID: 8891367566238856828}
   - component: {fileID: 3391036567349535459}
+  - component: {fileID: 3330476965187465481}
   m_Layer: 0
   m_Name: PF Village Props - Stone of Recall
   m_TagString: Untagged
@@ -87,22 +87,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &8891367566238856828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2183321564951531335}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc11d6a3ea2d6a6e19f3c77dbb561fd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  uiManager: {fileID: 0}
-  indicatorSprite: {fileID: 0}
-  interactParticleSystemPrefab: {fileID: 100008, guid: e3d819d8722fa1f47a3f68574b56dfb3, type: 3}
-  levelToLoad: Level2
 --- !u!61 &3391036567349535459
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -129,6 +113,22 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.67835176, y: 1.0625}
   m_EdgeRadius: 0
+--- !u!114 &3330476965187465481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2183321564951531335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc11d6a3ea2d6a6e19f3c77dbb561fd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiManager: {fileID: 0}
+  indicatorSprite: {fileID: 0}
+  interactParticleSystemPrefab: {fileID: 100008, guid: e3d819d8722fa1f47a3f68574b56dfb3, type: 3}
+  levelToLoad: Level4
 --- !u!1 &2319273174036298326
 GameObject:
   m_ObjectHideFlags: 0

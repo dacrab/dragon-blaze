@@ -11,7 +11,6 @@ public class MeleeEnemy : MonoBehaviour
     [SerializeField] private float moveSpeed = 3.0f; // Speed at which the enemy moves towards the player
 
     [Header("Collider Parameters")]
-    [SerializeField] private float colliderDistance; // Distance of the attack collider from the enemy
     [SerializeField] private BoxCollider2D boxCollider; // Reference to the attack collider
 
     [Header("Player Layer")]
@@ -56,23 +55,51 @@ public class MeleeEnemy : MonoBehaviour
     {
         cooldownTimer += Time.deltaTime;
 
-        if (PlayerInSight())
+        if (PlayerInSight() && PlayerWithinPatrolBounds())
         {
-            // Immediate attack when player is in sight
+            enemyPatrol.enabled = false; // Disable patrol when player is in sight and within bounds
+            if (CanMoveForward())
+            {
+                FollowPlayer(); // Aggressively follow the player
+            }
+
             if (cooldownTimer >= attackCooldown)
             {
                 cooldownTimer = 0;
                 anim.SetTrigger("meleeAttack");
-                DamagePlayer(); // Damage the player immediately upon attack
+                DamagePlayer(); // Attack the player
             }
-
-            FollowPlayer(); // Follow the player when in sight
         }
         else
         {
-            if (enemyPatrol != null)
-                enemyPatrol.enabled = true; // Enable patrol if the player is not in sight
+            enemyPatrol.enabled = true; // Enable patrol if the player is not in sight or out of bounds
         }
+    }
+
+    private bool PlayerInSight()
+    {
+        // Implement your sight detection logic here
+        return true; // Placeholder
+    }
+
+    private bool PlayerWithinPatrolBounds()
+    {
+        if (enemyPatrol != null && playerTransform != null)
+        {
+            return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
+                   playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
+        }
+        return false;
+    }
+
+    private bool CanMoveForward()
+    {
+        Vector2 direction = transform.right * transform.localScale.x;
+        Vector2 checkPosition = (Vector2)transform.position + (direction * boxCollider.size.x);
+
+        // Check for ground and obstacles in front of the enemy
+        Collider2D hit = Physics2D.OverlapBox(checkPosition, boxCollider.size, 0, LayerMask.GetMask("Default"));
+        return hit == null; // If nothing is hit, it's safe to move forward
     }
 
     private void FollowPlayer()
@@ -110,26 +137,6 @@ public class MeleeEnemy : MonoBehaviour
         }
     }
 
-    private bool PlayerInSight()
-    {
-        RaycastHit2D hit = Physics2D.BoxCast(
-            boxCollider.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
-            new Vector3(boxCollider.bounds.size.x * range, boxCollider.bounds.size.y, boxCollider.bounds.size.z),
-            0, Vector2.left, 0, playerLayer);
-
-        if (hit.collider != null)
-        {
-            playerHealth = hit.transform.GetComponent<Health>();
-            if (cooldownTimer >= attackCooldown)
-            {
-                cooldownTimer = 0;
-                anim.SetTrigger("meleeAttack");
-            }
-            return true;
-        }
-        return false;
-    }
-
     private void DamagePlayer()
     {
         if (playerHealth != null)
@@ -163,3 +170,4 @@ public class MeleeEnemy : MonoBehaviour
         Destroy(gameObject);
     }
 }
+

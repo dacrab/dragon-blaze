@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.UI;
+using TMPro; // Add this to use TextMeshPro components
 
 public class UIManager : MonoBehaviour
 {
@@ -14,10 +15,53 @@ public class UIManager : MonoBehaviour
 
     [Header(" Level Transition")]
     [SerializeField] private ParticleSystem particles;
-    public GameObject loadingScreen;
+    public GameObject loadingScreen; // Assign this in the Inspector
     public Image loadingBar;
     private float _target;
-    
+
+    [Header("Menu Options")]
+    public Button continueButton; // Assign in the inspector
+    public Button newGameButton; // Assign in the inspector
+
+    [Header("Coin Display")]
+    [SerializeField] private TextMeshProUGUI coinText; // Assign this in the inspector
+
+    private void Start()
+    {
+        CheckSaveData();
+    }
+
+    private void CheckSaveData()
+    {
+        // Check if save data exists using GameManager
+        bool saveExists = GameManager.instance.SaveDataExists();
+        continueButton.gameObject.SetActive(saveExists); // Only activate continue button if save exists
+        newGameButton.gameObject.SetActive(true); // Always activate new game button
+    }
+
+    public void NewGame()
+    {
+        // Reset or create new save data
+        GameManager.instance.ResetCoins(); // Reset coins to 0
+        GameManager.instance.SaveGame(); // Save the reset state
+        SceneManager.LoadScene("Level1"); // Assuming "Level1" is your first level scene
+    }
+
+    public void ContinueGame()
+    {
+        // Load the existing game
+        SaveData saveData = GameManager.instance.LoadGame(); // Load game data
+        if (saveData != null)
+        {
+            SceneManager.LoadScene(saveData.currentLevel); // Load the saved level
+        }
+        else
+        {
+            Debug.Log("No save data found, cannot continue!");
+            // Optionally, you could also handle this case by showing an error message to the user
+        }
+    }
+
     public void Play(string sceneIndex)
     {
         StartCoroutine(LoadAsync(sceneIndex));
@@ -116,4 +160,24 @@ public class UIManager : MonoBehaviour
         SoundManager.instance.ChangeMusicVolume(0.2f);
     }
     #endregion
+
+    public void ShowLoadingScreen(bool show)
+    {
+        if (loadingScreen != null)
+            loadingScreen.SetActive(show);
+    }
+
+    public void SaveGame()
+    {
+        if (GameManager.instance != null)
+            GameManager.instance.SaveGame();
+    }
+
+    public void UpdateCoinDisplay(int coins)
+    {
+        if (coinText != null)
+            coinText.text = ": " + coins;
+        else
+            Debug.LogError("Coin TextMeshProUGUI not assigned in UIManager.");
+    }
 }

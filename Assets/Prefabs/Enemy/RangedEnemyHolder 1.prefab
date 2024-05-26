@@ -134,7 +134,6 @@ GameObject:
   - component: {fileID: 6058310110669822430}
   - component: {fileID: 6058310110669822405}
   - component: {fileID: 6075761393699654876}
-  - component: {fileID: 6287678727304094597}
   - component: {fileID: 175304473291455217}
   m_Layer: 11
   m_Name: RangedEnemy
@@ -277,6 +276,8 @@ MonoBehaviour:
   - {fileID: 6058310110669822405}
   deathSound: {fileID: 8300000, guid: dd6d9531e2f11434f9add7e7e09cd332, type: 3}
   hurtSound: {fileID: 8300000, guid: 32ff513695816ae4fb9ecd5c1bc67120, type: 3}
+  hitParticleSystemPrefab: {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
+  deathParticleSystemPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
 --- !u!114 &6058310110669822405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -289,7 +290,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 864d4debf4433b847acbd4aa9c89cb4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  flipSpeed: 0
   attackCooldown: 1
   range: 13
   damage: 1
@@ -324,27 +324,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 1
---- !u!50 &6287678727304094597
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6058310110669822402}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 4
 --- !u!61 &175304473291455217
 BoxCollider2D:
   m_ObjectHideFlags: 0

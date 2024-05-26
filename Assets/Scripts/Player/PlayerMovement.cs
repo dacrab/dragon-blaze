@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System; // Added for Action delegate
 
 
 public class PlayerMovement : MonoBehaviour 
 {
     //=========INVISIBILITY========
     [Header("Invisibility PowerUp")]
-    [SerializeField] private float defaultInvisibilityDuration = 5f;
-    [SerializeField] private Color invisibleColor = new Color(1f, 1f, 1f, 0.5f); // Change the alpha channel to reduce visibility
-    [SerializeField] private SpriteRenderer playerSpriteRenderer;
+    [SerializeField] public float defaultInvisibilityDuration = 5f;
+    [SerializeField] public Color invisibleColor = new Color(1f, 1f, 1f, 0.5f); // Change the alpha channel to reduce visibility
+    [SerializeField] public SpriteRenderer playerSpriteRenderer;
 
     //=====HIGHER JUMP=======
     [Header("Higher Jump PowerUp")]
@@ -21,8 +22,8 @@ public class PlayerMovement : MonoBehaviour
 
     //====MOVEMENT======
     [Header("Movement Parameters")]
-    [SerializeField] private float speed;
-    [SerializeField] private float jumpPower;
+    [SerializeField] public float jumpPower; // Changed to public
+    [SerializeField] public float speed;  // Define the speed variable
 
     //======COYOTE=======
     [Header("Coyote Time")]
@@ -38,6 +39,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Wall Jumping")]
     [SerializeField] private float wallJumpX; //Horizontal wall jump force
     [SerializeField] private float wallJumpY; //Vertical wall jump force
+    [SerializeField] private int maxWallJumps = 2; // Maximum number of consecutive wall jumps
+    private int wallJumpCounter; // Counter for the number of wall jumps performed
 
     //=======LAYERS=======
     [Header("Layers")]
@@ -57,6 +60,7 @@ public class PlayerMovement : MonoBehaviour
     //========SCORE/COINS=========
     [Header("Coins")]
     private int score = 0; //Players Score
+    public static event Action<int> OnScoreChanged;
 
     //========FALLING PARAMETERS=======
     [Header("Falling Parameters")]
@@ -70,6 +74,7 @@ public class PlayerMovement : MonoBehaviour
 
     // Added for particle system
     [SerializeField] private GameObject deathParticlesPrefab;
+    [SerializeField] private GameObject jumpParticlesPrefab; // Added for jump particles
 
     public void setInteracting(bool interacting)
     {
@@ -82,6 +87,8 @@ public class PlayerMovement : MonoBehaviour
     public void AddScore(int value) //Reference to the UIManager class
     {
         score += value;
+        Debug.Log($"Score added: {score}, firing event.");
+        OnScoreChanged?.Invoke(score);
     }
 
     public void Die()
@@ -127,6 +134,7 @@ public class PlayerMovement : MonoBehaviour
         boxCollider = GetComponent<BoxCollider2D>();
         //Gets sprite rendere component of the player
         playerSpriteRenderer = GetComponent<SpriteRenderer>();
+        wallJumpCounter = maxWallJumps; // Initialize the wall jump counter
     }
 
     public bool IsVisible()
@@ -149,9 +157,9 @@ public class PlayerMovement : MonoBehaviour
         isInvisible = !visible;
     }
 
-    public void ApplyInvisibility(float duration)
+    public void ApplyInvisibility(float? duration = null)
     {
-        StartCoroutine(InvisibilityCoroutine(duration));
+        StartCoroutine(InvisibilityCoroutine(duration ?? defaultInvisibilityDuration));
     }
 
     private IEnumerator InvisibilityCoroutine(float duration)
@@ -161,17 +169,12 @@ public class PlayerMovement : MonoBehaviour
         SetInvisibility(true);
     }
 
-    private void SetVisibility(bool visible)
+    // Change the access modifier to public
+
+
+    public void SetVisibility(bool isVisible)
     {
-        if (visible)
-        {
-            playerSpriteRenderer.color = Color.white;
-        }
-        else
-        {
-            playerSpriteRenderer.color = invisibleColor;
-        }
-        isInvisible = !visible;
+        playerSpriteRenderer.color = isVisible ? Color.white : invisibleColor;
     }
 
     public void ApplyDefaultHigherJump()
@@ -192,9 +195,9 @@ public class PlayerMovement : MonoBehaviour
         jumpPower = originalJumpPower;
     }
 
-    public void ApplySpeedBoost(float multiplier, float duration)
+    public void ApplySpeedBoost(float? multiplier = null, float? duration = null)
     {
-        StartCoroutine(SpeedBoostCoroutine(multiplier, duration));
+        StartCoroutine(SpeedBoostCoroutine(multiplier ?? defaultSpeedBoostMultiplier, duration ?? defaultSpeedBoostDuration));
     }
 
     private IEnumerator SpeedBoostCoroutine(float multiplier, float duration)
@@ -252,25 +255,28 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.Space) && body.velocity.y > 0)
             body.velocity = new Vector2(body.velocity.x, body.velocity.y / 2);
 
-        if (IsOnWall())
+        if (IsOnWall() && Mathf.Approximately(horizontalInput, 0))
         {
+            // Apply slow fall only when on the wall and no horizontal input
             body.gravityScale = 0.5f; // Reduced gravity scale for slower fall
-            body.velocity = new Vector2(body.velocity.x, -1f); // Apply a small downward force
+            body.velocity = new Vector2(0, -1f); // Apply a small downward force, ensuring no horizontal movement
         }
         else
         {
-            body.gravityScale = 7; // Normal gravity scale
+            // Normal movement and gravity
+            body.gravityScale = 7;
             body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+        }
 
-            if (IsGrounded())
-            {
-                coyoteCounter = coyoteTime; //Reset coyote counter when on the ground
-                jumpCounter = extraJumps; //Reset jump counter to extra jump value
-            }
-            else
-                coyoteCounter -= Time.deltaTime; //Start decreasing coyote counter when not on the ground
+        if (IsGrounded())
+        {
+            coyoteCounter = coyoteTime; //Reset coyote counter when on the ground
+            jumpCounter = extraJumps; //Reset jump counter to extra jump value
+            wallJumpCounter = maxWallJumps; // Reset the wall jump counter when grounded
         }
-        }
+        else
+            coyoteCounter -= Time.deltaTime; //Start decreasing coyote counter when not on the ground
+    }
     }
 
     private void Jump()
@@ -280,30 +286,38 @@ public class PlayerMovement : MonoBehaviour
 
         SoundManager.instance.PlaySound(jumpSound);
 
+        // Instantiate jump particles
+        if (jumpParticlesPrefab != null)
+        {
+            Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        else
+        {
+            Debug.LogWarning("Jump Particle System Prefab is not assigned.");
+        }
+
+        float horizontalVelocity = body.velocity.x; // Preserve the current horizontal velocity
+
         if (IsOnWall())
             WallJump();
         else
         {
-            if (IsGrounded())
-                body.velocity = new Vector2(body.velocity.x, jumpPower);
+            if (IsGrounded() || coyoteCounter > 0)
+            {
+                body.velocity = new Vector2(horizontalVelocity, jumpPower); // Use preserved horizontal velocity
+            }
             else
             {
-                //If not on the ground and coyote counter bigger than 0 do a normal jump
-                if (coyoteCounter > 0)
-                    body.velocity = new Vector2(body.velocity.x, jumpPower);
-                else
+                if (jumpCounter > 0) // If we have extra jumps then jump and decrease the jump counter
                 {
-                    if (jumpCounter > 0) //If we have extra jumps then jump and decrease the jump counter
-                    {
-                        body.velocity = new Vector2(body.velocity.x, jumpPower);
-                        jumpCounter--;
-                    }
+                    body.velocity = new Vector2(horizontalVelocity, jumpPower); // Use preserved horizontal velocity
+                    jumpCounter--;
                 }
             }
-
-            //Reset coyote counter to 0 to avoid double jumps
-            coyoteCounter = 0;
         }
+
+        // Reset coyote counter to 0 to avoid double jumps
+        coyoteCounter = 0;
     }
 
     public void SpeedPowerUp(float value)
@@ -313,20 +327,58 @@ public class PlayerMovement : MonoBehaviour
 
     private void WallJump()
     {
-        body.AddForce(new Vector2(-Mathf.Sign(transform.localScale.x) * wallJumpX, wallJumpY));
-        wallJumpCooldown = 0;
+        if (wallJumpCounter > 0 && IsOnWall())
+        {
+            // Perform a wall jump
+            int originalLayer = gameObject.layer;
+            int nonCollidingLayer = LayerMask.NameToLayer("NonCollidingWithPlatforms");
+
+            if (nonCollidingLayer == -1)
+            {
+                Debug.LogError("NonCollidingWithPlatforms layer does not exist. Please create it in the Layer Manager.");
+                return;
+            }
+
+            gameObject.layer = nonCollidingLayer;
+            body.AddForce(new Vector2(-Mathf.Sign(transform.localScale.x) * wallJumpX, wallJumpY));
+            wallJumpCounter--; // Decrement the wall jump counter
+
+            StartCoroutine(RestoreLayer(originalLayer));
+        }
+        else if (IsOnWall())
+        {
+            // Start sliding down the wall
+            StartWallSlide();
+        }
     }
 
-    private bool IsGrounded()
+    private void StartWallSlide()
     {
-        RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, Vector2.down, 0.1f, groundLayer);
-        return raycastHit.collider != null;
+        // Adjust these values as needed for the desired sliding effect
+        body.velocity = new Vector2(0, -1f); // Slow downward movement
+        body.gravityScale = 0.5f; // Reduced gravity for sliding
+    }
+
+    private IEnumerator RestoreLayer(int originalLayer)
+    {
+        yield return new WaitForSeconds(0.2f);
+        gameObject.layer = originalLayer;
     }
 
     private bool IsOnWall()
     {
-        RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, new Vector2(transform.localScale.x, 0), 0.1f, wallLayer);
+        // Use only the Ground layer for checking wall collisions
+        LayerMask mask = LayerMask.GetMask("Ground");
+        RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, new Vector2(transform.localScale.x, 0), 0.1f, mask);
         return raycastHit.collider != null;
+    }
+
+    private bool IsOnAnotherWall()
+    {
+        // Logic to determine if the player is on a different wall segment
+        // This might involve checking the player's position against the last wall touched
+        // For simplicity, you might treat any wall contact as a new wall if desired
+        return IsOnWall();
     }
 
     public bool canAttack()
@@ -338,5 +390,26 @@ public class PlayerMovement : MonoBehaviour
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private bool IsGrounded()
+    {
+        float extraHeight = 0.1f;
+        // Combine the masks for Ground and NonCollidingWithPlatforms layers
+        int combinedLayerMask = LayerMask.GetMask("Ground") | LayerMask.GetMask("NonCollidingWithPlatforms");
+
+        // Declare raycastHit only once
+        RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0f, Vector2.down, extraHeight, combinedLayerMask);
+        return raycastHit.collider != null;
+    }
+
+    public float GetJumpPower()
+    {
+        return jumpPower;
+    }
+
+    public void SetJumpPower(float value)
+    {
+        jumpPower = value;
     }
 }
