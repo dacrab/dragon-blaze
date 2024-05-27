@@ -9,16 +9,13 @@ public class EnemyDamage : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
-            if (playerMovement != null && !playerMovement.IsVisible())
+            if (playerMovement != null && playerMovement.IsVisible())
             {
-                // Player is invisible, so don't deal damage
-                return;
-            }
-            
-            Health playerHealth = collision.GetComponent<Health>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(damage);
+                Health playerHealth = collision.GetComponent<Health>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(damage);
+                }
             }
         }
     }

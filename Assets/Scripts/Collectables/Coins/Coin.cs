@@ -26,9 +26,6 @@ public class Coin : MonoBehaviour
             Debug.LogError("GameManager instance is null");
             return;
         }
-
-        Debug.Log("Collecting coin");
-
         // Play the pickup sound
         if (SoundManager.instance != null && pickupSound != null)
         {
@@ -43,12 +40,8 @@ public class Coin : MonoBehaviour
             Destroy(effect.gameObject, effect.main.duration);
         }
 
-        // Add the value of the coin to the player's score
-        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
-        if (playerMovement != null)
-        {
-            playerMovement.AddScore(value);
-        }
+        // Add the value of the coin to the GameManager's total coins
+        GameManager.instance.AddCoins(value);
 
         // Destroy the coin
         Destroy(gameObject);

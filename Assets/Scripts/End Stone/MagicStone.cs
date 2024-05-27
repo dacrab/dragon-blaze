@@ -11,6 +11,7 @@ public class MagicStone : MonoBehaviour
     public string levelToLoad; // Set this to the name of the level to load in the Inspector
     private bool playerInTrigger = false;
     private Vector3 playerPosition; // Store the player's position when they enter the trigger area
+    private GameObject activeParticleSystemInstance = null;
 
     void Start()
     {
@@ -93,11 +94,20 @@ public class MagicStone : MonoBehaviour
     {
         if (interactParticleSystemPrefab != null)
         {
-            GameObject particleSystemInstance = Instantiate(interactParticleSystemPrefab, position, Quaternion.identity);
-            ParticleSystem ps = particleSystemInstance.GetComponent<ParticleSystem>();
-            if (ps != null)
+            if (activeParticleSystemInstance == null || !activeParticleSystemInstance.activeInHierarchy)
             {
-                ps.Play();
+                if (activeParticleSystemInstance != null)
+                    Destroy(activeParticleSystemInstance);
+
+                activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position, Quaternion.identity);
+                ParticleSystem ps = activeParticleSystemInstance.GetComponent<ParticleSystem>();
+                if (ps != null)
+                {
+                    ps.Play();
+                }
+
+                // Optionally, automatically destroy the particle system after it has finished
+                Destroy(activeParticleSystemInstance, ps.main.duration);
             }
         }
     }

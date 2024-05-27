@@ -24,11 +24,10 @@ public class PowerUpIndicatorManager : MonoBehaviour
         if (existingIndicator != null)
         {
             // Reset the timer of the existing indicator
-            Slider existingSlider = existingIndicator.GetComponentInChildren<Slider>();
-            if (existingSlider != null)
+            Image existingImage = existingIndicator.GetComponentInChildren<Image>();
+            if (existingImage != null)
             {
-                existingSlider.maxValue = duration;
-                existingSlider.value = duration;
+                existingImage.color = new Color(existingImage.color.r, existingImage.color.g, existingImage.color.b, 1f);
             }
             return;
         }
@@ -59,19 +58,7 @@ public class PowerUpIndicatorManager : MonoBehaviour
             return;
         }
 
-        Slider timeSlider = newIndicator.GetComponentInChildren<Slider>();
-        if (timeSlider != null)
-        {
-            timeSlider.maxValue = duration;
-            timeSlider.value = duration;
-        }
-        else
-        {
-            Debug.LogError("Slider component is missing in the IndicatorPrefab.");
-            return;
-        }
-
-        StartCoroutine(UpdateIndicator(newIndicator, duration, timeSlider));
+        StartCoroutine(UpdateIndicator(newIndicator, duration, imageComponent));
         activeIndicators.Add(newIndicator);
         UpdateIndicatorPositions();
     }
@@ -89,12 +76,18 @@ public class PowerUpIndicatorManager : MonoBehaviour
         return null;
     }
 
-    private IEnumerator UpdateIndicator(GameObject indicator, float duration, Slider slider)
+    private IEnumerator UpdateIndicator(GameObject indicator, float duration, Image imageComponent)
     {
         float remainingTime = duration;
         while (remainingTime > 0)
         {
-            slider.value = remainingTime;
+            float alpha = remainingTime / duration;
+            if (imageComponent != null)
+            {
+                Color c = imageComponent.color;
+                c.a = alpha;
+                imageComponent.color = c;
+            }
             remainingTime -= Time.deltaTime;
             yield return null;
         }
@@ -105,12 +98,35 @@ public class PowerUpIndicatorManager : MonoBehaviour
         UpdateIndicatorPositions();
     }
 
-    private void UpdateIndicatorPositions()
-    {
-        // Update positions so indicators don't overlap
-        for (int i = 0; i < activeIndicators.Count; i++)
-        {
-            activeIndicators[i].transform.localPosition = new Vector3(i * 100, 0, 0); // Adjust spacing as needed
+    private void UpdateIndicatorPositions() {
+        float currentPositionX = 0;
+        float maxHeight = 0;
+        int gap = 10; // Gap in pixels between indicators
+
+        foreach (GameObject indicator in activeIndicators) {
+            RectTransform rect = indicator.GetComponent<RectTransform>();
+            TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
+
+            // Calculate the required width and height
+            float indicatorWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(textComponent.rectTransform), 200); // Max width of 200
+            float indicatorHeight = LayoutUtility.GetPreferredHeight(textComponent.rectTransform);
+
+            // Set the position
+            rect.localPosition = new Vector3(currentPositionX, 0, 0);
+
+            // Update the currentPositionX for the next indicator
+            currentPositionX += indicatorWidth + gap;
+
+            // Track the maximum height
+            if (indicatorHeight > maxHeight) {
+                maxHeight = indicatorHeight;
+            }
+        }
+
+        // Optionally adjust the height of the container if you want all indicators to align vertically
+        foreach (GameObject indicator in activeIndicators) {
+            RectTransform rect = indicator.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(rect.sizeDelta.x, maxHeight);
         }
     }
 }

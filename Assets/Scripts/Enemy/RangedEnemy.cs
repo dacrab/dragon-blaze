@@ -25,11 +25,21 @@ public class RangedEnemy : MonoBehaviour
     //References
     private Animator anim;
     private EnemyPatrol enemyPatrol;
+    private PlayerMovement playerMovement;
 
     private void Awake()
     {
         anim = GetComponent<Animator>();
         enemyPatrol = GetComponentInParent<EnemyPatrol>();
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            playerMovement = player.GetComponent<PlayerMovement>();
+        }
+        else
+        {
+            Debug.LogError("Player object not found with tag 'Player'!");
+        }
     }
 
     private void Update()
@@ -69,8 +79,10 @@ public class RangedEnemy : MonoBehaviour
 
     private bool PlayerInSight()
     {
-        RaycastHit2D hit =
-            Physics2D.BoxCast(boxCollider.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
+        if (playerMovement.IsInvisible()) return false;  // Correctly using the IsInvisible method
+
+        RaycastHit2D hit = Physics2D.BoxCast(
+            boxCollider.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
             new Vector3(boxCollider.bounds.size.x * range, boxCollider.bounds.size.y, boxCollider.bounds.size.z),
             0, Vector2.left, 0, playerLayer);
 

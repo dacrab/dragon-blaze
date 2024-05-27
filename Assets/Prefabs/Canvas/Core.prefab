@@ -2345,6 +2345,11 @@ MonoBehaviour:
   gameOverScreen: {fileID: 8801591685366544177}
   gameOverSound: {fileID: 8300000, guid: 363a938ca73b3584db2b4669a1d37e27, type: 3}
   pauseScreen: {fileID: 8735702568822191543}
+  loadingScreen: {fileID: 0}
+  loadingBar: {fileID: 0}
+  continueButton: {fileID: 0}
+  newGameButton: {fileID: 0}
+  coinText: {fileID: 0}
 --- !u!1 &5962714068935538707
 GameObject:
   m_ObjectHideFlags: 0
@@ -3741,7 +3746,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: QUIT
+  m_Text: SAVE N QUIT
 --- !u!114 &5852394522625317485
 MonoBehaviour:
   m_ObjectHideFlags: 0

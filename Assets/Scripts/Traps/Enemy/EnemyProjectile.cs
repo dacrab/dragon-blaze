@@ -37,6 +37,16 @@ public class EnemyProjectile : EnemyDamage
 
     private new void OnTriggerEnter2D(Collider2D collision)
     {
+        if (collision.CompareTag("Player"))
+        {
+            PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
+            if (playerMovement != null && !playerMovement.IsVisible())
+            {
+                // If the player is not visible, do not process collision for damage
+                return;
+            }
+        }
+
         hit = true;
         coll.enabled = false;
 
@@ -45,7 +55,7 @@ public class EnemyProjectile : EnemyDamage
         else
             gameObject.SetActive(false);
 
-        base.OnTriggerEnter2D(collision);
+        base.OnTriggerEnter2D(collision); // This will now only be called if the player is visible
     }
 
     private void Deactivate()

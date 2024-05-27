@@ -26,16 +26,19 @@ public class Health : MonoBehaviour
     [SerializeField] private GameObject hitParticleSystemPrefab; // Particle system prefab for player hit effects
     [SerializeField] private GameObject deathParticleSystemPrefab; // Particle system prefab for player death effects
 
+    private PlayerMovement playerMovement;
+
     private void Awake()
     {
         currentHealth = startingHealth; // Initialize current health to starting health
         anim = GetComponent<Animator>(); // Get reference to the Animator component
         spriteRend = GetComponent<SpriteRenderer>(); // Get reference to the SpriteRenderer component
+        playerMovement = GetComponent<PlayerMovement>();  // Get the PlayerMovement component
     }
 
     public void TakeDamage(float _damage)
     {
-        if (invulnerable) return; // If the player is invulnerable, exit the method
+        if (invulnerable || (playerMovement != null && playerMovement.IsInvisible())) return; // Check if invulnerable or invisible
 
         // Decrease current health by the damage amount within the range of 0 to startingHealth
         currentHealth = Mathf.Clamp(currentHealth - _damage, 0, startingHealth);

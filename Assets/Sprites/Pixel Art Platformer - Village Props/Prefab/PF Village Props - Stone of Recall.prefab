@@ -127,7 +127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 0}
   indicatorSprite: {fileID: 0}
-  interactParticleSystemPrefab: {fileID: 100008, guid: e3d819d8722fa1f47a3f68574b56dfb3, type: 3}
+  interactParticleSystemPrefab: {fileID: 2708598583397607911, guid: 6398d43fe79ea0140913dc5530c646af, type: 3}
   levelToLoad: Level4
 --- !u!1 &2319273174036298326
 GameObject:

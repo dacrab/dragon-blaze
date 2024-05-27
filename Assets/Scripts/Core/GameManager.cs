@@ -42,7 +42,8 @@ public class GameManager : MonoBehaviour
     public void AddCoins(int value)
     {
         totalCoins += value;
-        OnScoreChanged?.Invoke(totalCoins);
+        Debug.Log($"Coins added. New total: {totalCoins}");
+        OnScoreChanged?.Invoke(totalCoins);  // Fire the event whenever coins are added
         SaveGame();
         UIManager uiManager = FindObjectOfType<UIManager>();
         if (uiManager != null)
@@ -54,7 +55,8 @@ public class GameManager : MonoBehaviour
     public void ResetCoins()
     {
         totalCoins = 0;
-        OnScoreChanged?.Invoke(totalCoins);
+        Debug.Log("Coins have been reset to zero.");
+        OnScoreChanged?.Invoke(totalCoins);  // Fire the event when coins are reset
         SaveGame();
         UIManager uiManager = FindObjectOfType<UIManager>();
         if (uiManager != null)
@@ -63,12 +65,12 @@ public class GameManager : MonoBehaviour
             Debug.LogError("UIManager not found.");
     }
 
-    public void SaveGame()
+    public void SaveGame(bool isNewGame = false)
     {
         SaveData data = new SaveData
         {
             totalCoins = totalCoins,
-            currentLevel = SceneManager.GetActiveScene().buildIndex
+            currentLevel = isNewGame ? 1 : SceneManager.GetActiveScene().buildIndex
         };
         string json = JsonUtility.ToJson(data);
         File.WriteAllText(saveFilePath, json);
@@ -85,7 +87,7 @@ public class GameManager : MonoBehaviour
         {
             string json = File.ReadAllText(saveFilePath);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
-            totalCoins = data.totalCoins;
+            totalCoins = data.totalCoins; // Ensure this is correctly updating the GameManager's state
             return data;
         }
         return null;

@@ -5,6 +5,42 @@ public abstract class PowerUpBase : MonoBehaviour
 {
     protected float duration = 5f; // Default duration, can be overridden in derived classes
     protected Coroutine powerUpCoroutine;
+    protected SpriteRenderer spriteRenderer;
+
+    protected virtual void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    protected IEnumerator FadeOutAndInSprite()
+    {
+        // Fade out
+        for (float i = 1f; i >= 0; i -= Time.deltaTime)
+        {
+            if (spriteRenderer != null)
+            {
+                Color c = spriteRenderer.color;
+                c.a = i;
+                spriteRenderer.color = c;
+            }
+            yield return null;
+        }
+
+        // Wait for the duration of the powerup
+        yield return new WaitForSeconds(duration);
+
+        // Fade in
+        for (float i = 0; i <= 1; i += Time.deltaTime)
+        {
+            if (spriteRenderer != null)
+            {
+                Color c = spriteRenderer.color;
+                c.a = i;
+                spriteRenderer.color = c;
+            }
+            yield return null;
+        }
+    }
 
     protected virtual void OnTriggerEnter2D(Collider2D collision)
     {
@@ -15,6 +51,7 @@ public abstract class PowerUpBase : MonoBehaviour
             if (powerUpCoroutine != null)
                 StopCoroutine(powerUpCoroutine);
             powerUpCoroutine = StartCoroutine(PowerUpTimer(playerMovement));
+            StartCoroutine(FadeOutAndInSprite());
 
             GetComponent<Collider2D>().enabled = false;
         }

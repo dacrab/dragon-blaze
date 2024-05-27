@@ -1,5 +1,6 @@
 using UnityEngine;
 
+
 public class ArrowTrap : MonoBehaviour
 {
     [SerializeField] private int damage; // Damage inflicted by the arrow
@@ -44,7 +45,6 @@ public class ArrowTrap : MonoBehaviour
 
     private bool PlayerIsVisible()
     {
-        // Check if the player is visible to the trap
         PlayerMovement playerMovement = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMovement>();
         return playerMovement != null && playerMovement.IsVisible();
     }    

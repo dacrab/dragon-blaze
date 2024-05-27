@@ -8,14 +8,14 @@ public class Invisibility : PowerUpBase
 
     protected override void ActivatePowerUp(PlayerMovement playerMovement)
     {
-        // Make the player invisible
+        // Make the player invisible and immune
         playerMovement.SetVisibility(false);
         ActivateIndicator("Invisibility", invisibilityImage);
     }
 
     protected override void DeactivatePowerUp(PlayerMovement playerMovement)
     {
-        // Make the player visible again
+        // Make the player visible and vulnerable again
         playerMovement.SetVisibility(true);
     }
 }

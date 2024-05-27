@@ -8,24 +8,24 @@ public class ScoreDisplay : MonoBehaviour // Make sure to inherit from MonoBehav
 
     private void OnEnable()
     {
-        PlayerMovement.OnScoreChanged += UpdateScoreDisplay;  // Make sure this is the correct event
+        GameManager.OnScoreChanged += UpdateScoreDisplay;  // Subscribe to the correct event
     }
 
     private void OnDisable()
     {
-        PlayerMovement.OnScoreChanged -= UpdateScoreDisplay;
+        GameManager.OnScoreChanged -= UpdateScoreDisplay;  // Unsubscribe when disabled
     }
 
     private void UpdateScoreDisplay(int score)
     {
-        Debug.Log($"Received score update: {score}");
         if (coinText != null)
         {
             coinText.text = $": {score}";
+            Debug.Log($"Score updated to: {score}");
         }
         else
         {
-            Debug.LogError("coinText is null");
+            Debug.LogError("coinText is null in ScoreDisplay");
         }
     }
 }

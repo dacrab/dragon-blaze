@@ -35,7 +35,7 @@ public class MeleeEnemy : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         enemyPatrol = GetComponentInParent<EnemyPatrol>();
-        GameObject player = GameObject.FindWithTag("Player");
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
             playerTransform = player.transform;
@@ -78,8 +78,10 @@ public class MeleeEnemy : MonoBehaviour
 
     private bool PlayerInSight()
     {
+        if (playerMovement.IsInvisible()) return false;  // Correctly using the IsInvisible method
+
         // Implement your sight detection logic here
-        return true; // Placeholder
+        return true; // Placeholder for actual sight detection logic
     }
 
     private bool PlayerWithinPatrolBounds()

@@ -35,13 +35,17 @@ public class Firetrap : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            playerHealth = collision.GetComponent<Health>(); // Get PlayerHealth component
+            PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
+            if (playerMovement != null && playerMovement.IsVisible())
+            {
+                playerHealth = collision.GetComponent<Health>(); // Get PlayerHealth component
 
-            if (!triggered)
-                StartCoroutine(ActivateFiretrap());
+                if (!triggered)
+                    StartCoroutine(ActivateFiretrap());
 
-            if (active)
-                playerHealth.TakeDamage(damage); // Call TakeDamage method from PlayerHealth
+                if (active)
+                    playerHealth.TakeDamage(damage); // Call TakeDamage method from PlayerHealth
+            }
         }
     }
 

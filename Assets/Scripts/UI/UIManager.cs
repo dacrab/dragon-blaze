@@ -14,7 +14,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject pauseScreen;
 
     [Header(" Level Transition")]
-    [SerializeField] private ParticleSystem particles;
     public GameObject loadingScreen; // Assign this in the Inspector
     public Image loadingBar;
     private float _target;
@@ -41,24 +40,30 @@ public class UIManager : MonoBehaviour
 
     public void NewGame()
     {
-        // Reset or create new save data
-        GameManager.instance.ResetCoins(); // Reset coins to 0
-        GameManager.instance.SaveGame(); // Save the reset state
-        SceneManager.LoadScene("Level1"); // Assuming "Level1" is your first level scene
+        // Reset coins to 0
+        GameManager.instance.ResetCoins();
+
+        // Save the reset state with the first level set
+        GameManager.instance.SaveGame(true); // Assuming SaveGame method accepts a boolean for new game
+
+        // Update the UI to show the reset coin count
+        UpdateCoinDisplay(0);
+
+        // Load the first level
+        SceneManager.LoadScene("Level1"); // Ensure "Level1" is the correct scene name for your first level
     }
 
     public void ContinueGame()
     {
-        // Load the existing game
-        SaveData saveData = GameManager.instance.LoadGame(); // Load game data
+        SaveData saveData = GameManager.instance.LoadGame();
         if (saveData != null)
         {
-            SceneManager.LoadScene(saveData.currentLevel); // Load the saved level
+            Debug.Log("Loaded save data with level index: " + saveData.currentLevel);
+            SceneManager.LoadScene(saveData.currentLevel);
         }
         else
         {
-            Debug.Log("No save data found, cannot continue!");
-            // Optionally, you could also handle this case by showing an error message to the user
+            Debug.LogError("No save data found, cannot continue!");
         }
     }
 
@@ -121,6 +126,13 @@ public class UIManager : MonoBehaviour
     //Quit game/exit play mode if in Editor
     public void Quit()
     {
+        // Save the game before quitting
+        if (GameManager.instance != null)
+        {
+            GameManager.instance.SaveGame();
+            Debug.Log("Game saved before quitting.");
+        }
+
         Application.Quit(); //Quits the game (only works in build)
 
 #if UNITY_EDITOR
@@ -179,5 +191,13 @@ public class UIManager : MonoBehaviour
             coinText.text = ": " + coins;
         else
             Debug.LogError("Coin TextMeshProUGUI not assigned in UIManager.");
+    }
+
+    public void RefreshUI()
+    {
+        if (GameManager.instance != null)
+        {
+            UpdateCoinDisplay(GameManager.instance.TotalCoins);
+        }
     }
 }
