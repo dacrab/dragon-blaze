@@ -47,7 +47,7 @@ public class ParallaxBackground : MonoBehaviour
             float offsetPositionX = (cameraTransform.position.x - transform.position.x) % textureUnitSizeX;
             if (Mathf.Abs(offsetPositionX) >= textureUnitSizeX / 2)
             {
-                transform.position = new Vector3(cameraTransform.position.x + offsetPositionX, transform.position.y);
+                transform.position = new Vector3(cameraTransform.position.x - offsetPositionX, transform.position.y);
             }
         }
 
@@ -56,7 +56,7 @@ public class ParallaxBackground : MonoBehaviour
             float offsetPositionY = (cameraTransform.position.y - transform.position.y) % textureUnitSizeY;
             if (Mathf.Abs(offsetPositionY) >= textureUnitSizeY / 2)
             {
-                transform.position = new Vector3(transform.position.x, cameraTransform.position.y + offsetPositionY);
+                transform.position = new Vector3(transform.position.x, cameraTransform.position.y - offsetPositionY);
             }
         }
     }

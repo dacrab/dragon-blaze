@@ -39,6 +39,11 @@ public class MeleeEnemy : MonoBehaviour
         if (player != null)
         {
             playerTransform = player.transform;
+            playerMovement = player.GetComponent<PlayerMovement>();  // Ensure this line is correctly fetching the component
+            if (playerMovement == null)
+            {
+                Debug.LogError("PlayerMovement component not found on the Player object!");
+            }
         }
         else
         {
@@ -53,6 +58,18 @@ public class MeleeEnemy : MonoBehaviour
 
     private void Update()
     {
+        if (playerMovement == null)
+        {
+            Debug.LogError("PlayerMovement component is not found!");
+            return; // Early exit to prevent further null reference issues
+        }
+
+        if (enemyPatrol == null || playerTransform == null)
+        {
+            Debug.LogError("EnemyPatrol or PlayerTransform is null!");
+            return; // Early exit
+        }
+
         cooldownTimer += Time.deltaTime;
 
         if (PlayerInSight() && PlayerWithinPatrolBounds())
@@ -78,20 +95,18 @@ public class MeleeEnemy : MonoBehaviour
 
     private bool PlayerInSight()
     {
-        if (playerMovement.IsInvisible()) return false;  // Correctly using the IsInvisible method
-
-        // Implement your sight detection logic here
-        return true; // Placeholder for actual sight detection logic
+        return !playerMovement.IsInvisible();
     }
 
     private bool PlayerWithinPatrolBounds()
     {
-        if (enemyPatrol != null && playerTransform != null)
+        if (enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null)
         {
-            return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
-                   playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
+            Debug.LogError("Patrol bounds (LeftEdge or RightEdge) are null!");
+            return false;
         }
-        return false;
+        return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
+               playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
     }
 
     private bool CanMoveForward()

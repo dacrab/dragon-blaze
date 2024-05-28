@@ -56,6 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "unity-game-main.sln",
+    "dotnet.defaultSolution": "unity-game.sln",
     "files.autoSave": "onFocusChange"
 }

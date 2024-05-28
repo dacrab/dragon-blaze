@@ -8,7 +8,6 @@ public class MagicStone : MonoBehaviour
     public UIManager uiManager; // Assign your UIManager in the Inspector
     public SpriteRenderer indicatorSprite; // Assign your SpriteRenderer in the Inspector
     public GameObject interactParticleSystemPrefab; // Assign your particle system prefab in the Inspector
-    public string levelToLoad; // Set this to the name of the level to load in the Inspector
     private bool playerInTrigger = false;
     private Vector3 playerPosition; // Store the player's position when they enter the trigger area
     private GameObject activeParticleSystemInstance = null;
@@ -65,7 +64,7 @@ public class MagicStone : MonoBehaviour
         SaveGame();
 
         // Load the next level asynchronously
-        yield return StartCoroutine(LoadLevelAsync(levelToLoad));
+        yield return StartCoroutine(LoadNextLevelAsync());
 
         // Hide loading screen after the level is loaded
         uiManager.ShowLoadingScreen(false);
@@ -79,9 +78,10 @@ public class MagicStone : MonoBehaviour
         }
     }
 
-    IEnumerator LoadLevelAsync(string levelName)
+    IEnumerator LoadNextLevelAsync()
     {
-        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(levelName);
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(currentSceneIndex + 1);
 
         // Wait until the asynchronous scene fully loads
         while (!asyncLoad.isDone)

@@ -88,9 +88,14 @@ public class PlayerMovement : MonoBehaviour
     public void setInteracting(bool interacting)
     {
         isInteracting = interacting;
-        anim.SetBool("Idle" , isInteracting);
-        //If interacting, stop the animation
-        anim.SetBool("run" , !isInteracting);
+        anim.SetBool("Idle", isInteracting);
+        anim.SetBool("run", !isInteracting);
+
+        // Reset velocity when starting an interaction to prevent slipping
+        if (interacting)
+        {
+            body.velocity = Vector2.zero;
+        }
     }
 
     public void AddScore(int value)

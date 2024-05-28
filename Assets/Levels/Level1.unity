@@ -4801,6 +4801,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5880797563127281583, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
     - target: {fileID: 426948899371091935, guid: d6ff8ceb3c4f0ad4e90f0aec90f0c427, type: 3}
+      propertyPath: iFramesDuration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 426948899371091935, guid: d6ff8ceb3c4f0ad4e90f0aec90f0c427, type: 3}
+      propertyPath: numberOfFlashes
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 426948899371091935, guid: d6ff8ceb3c4f0ad4e90f0aec90f0c427, type: 3}
       propertyPath: hitParticleSystemPrefab
       value: 
       objectReference: {fileID: 5880797563127281583, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
@@ -18873,7 +18881,7 @@ MonoBehaviour:
   NPCNameText: {fileID: 936681786216158081}
   NPCDialogueText: {fileID: 936681787053934495}
   typeSpeed: 10
-  dialogueSound: {fileID: 8300000, guid: 3d4f9020160ce2b28b8b753a866703e2, type: 3}
+  dialogueSound: {fileID: 8300000, guid: fdc5ae712861608d6b82f472a68b25ce, type: 3}
   playerMovement: {fileID: 1060348522}
 --- !u!1 &936681786063443630
 GameObject:
@@ -23293,11 +23301,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8594955030401506640, guid: 83a0246fdfaa2820aa300557d2dccd18, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -61.785744
+      value: -61.794773
       objectReference: {fileID: 0}
     - target: {fileID: 8594955030401506640, guid: 83a0246fdfaa2820aa300557d2dccd18, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.54591
+      value: 0.5459899
       objectReference: {fileID: 0}
     - target: {fileID: 8594955030401506640, guid: 83a0246fdfaa2820aa300557d2dccd18, type: 3}
       propertyPath: m_LocalPosition.z
