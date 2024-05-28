@@ -11,6 +11,11 @@ This project is a simple 2D platformer game developed in Unity. The game feature
 - Basic level design with obstacles
 - Simple yet appealing graphics
 - Audio effects for immersion
+- Save Game (Locally at the moment)
+- Scene Transitions
+- Particles
+- Checkpoints
+- Power-Ups
 
 ## Getting Started 🛠️
 To get started with the game, follow these steps:
@@ -18,15 +23,15 @@ To get started with the game, follow these steps:
 2. Open the project in Unity.
 3. Navigate to the main scene in the project.
 4. Press the play button in Unity to start the game.
-5. Use arrow keys or WASD to move the player character.
-6. Press the spacebar or up arrow key to jump.
+5. Use arrow keys or "A-S" to move the player character.
+6. Press the spacebar or to jump.
 7. Navigate through the level, avoiding obstacles and reaching the end goal.
 
 ## Future Improvements 🚧
 - Adding more levels with increasing difficulty.
 - Uses for the coin.
-- Include interactive story-telling NPC's.
-- Integrating a scoring system or achievements.
+- Final Boss
+- Shop to increase your health , damage and Power-ups duration
 - Fine-tuning controls for better responsiveness.
 
 ## Credits 🙌
