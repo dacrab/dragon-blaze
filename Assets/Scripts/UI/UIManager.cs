@@ -27,15 +27,41 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("UIManager Start is called");
         CheckSaveData();
     }
 
     private void CheckSaveData()
     {
-        // Check if save data exists using GameManager
-        bool saveExists = GameManager.instance.SaveDataExists();
-        continueButton.gameObject.SetActive(saveExists); // Only activate continue button if save exists
-        newGameButton.gameObject.SetActive(true); // Always activate new game button
+        if (GameManager.instance == null)
+        {
+            Debug.LogError("GameManager instance is not initialized");
+            return;
+        }
+
+        // Check if the current scene is the main menu using the build index
+        if (SceneManager.GetActiveScene().buildIndex == 0) // Replace 0 with your actual main menu scene build index
+        {
+            bool saveExists = GameManager.instance.SaveDataExists();
+
+            if (continueButton != null)
+            {
+                continueButton.gameObject.SetActive(saveExists);
+            }
+            else
+            {
+                Debug.LogWarning("Continue button is not assigned in the Inspector.");
+            }
+
+            if (newGameButton != null)
+            {
+                newGameButton.gameObject.SetActive(true);
+            }
+            else
+            {
+                Debug.LogWarning("New Game button is not assigned in the Inspector.");
+            }
+        }
     }
 
     public void NewGame()
@@ -95,7 +121,12 @@ public class UIManager : MonoBehaviour
             //If pause screen already active unpause and viceversa
             PauseGame(!pauseScreen.activeInHierarchy);
         }
-        loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount , _target,3 *Time.deltaTime);
+
+        // Check if loadingBar is not null before trying to update its fillAmount
+        if (loadingBar != null)
+        {
+            loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, _target, 3 * Time.deltaTime);
+        }
     }
 
     #region Game Over

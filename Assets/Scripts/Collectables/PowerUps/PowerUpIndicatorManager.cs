@@ -13,29 +13,35 @@ public class PowerUpIndicatorManager : MonoBehaviour
 
     public void ActivateIndicator(string powerUpName, Sprite powerUpImage, float duration)
     {
-        if (indicatorPrefab == null || indicatorsPanel == null)
-        {
-            Debug.LogError("Setup error: indicatorPrefab or indicatorsPanel is not set.");
+        if (indicatorPrefab == null) {
+            Debug.LogError("indicatorPrefab is not set.");
+            return;
+        }
+        if (indicatorsPanel == null) {
+            Debug.LogError("indicatorsPanel is not set.");
             return;
         }
 
-        // Check if an indicator for the same power-up already exists
-        GameObject existingIndicator = FindIndicatorByName(powerUpName);
-        if (existingIndicator != null)
-        {
-            // Reset the timer of the existing indicator
-            Image existingImage = existingIndicator.GetComponentInChildren<Image>();
-            if (existingImage != null)
-            {
-                existingImage.color = new Color(existingImage.color.r, existingImage.color.g, existingImage.color.b, 1f);
-            }
-            return;
-        }
-
-        // Create a new indicator
         GameObject newIndicator = Instantiate(indicatorPrefab, indicatorsPanel);
-        
-        // Use TMP_Text instead of Text
+        if (newIndicator == null) {
+            Debug.LogError("Failed to instantiate newIndicator.");
+            return;
+        }
+
+        Image imageComponent = newIndicator.transform.Find("Image").GetComponent<Image>();
+        if (imageComponent == null) {
+            Debug.LogError("Image component not found in newIndicator.");
+            return;
+        }
+
+        imageComponent.sprite = powerUpImage;
+        imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, 0.5f); // Set to 50% opacity
+
+        StartCoroutine(UpdateIndicator(newIndicator, duration, imageComponent));
+        activeIndicators.Add(newIndicator);
+        UpdateIndicatorPositions();
+
+        // Set the name of the power-up
         TMP_Text textComponent = newIndicator.GetComponentInChildren<TMP_Text>();
         if (textComponent != null)
         {
@@ -43,24 +49,8 @@ public class PowerUpIndicatorManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Text component is missing in the IndicatorPrefab.");
-            return;
+            Debug.LogError("Text component not found in newIndicator.");
         }
-
-        Image imageComponent = newIndicator.transform.Find("Image").GetComponent<Image>();
-        if (imageComponent != null)
-        {
-            imageComponent.sprite = powerUpImage;
-        }
-        else
-        {
-            Debug.LogError("Image component is missing or named incorrectly in the IndicatorPrefab.");
-            return;
-        }
-
-        StartCoroutine(UpdateIndicator(newIndicator, duration, imageComponent));
-        activeIndicators.Add(newIndicator);
-        UpdateIndicatorPositions();
     }
 
     private GameObject FindIndicatorByName(string powerUpName)
@@ -78,21 +68,28 @@ public class PowerUpIndicatorManager : MonoBehaviour
 
     private IEnumerator UpdateIndicator(GameObject indicator, float duration, Image imageComponent)
     {
+        // Fade out the image over the duration
         float remainingTime = duration;
         while (remainingTime > 0)
         {
-            float alpha = remainingTime / duration;
             if (imageComponent != null)
             {
-                Color c = imageComponent.color;
-                c.a = alpha;
-                imageComponent.color = c;
+                float alpha = remainingTime / duration;
+                imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, alpha);
             }
             remainingTime -= Time.deltaTime;
             yield return null;
         }
 
-        // Once the duration ends, remove and destroy the indicator
+        // Once the duration ends, fade the image back in
+        while (imageComponent.color.a < 1.0f)
+        {
+            float alpha = imageComponent.color.a + Time.deltaTime / duration; // Adjust fade-in time as needed
+            imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, Mathf.Min(alpha, 1.0f));
+            yield return null;
+        }
+
+        // Optionally, remove and destroy the indicator if not needed anymore
         activeIndicators.Remove(indicator);
         Destroy(indicator);
         UpdateIndicatorPositions();

@@ -11,12 +11,16 @@ public class ArrowTrap : MonoBehaviour
 
     [Header("SFX")]
     [SerializeField] private AudioClip arrowSound; // Sound clip for arrow firing
+    [SerializeField] private float soundRange = 10f; // Maximum distance to hear the sound
 
     private void Attack()
     {
         cooldownTimer = 0; // Reset the cooldown timer
 
-        SoundManager.instance.PlaySound(arrowSound); // Play the arrow firing sound
+        if (Vector3.Distance(transform.position, GameObject.FindGameObjectWithTag("Player").transform.position) <= soundRange)
+        {
+            SoundManager.instance.PlaySound(arrowSound); // Play the arrow firing sound
+        }
         arrows[FindArrow()].transform.position = firePoint.position; // Set the position of the arrow
         arrows[FindArrow()].GetComponent<EnemyProjectile>().ActivateProjectile(); // Activate the arrow projectile
     }

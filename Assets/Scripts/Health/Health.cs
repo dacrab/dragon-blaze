@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic; // Needed for List
 
 public class Health : MonoBehaviour
 {
     [Header("Health")]
-    [SerializeField] private float startingHealth; // Starting health value
+    [SerializeField] private float startingHealth = 100f; // Set starting health for the player
     public float currentHealth { get; private set; } // Current health value
     private Animator anim; // Animator component reference
     private bool dead; // Flag indicating if the player is dead
@@ -26,14 +27,40 @@ public class Health : MonoBehaviour
     [SerializeField] private GameObject hitParticleSystemPrefab; // Particle system prefab for player hit effects
     [SerializeField] private GameObject deathParticleSystemPrefab; // Particle system prefab for player death effects
 
+    [Header("Respawn")]
+    [SerializeField] private List<FallingPlatform> fallingPlatforms; // Reference to falling platforms
+
     private PlayerMovement playerMovement;
+    public Healthbar healthBar; // Reference to the Healthbar script
 
     private void Awake()
     {
         currentHealth = startingHealth; // Initialize current health to starting health
         anim = GetComponent<Animator>(); // Get reference to the Animator component
         spriteRend = GetComponent<SpriteRenderer>(); // Get reference to the SpriteRenderer component
-        playerMovement = GetComponent<PlayerMovement>();  // Get the PlayerMovement component
+
+        // Check if this is the Player GameObject
+        if (gameObject.CompareTag("Player"))
+        {
+            playerMovement = GetComponent<PlayerMovement>();
+            if (playerMovement == null)
+            {
+                Debug.LogError("PlayerMovement component not found on Player!");
+            }
+        }
+
+        // Common error checks for all GameObjects
+        if (anim == null) Debug.LogError("Animator component not found!");
+        if (spriteRend == null) Debug.LogError("SpriteRenderer component not found!");
+
+        if (healthBar == null)
+        {
+            healthBar = FindObjectOfType<Healthbar>(); // Attempt to find the Healthbar in the scene
+            if (healthBar == null)
+            {
+                Debug.LogError("Healthbar component is not found in the scene.");
+            }
+        }
     }
 
     public void TakeDamage(float _damage)
@@ -43,12 +70,32 @@ public class Health : MonoBehaviour
         // Decrease current health by the damage amount within the range of 0 to startingHealth
         currentHealth = Mathf.Clamp(currentHealth - _damage, 0, startingHealth);
 
+        // Update the health bar UI
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealthUI(currentHealth, startingHealth);
+        }
+        else
+        {
+            Debug.LogError("Healthbar reference not set in Health script.");
+        }
+
         if (currentHealth > 0)
         {
             // If the player is still alive, trigger the hurt animation and start invulnerability frames
-            anim.SetTrigger("hurt");
+            if (anim != null)
+            {
+                anim.SetTrigger("hurt");
+            }
             StartCoroutine(Invulnerability());
-            SoundManager.instance.PlaySound(hurtSound); // Play the hurt sound
+            if (SoundManager.instance != null)
+            {
+                SoundManager.instance.PlaySound(hurtSound); // Play the hurt sound
+            }
+            else
+            {
+                Debug.LogError("SoundManager instance not found!");
+            }
 
             // Play particle system at player's position for hit effects
             if (hitParticleSystemPrefab != null)
@@ -63,14 +110,31 @@ public class Health : MonoBehaviour
                 // If the player is dead, deactivate all attached component classes, trigger death animation, and play death sound
                 foreach (Behaviour component in components)
                 {
-                    component.enabled = false;
+                    if (component != null)
+                    {
+                        component.enabled = false;
+                    }
+                    else
+                    {
+                        Debug.LogError("Component in components array is null!");
+                    }
+                }
+                if (playerMovement != null)
+                {
+                    playerMovement.enabled = false; // Disable player movement controls
                 }
 
-                anim.SetBool("grounded", true);
-                anim.SetTrigger("die");
+                if (anim != null)
+                {
+                    anim.SetBool("grounded", true);
+                    anim.SetTrigger("die");
+                }
 
                 dead = true; // Set the dead flag to true
-                SoundManager.instance.PlaySound(deathSound); // Play the death sound
+                if (SoundManager.instance != null)
+                {
+                    SoundManager.instance.PlaySound(deathSound); // Play the death sound
+                }
 
                 // Play particle system at player's position for death effects
                 if (deathParticleSystemPrefab != null)
@@ -95,10 +159,17 @@ public class Health : MonoBehaviour
         // Flash the player sprite for a certain number of times during invulnerability frames
         for (int i = 0; i < numberOfFlashes; i++)
         {
-            spriteRend.color = new Color(1, 0, 0, 0.5f); // Set the sprite color to red with reduced alpha
-            yield return new WaitForSeconds(iFramesDuration / (numberOfFlashes * 2)); // Wait for half of the invulnerability duration
-            spriteRend.color = Color.white; // Set the sprite color back to white
-            yield return new WaitForSeconds(iFramesDuration / (numberOfFlashes * 2)); // Wait for the remaining half of the invulnerability duration
+            if (spriteRend != null)
+            {
+                spriteRend.color = new Color(1, 0, 0, 0.5f); // Set the sprite color to red with reduced alpha
+                yield return new WaitForSeconds(iFramesDuration / (numberOfFlashes * 2)); // Wait for half of the invulnerability duration
+                spriteRend.color = Color.white; // Set the sprite color back to white
+                yield return new WaitForSeconds(iFramesDuration / (numberOfFlashes * 2)); // Wait for the remaining half of the invulnerability duration
+            }
+            else
+            {
+                Debug.LogError("SpriteRenderer component not found!");
+            }
         }
 
         Physics2D.IgnoreLayerCollision(10, 11, false); // Re-enable collision between player and enemies
@@ -114,18 +185,53 @@ public class Health : MonoBehaviour
     {
         // Reset health, animation triggers, and flags
         AddHealth(startingHealth);
-        anim.ResetTrigger("die");
-        anim.Play("Idle");
+        if (anim != null)
+        {
+            anim.ResetTrigger("die");
+            anim.Play("Idle");
+        }
         StartCoroutine(Invulnerability());
         dead = false;
 
         // Activate all attached component classes
         foreach (Behaviour component in components)
         {
-            component.enabled = true;
+            if (component != null)
+            {
+                component.enabled = true;
+            }
+            else
+            {
+                Debug.LogError("Component in components array is null!");
+            }
+        }
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = true; // Re-enable player movement controls
         }
 
         // Enable the BoxCollider2D component to allow interactions again
-        GetComponent<BoxCollider2D>().enabled = true;
+        BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
+        if (boxCollider != null)
+        {
+            boxCollider.enabled = true;
+        }
+        else
+        {
+            Debug.LogError("BoxCollider2D component not found!");
+        }
+
+        // Reset falling platforms
+        foreach (var platform in fallingPlatforms)
+        {
+            if (platform != null)
+            {
+                platform.ResetPlatform(); // Reset each platform to its initial state
+            }
+            else
+            {
+                Debug.LogError("FallingPlatform in fallingPlatforms list is null!");
+            }
+        }
     }
 }

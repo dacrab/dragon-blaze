@@ -9,9 +9,9 @@ public class HigherJump : PowerUpBase
     protected override void ActivatePowerUp(PlayerMovement playerMovement)
     {
         // Store the original jump power
-        originalJumpPower = playerMovement.GetJumpPower();
+        originalJumpPower = playerMovement.jumpPower;
         // Apply the jump multiplier
-        playerMovement.SetJumpPower(originalJumpPower * jumpMultiplier);
+        playerMovement.jumpPower = originalJumpPower * jumpMultiplier;
         // Activate the UI indicator
         ActivateIndicator("Higher Jump", higherJumpImage);
     }
@@ -19,6 +19,6 @@ public class HigherJump : PowerUpBase
     protected override void DeactivatePowerUp(PlayerMovement playerMovement)
     {
         // Reset the jump power back to the original
-        playerMovement.SetJumpPower(originalJumpPower);
+        playerMovement.jumpPower = originalJumpPower;
     }
 }

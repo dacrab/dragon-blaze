@@ -57,17 +57,29 @@ public class MagicStone : MonoBehaviour
         // Wait for the particle system to finish
         yield return new WaitForSeconds(interactParticleSystemPrefab.GetComponent<ParticleSystem>().main.duration);
 
-        // Show loading screen (assuming UIManager handles this)
-        uiManager.ShowLoadingScreen(true);
+        // Check if it's the final level
+        if (SceneManager.GetActiveScene().buildIndex == 5) // Replace FINAL_LEVEL_INDEX with the index of your final level
+        {
+            // Load the credits scene by index
+            yield return StartCoroutine(LoadSceneAndWait(5)); // Replace 5 with your credits scene index
 
-        // Save the game
-        SaveGame();
+            // After credits, load the main menu
+            SceneManager.LoadScene(0); // Assuming 0 is your main menu index
+        }
+        else
+        {
+            // Continue with the existing logic for non-final levels
+            uiManager.ShowLoadingScreen(true);
+            SaveGame();
+            yield return StartCoroutine(LoadNextLevelAsync());
+            uiManager.ShowLoadingScreen(false);
+        }
+    }
 
-        // Load the next level asynchronously
-        yield return StartCoroutine(LoadNextLevelAsync());
-
-        // Hide loading screen after the level is loaded
-        uiManager.ShowLoadingScreen(false);
+    IEnumerator LoadSceneAndWait(int sceneIndex)
+    {
+        SceneManager.LoadScene(sceneIndex);
+        yield return new WaitForSeconds(10); // Wait for 10 seconds or the duration of your credits
     }
 
     private void SaveGame()
@@ -100,15 +112,11 @@ public class MagicStone : MonoBehaviour
                     Destroy(activeParticleSystemInstance);
 
                 activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position, Quaternion.identity);
-                ParticleSystem ps = activeParticleSystemInstance.GetComponent<ParticleSystem>();
-                if (ps != null)
-                {
-                    ps.Play();
-                }
-
-                // Optionally, automatically destroy the particle system after it has finished
-                Destroy(activeParticleSystemInstance, ps.main.duration);
             }
+        }
+        else
+        {
+            Debug.LogError("Interact Particle System Prefab is not assigned.");
         }
     }
 }

@@ -53,4 +53,3 @@ public class Enemy_Sideways : MonoBehaviour
         }
     }
 }
-

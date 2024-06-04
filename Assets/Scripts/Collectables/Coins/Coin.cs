@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Coin : MonoBehaviour
+public class Coin : Collectable
 {
     [SerializeField] private int value = 1;
     private int storedValue;
@@ -11,7 +11,7 @@ public class Coin : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
-            CollectCoin();
+            Collect();
         }
         else if (other.gameObject.CompareTag("Checkpoint"))
         {
@@ -19,7 +19,7 @@ public class Coin : MonoBehaviour
         }
     }
 
-    private void CollectCoin()
+    public override void Collect()
     {
         if (GameManager.instance == null)
         {
