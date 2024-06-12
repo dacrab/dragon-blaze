@@ -69,6 +69,11 @@ public class PlayerMovement : MonoBehaviour
     private BoxCollider2D boxCollider;
     private float horizontalInput;
 
+    // Added for wall jump
+    [Header("Wall Jump Parameters")]
+    [SerializeField] private int maxWallJumps = 3;
+    private int wallJumpCounter;
+
     private void Awake()
     {
         uiManagerInstance = FindObjectOfType<UIManager>();
@@ -115,13 +120,17 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxis("Horizontal");
 
         if (horizontalInput > 0.01f)
+        {
             transform.localScale = Vector3.one;
+        }
         else if (horizontalInput < -0.01f)
+        {
             transform.localScale = new Vector3(-1, 1, 1);
+        }
 
         if (isInteracting)
         {
-            anim.SetBool("interacting", true);
+            anim.SetBool("grounded", true);
         }
         else
         {
@@ -130,13 +139,18 @@ public class PlayerMovement : MonoBehaviour
 
         anim.SetBool("grounded", IsGrounded());
 
-        body.gravityScale = 7;
-        body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+        body.gravityScale = IsOnWall() && !IsGrounded() ? 0 : 7; // Disable gravity when on wall and not grounded
+        body.velocity = new Vector2(horizontalInput * speed, IsOnWall() && !IsGrounded() ? 0 : body.velocity.y); // Stop vertical movement when on wall
+
+        if (IsOnWall() && !IsGrounded())
+        {
+            body.velocity = new Vector2(body.velocity.x, Mathf.Clamp(body.velocity.y, -0.5f, float.MaxValue));
+        }
     }
 
     private void HandleJump()
     {
-        if ((IsGrounded() || coyoteCounter > 0 || jumpCounter > 0) && Input.GetKeyDown(KeyCode.Space))
+        if ((IsGrounded() || coyoteCounter > 0 || jumpCounter > 0 || (IsOnWall() && wallJumpCounter > 0)) && Input.GetKeyDown(KeyCode.Space))
             Jump();
 
         if (Input.GetKeyUp(KeyCode.Space) && body.velocity.y > 0)
@@ -158,6 +172,7 @@ public class PlayerMovement : MonoBehaviour
         {
             coyoteCounter = coyoteTime;
             jumpCounter = extraJumps;
+            wallJumpCounter = maxWallJumps; // Reset wall jump counter
             body.gravityScale = 1;
         }
     }
@@ -168,12 +183,19 @@ public class PlayerMovement : MonoBehaviour
         {
             body.velocity = new Vector2(body.velocity.x, jumpPower);
             jumpCounter = extraJumps;
+            wallJumpCounter = maxWallJumps; // Reset wall jump counter when grounded
             Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
         }
         else if (jumpCounter > 0)
         {
             body.velocity = new Vector2(body.velocity.x, jumpPower);
             jumpCounter--;
+            Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        else if (IsOnWall() && !IsGrounded() && wallJumpCounter > 0)
+        {
+            body.velocity = new Vector2(-Mathf.Sign(transform.localScale.x) * jumpPower, jumpPower);
+            wallJumpCounter--;
             Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
         }
     }
@@ -261,8 +283,11 @@ public class PlayerMovement : MonoBehaviour
     public void setInteracting(bool interacting)
     {
         isInteracting = interacting;
-        anim.SetBool("Idle", isInteracting);
+        anim.SetBool("grounded", isInteracting);
         anim.SetBool("run", !isInteracting);
+
+        // Remove or comment out the line if Idle parameter is not needed
+        // anim.SetBool("Idle", isInteracting);
 
         if (interacting)
         {

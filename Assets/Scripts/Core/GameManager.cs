@@ -42,7 +42,6 @@ public class GameManager : MonoBehaviour
     public void AddCoins(int value)
     {
         totalCoins += value;
-        Debug.Log($"Coins added. New total: {totalCoins}");
         OnScoreChanged?.Invoke(totalCoins);  // Fire the event whenever coins are added
         SaveGame();
         UIManager uiManager = FindObjectOfType<UIManager>();
@@ -55,7 +54,6 @@ public class GameManager : MonoBehaviour
     public void ResetCoins()
     {
         totalCoins = 0;
-        Debug.Log("Coins have been reset to zero.");
         OnScoreChanged?.Invoke(totalCoins);  // Fire the event when coins are reset
         SaveGame();
         UIManager uiManager = FindObjectOfType<UIManager>();

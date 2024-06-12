@@ -13,10 +13,11 @@ public class UIManager : MonoBehaviour
     [Header("Pause")]
     [SerializeField] private GameObject pauseScreen;
 
-    [Header(" Level Transition")]
+    [Header("Level Transition")]
     public GameObject loadingScreen; // Assign this in the Inspector
     public Image loadingBar;
     private float _target;
+    public Image loadingImage; // Assign this in the Inspector
 
     [Header("Menu Options")]
     public Button continueButton; // Assign in the inspector
@@ -27,7 +28,6 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("UIManager Start is called");
         CheckSaveData();
     }
 
@@ -110,6 +110,7 @@ public class UIManager : MonoBehaviour
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
             _target = progress;
             loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, _target, 3 * Time.deltaTime);
+            UpdateLoadingImage(progress); // Update the loading image
             yield return null;
         }
     }
@@ -161,7 +162,6 @@ public class UIManager : MonoBehaviour
         if (GameManager.instance != null)
         {
             GameManager.instance.SaveGame();
-            Debug.Log("Game saved before quitting.");
         }
 
         Application.Quit(); //Quits the game (only works in build)
@@ -207,7 +207,23 @@ public class UIManager : MonoBehaviour
     public void ShowLoadingScreen(bool show)
     {
         if (loadingScreen != null)
+        {
             loadingScreen.SetActive(show);
+            Debug.Log("Loading screen set to: " + show);
+        }
+    }
+
+    public void UpdateLoadingImage(float progress)
+    {
+        if (loadingImage != null)
+        {
+            loadingImage.fillAmount = progress;
+            Debug.Log("Loading Progress: " + progress); // Debug statement
+        }
+        else
+        {
+            Debug.LogError("Loading Image not assigned in the Inspector");
+        }
     }
 
     public void SaveGame()

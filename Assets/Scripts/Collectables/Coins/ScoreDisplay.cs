@@ -21,11 +21,6 @@ public class ScoreDisplay : MonoBehaviour // Make sure to inherit from MonoBehav
         if (coinText != null)
         {
             coinText.text = $": {score}";
-            Debug.Log($"Score updated to: {score}");
-        }
-        else
-        {
-            Debug.LogError("coinText is null in ScoreDisplay");
         }
     }
 }

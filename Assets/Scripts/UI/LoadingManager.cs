@@ -7,6 +7,9 @@ public class LoadingManager : MonoBehaviour
     public GameObject magicStone; // The magic stone collider
     public SpriteRenderer indicator; // The sprite renderer
     public ParticleSystem myParticleSystem; // The particle system
+    [SerializeField] private float minLoadingTime = 2f; // Minimum time to display the loading screen
+    [SerializeField] private float loadingImageDelay = 1f; // Delay before showing the loading image
+    public UIManager uiManager; // Reference to the UIManager
 
     private bool isNearMagicStone = false;
 
@@ -27,15 +30,31 @@ public class LoadingManager : MonoBehaviour
 
     IEnumerator LoadLevel(int levelIndex)
     {
+        yield return new WaitForSeconds(loadingImageDelay); // Add delay before showing the loading screen
+
+        uiManager.ShowLoadingScreen(true); // Show the loading screen
+        Debug.Log("Loading screen shown");
+
         AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
+        operation.allowSceneActivation = false; // Prevent the scene from activating immediately
+        float startTime = Time.time;
 
         while (!operation.isDone)
         {
-            // Here you can add your loading screen logic
-            // For example, you can update a progress bar using operation.progress
+            float progress = Mathf.Clamp01(operation.progress / 0.9f);
+            uiManager.UpdateLoadingImage(progress); // Update the loading image
+            Debug.Log("Loading progress: " + progress);
+
+            if (operation.progress >= 0.9f && Time.time - startTime >= minLoadingTime)
+            {
+                operation.allowSceneActivation = true; // Allow the scene to activate
+            }
 
             yield return null;
         }
+
+        uiManager.ShowLoadingScreen(false); // Hide the loading screen
+        Debug.Log("Loading screen hidden");
     }
 
     void OnCollisionEnter(Collision collision)

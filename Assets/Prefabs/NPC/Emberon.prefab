@@ -239,6 +239,7 @@ MonoBehaviour:
   _interactSprite: {fileID: 6830916868064400440}
   dialogueText: {fileID: 11400000, guid: 469a509adfe0c73128019fd3aa7cba81, type: 2}
   dialogueController: {fileID: 0}
+  dialogueSound: {fileID: 8300000, guid: e0e8de093f9594cbbbc0c8fe3fc01413, type: 3}
 --- !u!1 &4557271297250927913
 GameObject:
   m_ObjectHideFlags: 0

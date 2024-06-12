@@ -18,7 +18,7 @@ public class DialogueController : MonoBehaviour
     private const float MAX_TYPE_TIME = 0.1f;
 
 
-    public void DisplayNextParagraph(DialogueText dialogueText)
+    public void DisplayNextParagraph(DialogueText dialogueText, AudioClip dialogueSound = null)
     {
         //If there is nothing in the queue
         if (paragraphs.Count == 0)
@@ -26,7 +26,7 @@ public class DialogueController : MonoBehaviour
             if(!conversationEnded)
             {
                 //Start a conversation
-                StartConversation(dialogueText);
+                StartConversation(dialogueText, dialogueSound);
             }
             else if (conversationEnded && !isTyping)
             {
@@ -55,7 +55,7 @@ public class DialogueController : MonoBehaviour
         }
     }
 
-    private void StartConversation(DialogueText dialogueText)
+    private void StartConversation(DialogueText dialogueText, AudioClip dialogueSound = null)
     {
         //Set animation to idle
         playerMovement.setInteracting(true);
@@ -64,7 +64,10 @@ public class DialogueController : MonoBehaviour
         playerMovement.enabled = false; 
 
         //Plays sound at the start of the dialogue
-        SoundManager.instance.PlaySound(dialogueSound);
+        if (dialogueSound != null)
+        {
+            SoundManager.instance.PlaySound(dialogueSound);
+        }
 
         //activate gameObject
         if (!gameObject.activeSelf)

@@ -23,7 +23,6 @@ public class Coin : Collectable
     {
         if (GameManager.instance == null)
         {
-            Debug.LogError("GameManager instance is null");
             return;
         }
         // Play the pickup sound
