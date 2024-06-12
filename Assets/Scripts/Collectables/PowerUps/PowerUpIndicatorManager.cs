@@ -45,7 +45,8 @@ public class PowerUpIndicatorManager : MonoBehaviour
         TMP_Text textComponent = newIndicator.GetComponentInChildren<TMP_Text>();
         if (textComponent != null)
         {
-            textComponent.text = powerUpName;
+            // Apply bold and increase size
+            textComponent.text = $"<b><size=120%>{powerUpName}</size></b>";
         }
         else
         {

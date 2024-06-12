@@ -2347,6 +2347,7 @@ MonoBehaviour:
   pauseScreen: {fileID: 8735702568822191543}
   loadingScreen: {fileID: 0}
   loadingBar: {fileID: 0}
+  loadingImage: {fileID: 0}
   continueButton: {fileID: 0}
   newGameButton: {fileID: 0}
   coinText: {fileID: 0}
@@ -3857,7 +3858,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8010198430052582297
 RectTransform:
   m_ObjectHideFlags: 0

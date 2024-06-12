@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System; // Added for Action delegate
+using System;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -38,7 +38,6 @@ public class PlayerMovement : MonoBehaviour
     //=======LAYERS=======
     [Header("Layers")]
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private LayerMask wallLayer;
 
     //=========SOUNDS==========
     [Header("Sounds")]
@@ -139,12 +138,15 @@ public class PlayerMovement : MonoBehaviour
 
         anim.SetBool("grounded", IsGrounded());
 
-        body.gravityScale = IsOnWall() && !IsGrounded() ? 0 : 7; // Disable gravity when on wall and not grounded
-        body.velocity = new Vector2(horizontalInput * speed, IsOnWall() && !IsGrounded() ? 0 : body.velocity.y); // Stop vertical movement when on wall
-
         if (IsOnWall() && !IsGrounded())
         {
-            body.velocity = new Vector2(body.velocity.x, Mathf.Clamp(body.velocity.y, -0.5f, float.MaxValue));
+            body.gravityScale = 0; // Disable gravity when on wall and not grounded
+            body.velocity = new Vector2(body.velocity.x, Mathf.Clamp(body.velocity.y, -0.5f, float.MaxValue)); // Stop vertical movement when on wall
+        }
+        else
+        {
+            body.gravityScale = 7; // Enable gravity otherwise
+            body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
         }
     }
 
@@ -202,15 +204,18 @@ public class PlayerMovement : MonoBehaviour
 
     private bool IsOnWall()
     {
-        Vector2 direction = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, 0.1f, wallLayer);
-        return hit.collider != null && hit.collider.CompareTag("Ground");
+        if (Mathf.Abs(horizontalInput) > 0.01f && body.velocity.y > 0.1f)
+        {
+            Vector2 direction = horizontalInput > 0 ? Vector2.right : Vector2.left;
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, 0.1f, groundLayer);
+            return hit.collider != null && hit.collider.CompareTag("Ground");
+        }
+        return false;
     }
 
     private bool IsGrounded()
     {
         float extraHeight = 0.1f;
-        // Include specific layers by name
         int groundLayerMask = LayerMask.GetMask("Ground", "Platform", "NonCollidingWithPlatforms");
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0f, Vector2.down, extraHeight, groundLayerMask);
         return raycastHit.collider != null;
@@ -284,10 +289,7 @@ public class PlayerMovement : MonoBehaviour
     {
         isInteracting = interacting;
         anim.SetBool("grounded", isInteracting);
-        anim.SetBool("run", !isInteracting);
-
-        // Remove or comment out the line if Idle parameter is not needed
-        // anim.SetBool("Idle", isInteracting);
+        anim.SetBool("run", !interacting);
 
         if (interacting)
         {
@@ -303,7 +305,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void Die()
     {
-        // Check if the player is on the wall, there is horizontal input, and not on the ground
         if (IsOnWall() && Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f && !IsGrounded())
             return;
 
