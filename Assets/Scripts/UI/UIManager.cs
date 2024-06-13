@@ -114,7 +114,7 @@ public class UIManager : MonoBehaviour
 
             // Use a smoother interpolation function such as Lerp for a more progressive fill.
             loadingImage.fillAmount = Mathf.Lerp(loadingImage.fillAmount, _target, fillSpeed);
-
+            Debug.Log("Coroutine running, progress: " + progress);
             yield return null;
         }
     }
@@ -178,10 +178,15 @@ public class UIManager : MonoBehaviour
 
     public void ShowLoadingScreen(bool show)
     {
+        Debug.Log("Attempting to show loading screen: " + show);
         if (loadingScreen != null)
         {
             loadingScreen.SetActive(show);
             Debug.Log("Loading screen set to: " + show);
+        }
+        else
+        {
+            Debug.LogError("Loading screen GameObject is not assigned in the Inspector");
         }
     }
 
@@ -190,7 +195,7 @@ public class UIManager : MonoBehaviour
         if (loadingImage != null)
         {
             loadingImage.fillAmount = progress;
-            Debug.Log("Loading Progress: " + progress);
+            Debug.Log("Loading Progress: " + progress + ", Fill Amount: " + loadingImage.fillAmount);
         }
         else
         {

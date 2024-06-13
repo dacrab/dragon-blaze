@@ -698,7 +698,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ':'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8160b48e8e3b8394d913422118cbea48, type: 2}
   m_sharedMaterial: {fileID: 3332035602695815884, guid: 8160b48e8e3b8394d913422118cbea48, type: 2}
@@ -725,7 +725,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 72
+  m_fontSize: 36
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -761,7 +761,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -0.75231934, y: 2.6479492, z: -4.463501, w: 3.2302246}
+  m_margin: {x: 1.757515, y: 2.6479492, z: -4.463501, w: 0.72021484}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -779,7 +779,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 977b601dec55aa043b7c4f477d8e69cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 0}
   coinText: {fileID: 3747226521471897606}
 --- !u!1 &7315845340937516006
 GameObject:
