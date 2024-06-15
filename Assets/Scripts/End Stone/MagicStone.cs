@@ -111,7 +111,7 @@ public class MagicStone : MonoBehaviour
                 if (activeParticleSystemInstance != null)
                     Destroy(activeParticleSystemInstance);
 
-                activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position, Quaternion.identity);
+                activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position + new Vector3(0, 0, -1), Quaternion.identity);
             }
         }
         else

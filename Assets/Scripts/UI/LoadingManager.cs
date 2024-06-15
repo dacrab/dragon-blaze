@@ -4,12 +4,13 @@ using UnityEngine.SceneManagement;
 
 public class LoadingManager : MonoBehaviour
 {
-    public GameObject magicStone; // The magic stone collider
-    public SpriteRenderer indicator; // The sprite renderer
-    public ParticleSystem myParticleSystem; // The particle system
+    [Header("Scene Loading Settings")]
+    [SerializeField] private GameObject magicStone; // The magic stone collider
+    [SerializeField] private SpriteRenderer indicator; // The sprite renderer
+    [SerializeField] private ParticleSystem myParticleSystem; // The particle system
     [SerializeField] private float minLoadingTime = 2f; // Minimum time to display the loading screen
     [SerializeField] private float loadingImageDelay = 1f; // Delay before showing the loading image
-    public UIManager uiManager; // Reference to the UIManager
+    [SerializeField] private UIManager uiManager; // Reference to the UIManager
 
     private bool isNearMagicStone = false;
 
@@ -17,10 +18,15 @@ public class LoadingManager : MonoBehaviour
     {
         if (isNearMagicStone && Input.GetKeyDown(KeyCode.E))
         {
-            indicator.enabled = false; // Disable the sprite renderer
-            myParticleSystem.Play(); // Play the particle system
-            LoadNextLevel();
+            StartLoadingNextLevel();
         }
+    }
+
+    private void StartLoadingNextLevel()
+    {
+        indicator.enabled = false;
+        myParticleSystem.Play();
+        LoadNextLevel();
     }
 
     public void LoadNextLevel()
@@ -28,50 +34,46 @@ public class LoadingManager : MonoBehaviour
         StartCoroutine(LoadLevel(SceneManager.GetActiveScene().buildIndex + 1));
     }
 
-    IEnumerator LoadLevel(int levelIndex)
+    private IEnumerator LoadLevel(int levelIndex)
     {
-        yield return new WaitForSeconds(loadingImageDelay); // Add delay before showing the loading screen
-
-        uiManager.ShowLoadingScreen(true); // Show the loading screen
-        Debug.Log("Loading screen shown");
+        yield return new WaitForSeconds(loadingImageDelay);
+        uiManager.ShowLoadingScreen(true);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
-        operation.allowSceneActivation = false; // Prevent the scene from activating immediately
+        operation.allowSceneActivation = false;
         float startTime = Time.time;
 
         while (!operation.isDone)
         {
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
-            uiManager.UpdateLoadingImage(progress); // Update the loading image
-            Debug.Log("Loading progress: " + progress);
+            uiManager.UpdateLoadingImage(progress);
 
             if (operation.progress >= 0.9f && Time.time - startTime >= minLoadingTime)
             {
-                operation.allowSceneActivation = true; // Allow the scene to activate
+                operation.allowSceneActivation = true;
             }
 
             yield return null;
         }
 
-        uiManager.ShowLoadingScreen(false); // Hide the loading screen
-        Debug.Log("Loading screen hidden");
+        uiManager.ShowLoadingScreen(false);
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "Player")
+        if (collision.gameObject.CompareTag("Player"))
         {
             isNearMagicStone = true;
-            indicator.enabled = true; // Enable the sprite renderer
+            indicator.enabled = true;
         }
     }
 
     void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.tag == "Player")
+        if (collision.gameObject.CompareTag("Player"))
         {
             isNearMagicStone = false;
-            indicator.enabled = false; // Disable the sprite renderer
+            indicator.enabled = false;
         }
     }
 }

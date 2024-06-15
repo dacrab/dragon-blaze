@@ -2,10 +2,24 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.UI;
-using TMPro; // Add this to use TextMeshPro components
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
+    public static UIManager instance;
+
+    private void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            instance = this;
+        }
+    }
+
     [Header("Game Over")]
     [SerializeField] private GameObject gameOverScreen;
     [SerializeField] private AudioClip gameOverSound;
@@ -14,16 +28,17 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject pauseScreen;
 
     [Header("Level Transition")]
-    [SerializeField] private GameObject loadingScreen; // Assign this in the Inspector
-    [SerializeField] private Image loadingImage; // Assign this in the Inspector
-    private float _target;
+    [SerializeField] private GameObject loadingScreen;
+    [SerializeField] private Image loadingImage;
 
     [Header("Menu Options")]
-    [SerializeField] private Button continueButton; // Assign in the inspector
-    [SerializeField] private Button newGameButton; // Assign in the inspector
+    [SerializeField] private Button continueButton;
+    [SerializeField] private Button newGameButton;
 
     [Header("Coin Display")]
-    [SerializeField] private TextMeshProUGUI coinText; // Assign this in the inspector
+    [SerializeField] private TextMeshProUGUI coinText;
+
+    public PlayerMovement playerMovement; // Assign this in the Unity Editor
 
     private void Start()
     {
@@ -46,7 +61,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (SceneManager.GetActiveScene().buildIndex == 0) // Replace 0 with your actual main menu scene build index
+        if (SceneManager.GetActiveScene().buildIndex == 0)
         {
             bool saveExists = GameManager.instance.SaveDataExists();
 
@@ -73,9 +88,9 @@ public class UIManager : MonoBehaviour
     public void NewGame()
     {
         GameManager.instance.ResetCoins();
-        GameManager.instance.SaveGame(true); // Assuming SaveGame method accepts a boolean for new game
+        GameManager.instance.SaveGame(true);
         UpdateCoinDisplay(0);
-        SceneManager.LoadScene("Level1"); // Ensure "Level1" is the correct scene name for your first level
+        SceneManager.LoadScene("Level1");
     }
 
     public void ContinueGame()
@@ -100,38 +115,45 @@ public class UIManager : MonoBehaviour
     private IEnumerator LoadAsync(string sceneIndex)
     {
         loadingScreen.SetActive(true);
-        loadingImage.fillAmount = 0; // Initialize fill amount
-        _target = 0;
+        loadingImage.fillAmount = 0;
         AsyncOperation operation = SceneManager.LoadSceneAsync(sceneIndex);
+        operation.allowSceneActivation = false;
 
-        // Use a smoother transition function for the fill amount.
-        float fillSpeed = 0.02f; // Lower this value for a slower, more progressive fill
+        float simulatedProgress = 0f;
+        float fillSpeed = 0.1f; // Speed of the simulated loading progress
+        float simulatedDuration = 3f; // Simulated duration for loading
 
-        while (!operation.isDone)
+        while (simulatedProgress < 1f)
         {
-            float progress = Mathf.Clamp01(operation.progress / 0.9f);
-            _target = progress;
-
-            // Use a smoother interpolation function such as Lerp for a more progressive fill.
-            loadingImage.fillAmount = Mathf.Lerp(loadingImage.fillAmount, _target, fillSpeed);
-            Debug.Log("Coroutine running, progress: " + progress);
+            simulatedProgress += Time.deltaTime / simulatedDuration;
+            loadingImage.fillAmount = Mathf.Lerp(loadingImage.fillAmount, simulatedProgress, fillSpeed);
+            Debug.Log("Current fill amount: " + loadingImage.fillAmount);
             yield return null;
         }
+
+        loadingImage.fillAmount = 1f;
+        Debug.Log("Loading complete. Fill amount: " + loadingImage.fillAmount);
+
+        yield return new WaitForSeconds(1); // Optional delay after filling
+        operation.allowSceneActivation = true;
+        yield return new WaitUntil(() => operation.isDone);
+        loadingScreen.SetActive(false);
     }
 
-    #region Game Over
     public void GameOver()
     {
         gameOverScreen.SetActive(true);
         SoundManager.instance.PlaySound(gameOverSound);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+        ShowGameOverScreen(true);
     }
 
     public void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1;
+        ShowGameOverScreen(false);
     }
 
     public void MainMenu()
@@ -139,6 +161,7 @@ public class UIManager : MonoBehaviour
         SceneManager.LoadScene(0);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+        ShowGameOverScreen(false);
     }
 
     public void Quit()
@@ -148,21 +171,25 @@ public class UIManager : MonoBehaviour
             GameManager.instance.SaveGame();
         }
 
-        Application.Quit(); // Quits the game (only works in build)
+        Application.Quit();
 
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false; // Exits play mode (will only be executed in the editor)
+        UnityEditor.EditorApplication.isPlaying = false;
 #endif
     }
-    #endregion
 
-    #region Pause
     public void PauseGame(bool status)
     {
+        if (gameOverScreen.activeInHierarchy)
+        {
+            return; // Do not allow pausing if the game over screen is active
+        }
+
         pauseScreen.SetActive(status);
         Time.timeScale = status ? 0.01f : 1;
         Cursor.visible = status;
         Cursor.lockState = status ? CursorLockMode.None : CursorLockMode.Locked;
+        ShowPauseScreen(status);
     }
 
     public void SoundVolume()
@@ -174,15 +201,12 @@ public class UIManager : MonoBehaviour
     {
         SoundManager.instance.ChangeMusicVolume(0.2f);
     }
-    #endregion
 
     public void ShowLoadingScreen(bool show)
     {
-        Debug.Log("Attempting to show loading screen: " + show);
         if (loadingScreen != null)
         {
             loadingScreen.SetActive(show);
-            Debug.Log("Loading screen set to: " + show);
         }
         else
         {
@@ -195,7 +219,6 @@ public class UIManager : MonoBehaviour
         if (loadingImage != null)
         {
             loadingImage.fillAmount = progress;
-            Debug.Log("Loading Progress: " + progress + ", Fill Amount: " + loadingImage.fillAmount);
         }
         else
         {
@@ -229,5 +252,33 @@ public class UIManager : MonoBehaviour
         {
             UpdateCoinDisplay(GameManager.instance.TotalCoins);
         }
+    }
+
+    public bool IsPauseScreenActive()
+    {
+        return pauseScreen.activeInHierarchy;
+    }
+
+    public bool IsGameOverScreenActive()
+    {
+        return gameOverScreen.activeInHierarchy;
+    }
+
+    public void TogglePlayerMovement(bool enable)
+    {
+        if (playerMovement != null)
+            playerMovement.enabled = enable;
+    }
+
+    public void ShowPauseScreen(bool show)
+    {
+        pauseScreen.SetActive(show);
+        TogglePlayerMovement(!show);
+    }
+
+    public void ShowGameOverScreen(bool show)
+    {
+        gameOverScreen.SetActive(show);
+        TogglePlayerMovement(!show);
     }
 }

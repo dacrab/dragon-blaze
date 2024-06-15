@@ -552,7 +552,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 763, y: 450}
+  m_AnchoredPosition: {x: 762, y: 478}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3747226520130360772
@@ -667,8 +667,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 854, y: 487.82}
-  m_SizeDelta: {x: 106.3647, y: 75.6477}
+  m_AnchoredPosition: {x: 867.6561, y: 461}
+  m_SizeDelta: {x: 75.314, y: -31.023}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3747226521471897607
 CanvasRenderer:
@@ -701,7 +701,7 @@ MonoBehaviour:
   m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8160b48e8e3b8394d913422118cbea48, type: 2}
-  m_sharedMaterial: {fileID: 3332035602695815884, guid: 8160b48e8e3b8394d913422118cbea48, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 0ec0ef0d24e23fe57ba069314db286b4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -732,7 +732,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -761,7 +761,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 1.757515, y: 2.6479492, z: -4.463501, w: 0.72021484}
+  m_margin: {x: 39.426083, y: -0.3404389, z: -0.35451508, w: 0.72021484}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -874,6 +874,14 @@ PrefabInstance:
     - target: {fileID: 3044303441711193926, guid: f42f55463ffedc7aa94cfa464330c23c, type: 3}
       propertyPath: m_TargetGraphic
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5610193781884219490, guid: f42f55463ffedc7aa94cfa464330c23c, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -99.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5610193781884219490, guid: f42f55463ffedc7aa94cfa464330c23c, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5987261296660590310, guid: f42f55463ffedc7aa94cfa464330c23c, type: 3}
       propertyPath: m_Name

@@ -2346,7 +2346,6 @@ MonoBehaviour:
   gameOverSound: {fileID: 8300000, guid: 363a938ca73b3584db2b4669a1d37e27, type: 3}
   pauseScreen: {fileID: 8735702568822191543}
   loadingScreen: {fileID: 0}
-  loadingBar: {fileID: 0}
   loadingImage: {fileID: 0}
   continueButton: {fileID: 0}
   newGameButton: {fileID: 0}

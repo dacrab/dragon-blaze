@@ -68,6 +68,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 339728065974302701}
+  - {fileID: 8132453676765181655}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -192,19 +193,20 @@ MonoBehaviour:
   speed: 10
   coyoteTime: 0.25
   extraJumps: 1
-  wallJumpX: 1500
-  wallJumpY: 750
-  maxWallJumps: 2
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
-  wallLayer:
-    serializedVersion: 2
-    m_Bits: 768
   jumpSound: {fileID: 8300000, guid: 3c23de8f88fc9ba498b0d232fb269dff, type: 3}
   maxFallingTime: 3
   deathParticlesPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   jumpParticlesPrefab: {fileID: 100000, guid: 83cd9cc9f9c88824ba18dc59b05ae328, type: 3}
+  dashSound: {fileID: 8300000, guid: d3f57dc85a6106977ab25a395932df43, type: 3}
+  dashParticlesPrefab: {fileID: 141433446842962269, guid: 9fe8f8b3288e45a44af36ff8aa04486e, type: 3}
+  dashSpeed: 20
+  dashDuration: 0.2
+  wallCheckDistance: 0.5
+  wallSlideSpeed: 2
+  maxWallJumps: 3
 --- !u!114 &339728066529960372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -275,6 +277,8 @@ MonoBehaviour:
   hurtSound: {fileID: 8300000, guid: 32ff513695816ae4fb9ecd5c1bc67120, type: 3}
   hitParticleSystemPrefab: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}
   deathParticleSystemPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
+  fallingPlatforms: []
+  healthBar: {fileID: 0}
 --- !u!114 &6126100315396194484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,3 +292,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkpoint: {fileID: 8300000, guid: ac2ef9f49e9913d47a234631fc894d68, type: 3}
+--- !u!1 &5216678782224797544
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8132453676765181655}
+  m_Layer: 0
+  m_Name: WallCheck
+  m_TagString: Untagged
+  m_Icon: {fileID: 6519382022992737161, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8132453676765181655
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5216678782224797544}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.4400024, y: -0.56000006, z: 3.329094}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 339728066529960371}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

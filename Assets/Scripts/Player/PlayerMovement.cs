@@ -62,16 +62,32 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private GameObject deathParticlesPrefab;
     [SerializeField] private GameObject jumpParticlesPrefab;
 
-    // Components
+    // Added for dash
+    [Header("Dash Effects")]
+    [SerializeField] private AudioClip dashSound;
+    [SerializeField] private GameObject dashParticlesPrefab;
+    [SerializeField] private float dashSpeed = 20f;
+    [SerializeField] private float dashDuration = 0.2f;
+    private bool isDashing;
+    private float dashTimer;
+
+    // Added for wall slide
+    [Header("Wall Slide")]
+    private Transform wallCheck; // Added this line
+    [SerializeField]private float wallCheckDistance = 0.5f;
+    private bool isWallSliding = false;
+    [SerializeField] private float wallSlideSpeed = 2f; // Adjust the speed value as needed
+
+    // Added for wall jump
+    [Header("Wall Jump")]
+    [SerializeField] private int maxWallJumps = 3;
+    private int wallJumpCount = 0;
+
+    // Newly added declarations
     private Rigidbody2D body;
     private Animator anim;
     private BoxCollider2D boxCollider;
     private float horizontalInput;
-
-    // Added for wall jump
-    [Header("Wall Jump Parameters")]
-    [SerializeField] private int maxWallJumps = 3;
-    private int wallJumpCounter;
 
     private void Awake()
     {
@@ -80,6 +96,7 @@ public class PlayerMovement : MonoBehaviour
         anim = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider2D>();
         playerSpriteRenderer = GetComponent<SpriteRenderer>();
+        wallCheck = transform.Find("WallCheck"); // Ensure there's a child object named 'WallCheck' positioned appropriately
     }
 
     private void Start()
@@ -93,11 +110,14 @@ public class PlayerMovement : MonoBehaviour
         HandleFalling();
         HandleMovement();
         HandleJump();
+        HandleDash();
+        CheckWallSliding();
+        HandleWallJump();
     }
 
     private void HandleFalling()
     {
-        if (!IsGrounded() && !IsOnWall())
+        if (!IsGrounded())
         {
             fallingTimer += Time.deltaTime;
 
@@ -138,21 +158,13 @@ public class PlayerMovement : MonoBehaviour
 
         anim.SetBool("grounded", IsGrounded());
 
-        if (IsOnWall() && !IsGrounded())
-        {
-            body.gravityScale = 0; // Disable gravity when on wall and not grounded
-            body.velocity = new Vector2(body.velocity.x, Mathf.Clamp(body.velocity.y, -0.5f, float.MaxValue)); // Stop vertical movement when on wall
-        }
-        else
-        {
-            body.gravityScale = 7; // Enable gravity otherwise
-            body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
-        }
+        body.gravityScale = 7; // Ensure gravity is always applied
+        body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
     }
 
     private void HandleJump()
     {
-        if ((IsGrounded() || coyoteCounter > 0 || jumpCounter > 0 || (IsOnWall() && wallJumpCounter > 0)) && Input.GetKeyDown(KeyCode.Space))
+        if ((IsGrounded() || coyoteCounter > 0 || jumpCounter > 0) && Input.GetKeyDown(KeyCode.Space))
             Jump();
 
         if (Input.GetKeyUp(KeyCode.Space) && body.velocity.y > 0)
@@ -174,7 +186,6 @@ public class PlayerMovement : MonoBehaviour
         {
             coyoteCounter = coyoteTime;
             jumpCounter = extraJumps;
-            wallJumpCounter = maxWallJumps; // Reset wall jump counter
             body.gravityScale = 1;
         }
     }
@@ -185,38 +196,23 @@ public class PlayerMovement : MonoBehaviour
         {
             body.velocity = new Vector2(body.velocity.x, jumpPower);
             jumpCounter = extraJumps;
-            wallJumpCounter = maxWallJumps; // Reset wall jump counter when grounded
             Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+            AudioSource.PlayClipAtPoint(jumpSound, transform.position);  // Play jump sound
         }
         else if (jumpCounter > 0)
         {
             body.velocity = new Vector2(body.velocity.x, jumpPower);
             jumpCounter--;
             Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+            AudioSource.PlayClipAtPoint(jumpSound, transform.position);  // Play jump sound
         }
-        else if (IsOnWall() && !IsGrounded() && wallJumpCounter > 0)
-        {
-            body.velocity = new Vector2(-Mathf.Sign(transform.localScale.x) * jumpPower, jumpPower);
-            wallJumpCounter--;
-            Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
-        }
-    }
-
-    private bool IsOnWall()
-    {
-        if (Mathf.Abs(horizontalInput) > 0.01f && body.velocity.y > 0.1f)
-        {
-            Vector2 direction = horizontalInput > 0 ? Vector2.right : Vector2.left;
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, 0.1f, groundLayer);
-            return hit.collider != null && hit.collider.CompareTag("Ground");
-        }
-        return false;
     }
 
     private bool IsGrounded()
     {
         float extraHeight = 0.1f;
-        int groundLayerMask = LayerMask.GetMask("Ground", "Platform", "NonCollidingWithPlatforms");
+        // Assuming "Ground" is the name of the layer you want to check against
+        int groundLayerMask = LayerMask.GetMask("Ground"); 
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0f, Vector2.down, extraHeight, groundLayerMask);
         return raycastHit.collider != null;
     }
@@ -305,7 +301,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Die()
     {
-        if (IsOnWall() && Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f && !IsGrounded())
+        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f && !IsGrounded())
             return;
 
         if (uiManagerInstance != null)
@@ -342,7 +338,7 @@ public class PlayerMovement : MonoBehaviour
 
     public bool canAttack()
     {
-        return Mathf.Approximately(horizontalInput, 0) && IsGrounded() && !IsOnWall();
+        return Mathf.Approximately(horizontalInput, 0) && IsGrounded();
     }
 
     public float GetJumpPower()
@@ -358,5 +354,115 @@ public class PlayerMovement : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isInvisible) return;
+    }
+
+    private void HandleDash()
+    {
+        // Check if the player is moving by checking the horizontal input
+        if (Input.GetKeyDown(KeyCode.LeftShift) && Mathf.Abs(horizontalInput) > 0.01f)
+        {
+            PlayDashEffects();
+            if (!isDashing)
+            {
+                StartCoroutine(Dash());
+            }
+        }
+    }
+
+    private void PlayDashEffects()
+    {
+        // Play dash sound
+        if (dashSound != null)
+        {
+            AudioSource.PlayClipAtPoint(dashSound, transform.position);
+        }
+        else
+        {
+            Debug.LogWarning("Dash sound clip is not assigned.");
+        }
+
+        // Instantiate dash particles
+        if (dashParticlesPrefab != null)
+        {
+            Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        else
+        {
+            Debug.LogWarning("Dash Particle System Prefab is not assigned.");
+        }
+    }
+
+    private IEnumerator Dash()
+    {
+        isDashing = true;
+        float originalSpeed = speed;
+        speed = dashSpeed;
+
+        // Lower the opacity
+        Color originalColor = playerSpriteRenderer.color;
+        playerSpriteRenderer.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0.5f); // Set alpha to 0.5
+
+        yield return new WaitForSeconds(dashDuration);
+
+        // Reset opacity and speed
+        playerSpriteRenderer.color = originalColor;
+        speed = originalSpeed;
+        isDashing = false;
+    }
+
+    private void CheckWallSliding()
+    {
+        if (wallCheck == null)
+        {
+            Debug.LogError("WallCheck Transform is not assigned in PlayerMovement script.");
+            return;
+        }
+
+        // Check for walls on both sides
+        RaycastHit2D hitLeft = Physics2D.Raycast(wallCheck.position, Vector2.left, wallCheckDistance, groundLayer);
+        RaycastHit2D hitRight = Physics2D.Raycast(wallCheck.position, Vector2.right, wallCheckDistance, groundLayer);
+
+        if ((hitLeft.collider != null || hitRight.collider != null) && !IsGrounded() && body.velocity.y < 0)
+        {
+            if (wallJumpCount < maxWallJumps)
+            {
+                StartWallSlide();
+            }
+        }
+        else
+        {
+            isWallSliding = false;
+            wallJumpCount = 0; // Reset wall jump count when not near a wall
+        }
+
+        if (isWallSliding)
+        {
+            body.velocity = new Vector2(body.velocity.x, -wallSlideSpeed); // Use wallSlideSpeed here
+        }
+    }
+
+    private void HandleWallJump()
+    {
+        if (isWallSliding && Input.GetKeyDown(KeyCode.Space))
+        {
+            WallJump();
+        }
+    }
+
+    private void WallJump()
+    {
+        float jumpDirection = transform.localScale.x > 0 ? -1 : 1; // Jump in the opposite direction of the wall
+        body.velocity = new Vector2(jumpPower * jumpDirection, jumpPower);
+        wallJumpCount++;
+        transform.localScale = new Vector3(-transform.localScale.x, 1, 1); // Flip player to face opposite direction
+        Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        AudioSource.PlayClipAtPoint(jumpSound, transform.position);  // Play jump sound
+        isWallSliding = false; // Exit wall sliding state immediately after jumping
+    }
+
+    private void StartWallSlide()
+    {
+        isWallSliding = true;
+        // Optionally play a sound or animate
     }
 }
