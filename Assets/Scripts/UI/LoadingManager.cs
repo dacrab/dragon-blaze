@@ -8,8 +8,6 @@ public class LoadingManager : MonoBehaviour
     [SerializeField] private GameObject magicStone; // The magic stone collider
     [SerializeField] private SpriteRenderer indicator; // The sprite renderer
     [SerializeField] private ParticleSystem myParticleSystem; // The particle system
-    [SerializeField] private float minLoadingTime = 2f; // Minimum time to display the loading screen
-    [SerializeField] private float loadingImageDelay = 1f; // Delay before showing the loading image
     [SerializeField] private UIManager uiManager; // Reference to the UIManager
 
     private bool isNearMagicStone = false;
@@ -36,19 +34,17 @@ public class LoadingManager : MonoBehaviour
 
     private IEnumerator LoadLevel(int levelIndex)
     {
-        yield return new WaitForSeconds(loadingImageDelay);
         uiManager.ShowLoadingScreen(true);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
         operation.allowSceneActivation = false;
-        float startTime = Time.time;
 
         while (!operation.isDone)
         {
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
             uiManager.UpdateLoadingImage(progress);
 
-            if (operation.progress >= 0.9f && Time.time - startTime >= minLoadingTime)
+            if (operation.progress >= 0.9f)
             {
                 operation.allowSceneActivation = true;
             }
@@ -77,3 +73,4 @@ public class LoadingManager : MonoBehaviour
         }
     }
 }
+

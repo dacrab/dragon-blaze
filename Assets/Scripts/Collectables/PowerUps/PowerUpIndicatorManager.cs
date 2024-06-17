@@ -22,6 +22,16 @@ public class PowerUpIndicatorManager : MonoBehaviour
             return;
         }
 
+        GameObject existingIndicator = FindIndicatorByName(powerUpName);
+        if (existingIndicator != null)
+        {
+            // Reset the timer and make sure it's active
+            existingIndicator.SetActive(true);
+            StopCoroutine(UpdateIndicator(existingIndicator, duration, existingIndicator.GetComponent<Image>()));
+            StartCoroutine(UpdateIndicator(existingIndicator, duration, existingIndicator.GetComponent<Image>()));
+            return;
+        }
+
         GameObject newIndicator = Instantiate(indicatorPrefab, indicatorsPanel);
         if (newIndicator == null) {
             Debug.LogError("Failed to instantiate newIndicator.");
@@ -59,7 +69,7 @@ public class PowerUpIndicatorManager : MonoBehaviour
         foreach (GameObject indicator in activeIndicators)
         {
             TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
-            if (textComponent != null && textComponent.text == powerUpName)
+            if (textComponent != null && textComponent.text.Contains(powerUpName))
             {
                 return indicator;
             }
@@ -69,7 +79,6 @@ public class PowerUpIndicatorManager : MonoBehaviour
 
     private IEnumerator UpdateIndicator(GameObject indicator, float duration, Image imageComponent)
     {
-        // Fade out the image over the duration
         float remainingTime = duration;
         while (remainingTime > 0)
         {
@@ -79,14 +88,6 @@ public class PowerUpIndicatorManager : MonoBehaviour
                 imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, alpha);
             }
             remainingTime -= Time.deltaTime;
-            yield return null;
-        }
-
-        // Once the duration ends, fade the image back in
-        while (imageComponent.color.a < 1.0f)
-        {
-            float alpha = imageComponent.color.a + Time.deltaTime / duration; // Adjust fade-in time as needed
-            imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, Mathf.Min(alpha, 1.0f));
             yield return null;
         }
 

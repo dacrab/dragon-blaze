@@ -90,7 +90,30 @@ public class UIManager : MonoBehaviour
         GameManager.instance.ResetCoins();
         GameManager.instance.SaveGame(true);
         UpdateCoinDisplay(0);
-        SceneManager.LoadScene("Level1");
+        StartCoroutine(LoadNewGameByIndex());
+    }
+
+    private IEnumerator LoadNewGameByIndex()
+    {
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1; // Increment the scene index
+        ShowLoadingScreen(true); // Use 'this' implicitly
+        AsyncOperation operation = SceneManager.LoadSceneAsync(nextSceneIndex);
+        operation.allowSceneActivation = false;
+
+        while (!operation.isDone)
+        {
+            float progress = Mathf.Clamp01(operation.progress / 0.9f);
+            UpdateLoadingImage(progress); // Use 'this' implicitly
+
+            if (operation.progress >= 0.9f)
+            {
+                operation.allowSceneActivation = true;
+            }
+
+            yield return null;
+        }
+
+        ShowLoadingScreen(false); // Use 'this' implicitly
     }
 
     public void ContinueGame()

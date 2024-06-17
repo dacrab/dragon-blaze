@@ -31,15 +31,14 @@ public class SoundManager : MonoBehaviour
         float initialSoundVolume = PlayerPrefs.GetFloat("soundVolume", 0.5f);
         musicSource.volume = initialMusicVolume;
         soundSource.volume = initialSoundVolume;
+        musicSlider.value = initialMusicVolume;
+        soundSlider.value = initialSoundVolume;
 
         //Add listeners for the sliders
         musicSlider.onValueChanged.AddListener(delegate { ChangeMusicVolume(musicSlider.value); });
         soundSlider.onValueChanged.AddListener(delegate { ChangeSoundVolume(soundSlider.value); });
 
-    // Assign slider values
-    musicSlider.value = initialMusicVolume;
-    soundSlider.value = initialSoundVolume; 
-
+    NormalizeSoundVolumes(0.5f); // Normalize all sounds to 50% volume initially
 }
 
     // Play a sound clip once
@@ -58,7 +57,8 @@ public class SoundManager : MonoBehaviour
     public void ChangeSoundVolume(float _volume)
     {
         soundSource.volume = _volume;
-        PlayerPrefs.SetFloat("soundVolume", _volume);    }
+        PlayerPrefs.SetFloat("soundVolume", _volume);    
+    }
 
     // Change the volume of background music
     public void ChangeMusicVolume(float _volume)
@@ -86,5 +86,20 @@ public class SoundManager : MonoBehaviour
 
         // Save final value to player prefs
         PlayerPrefs.SetFloat(volumeName, currentVolume);
+    }
+
+    public void NormalizeSoundVolumes(float normalizedVolume)
+    {
+        AudioSource[] audioSources = GetComponents<AudioSource>();
+        foreach (var source in audioSources)
+        {
+            source.volume = normalizedVolume;
+        }
+        musicSource.volume = normalizedVolume;
+        soundSource.volume = normalizedVolume;
+
+        // Update slider values to match the normalized volume
+        musicSlider.value = normalizedVolume;
+        soundSlider.value = normalizedVolume;
     }
 }
