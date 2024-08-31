@@ -2,40 +2,78 @@ using UnityEngine;
 
 public class PlayerRespawn : MonoBehaviour
 {
-    [SerializeField] private AudioClip checkpoint; // Sound played when reaching a checkpoint
-    private Transform currentCheckpoint; // Reference to the current checkpoint
-    private Health playerHealth; // Reference to the player's health component
-    private UIManager uiManager; // Reference to the UIManager
+    #region Serialized Fields
+    [SerializeField] private AudioClip checkpoint;
+    #endregion
 
-    // Awake is called when the script instance is being loaded.
+    #region Private Fields
+    private Transform currentCheckpoint;
+    private Health playerHealth;
+    private UIManager uiManager;
+    #endregion
+
+    #region Unity Lifecycle Methods
     private void Awake()
     {
-        playerHealth = GetComponent<Health>(); // Get the Health component attached to the player
-        uiManager = FindObjectOfType<UIManager>(); // Find the UIManager in the scene
+        InitializeComponents();
     }
 
-    // Method to handle respawning the player
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        HandleCheckpointCollision(collision);
+    }
+    #endregion
+
+    #region Public Methods
     public void RespawnCheck()
     {
-        if (currentCheckpoint == null) // If no checkpoint is set
+        if (currentCheckpoint == null)
         {
-            uiManager.GameOver(); // Display game over UI
+            uiManager.GameOver();
             return;
         }
 
-        playerHealth.Respawn(); // Restore player health and reset animation
-        transform.position = currentCheckpoint.position; // Move player to checkpoint location
+        RespawnPlayer();
     }
 
-    // OnTriggerEnter2D is called when the Collider2D other enters the trigger (2D physics only).
-    private void OnTriggerEnter2D(Collider2D collision)
+    public Transform GetCurrentCheckpoint()
     {
-        if (collision.gameObject.tag == "Checkpoint") // If collided object is tagged as a checkpoint
+        return currentCheckpoint;
+    }
+    #endregion
+
+    #region Private Methods
+    private void InitializeComponents()
+    {
+        playerHealth = GetComponent<Health>();
+        uiManager = FindObjectOfType<UIManager>();
+    }
+
+    private void HandleCheckpointCollision(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Checkpoint"))
         {
-            currentCheckpoint = collision.transform; // Set currentCheckpoint to the collided object's transform
-            SoundManager.instance.PlaySound(checkpoint); // Play checkpoint sound
-            collision.GetComponent<Collider2D>().enabled = false; // Disable the collider of the checkpoint to prevent multiple triggers
-            collision.GetComponent<Animator>().SetTrigger("activate"); // Trigger checkpoint activation animation
+            SetCheckpoint(collision);
+            ActivateCheckpoint(collision);
         }
     }
+
+    private void SetCheckpoint(Collider2D checkpoint)
+    {
+        currentCheckpoint = checkpoint.transform;
+        SoundManager.instance.PlaySound(this.checkpoint);
+    }
+
+    private void ActivateCheckpoint(Collider2D checkpoint)
+    {
+        checkpoint.enabled = false;
+        checkpoint.GetComponent<Animator>().SetTrigger("activate");
+    }
+
+    private void RespawnPlayer()
+    {
+        playerHealth.Respawn();
+        transform.position = currentCheckpoint.position;
+    }
+    #endregion
 }

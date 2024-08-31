@@ -4,36 +4,64 @@ using UnityEngine.SceneManagement;
 
 public class LoadingManager : MonoBehaviour
 {
-    [Header("Scene Loading Settings")]
-    [SerializeField] private GameObject magicStone; // The magic stone collider
-    [SerializeField] private SpriteRenderer indicator; // The sprite renderer
-    [SerializeField] private ParticleSystem myParticleSystem; // The particle system
-    [SerializeField] private UIManager uiManager; // Reference to the UIManager
+    #region Singleton
+    private static LoadingManager instance;
 
-    private bool isNearMagicStone = false;
-
-    void Update()
+    public static LoadingManager Instance
     {
-        if (isNearMagicStone && Input.GetKeyDown(KeyCode.E))
+        get
         {
-            StartLoadingNextLevel();
+            if (instance == null)
+            {
+                instance = FindObjectOfType<LoadingManager>();
+                if (instance == null)
+                {
+                    GameObject obj = new GameObject();
+                    obj.name = typeof(LoadingManager).Name;
+                    instance = obj.AddComponent<LoadingManager>();
+                }
+            }
+            return instance;
         }
     }
 
-    private void StartLoadingNextLevel()
+    private void Awake()
     {
-        indicator.enabled = false;
-        myParticleSystem.Play();
-        LoadNextLevel();
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+    #endregion
+
+    #region Serialized Fields
+    [Header("Scene Loading Settings")]
+    [SerializeField] private UIManager uiManager;
+    #endregion
+
+    #region Public Methods
+    public static void LoadNextLevel()
+    {
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        Instance.StartCoroutine(Instance.LoadLevel(nextSceneIndex));
     }
 
-    public void LoadNextLevel()
+    public static void LoadSpecificLevel(int levelIndex)
     {
-        StartCoroutine(LoadLevel(SceneManager.GetActiveScene().buildIndex + 1));
+        Instance.StartCoroutine(Instance.LoadLevel(levelIndex));
     }
+    #endregion
 
+    #region Private Methods
     private IEnumerator LoadLevel(int levelIndex)
     {
+        EnsureUIManager();
+
         uiManager.ShowLoadingScreen(true);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
@@ -46,6 +74,7 @@ public class LoadingManager : MonoBehaviour
 
             if (operation.progress >= 0.9f)
             {
+                yield return new WaitForSeconds(0.5f); // Short delay for visual feedback
                 operation.allowSceneActivation = true;
             }
 
@@ -55,22 +84,18 @@ public class LoadingManager : MonoBehaviour
         uiManager.ShowLoadingScreen(false);
     }
 
-    void OnCollisionEnter(Collision collision)
+    private void EnsureUIManager()
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (uiManager == null)
         {
-            isNearMagicStone = true;
-            indicator.enabled = true;
+            uiManager = FindObjectOfType<UIManager>();
+            if (uiManager == null)
+            {
+                Debug.LogWarning("UIManager not found in the scene. Creating a temporary one.");
+                GameObject tempUIManager = new GameObject("Temporary UIManager");
+                uiManager = tempUIManager.AddComponent<UIManager>();
+            }
         }
     }
-
-    void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            isNearMagicStone = false;
-            indicator.enabled = false;
-        }
-    }
+    #endregion
 }
-

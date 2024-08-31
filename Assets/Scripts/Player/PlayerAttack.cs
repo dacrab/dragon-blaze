@@ -13,47 +13,86 @@ public class PlayerAttack : MonoBehaviour
 
     private void Awake()
     {
-        anim = GetComponent<Animator>();
-        playerMovement = GetComponent<PlayerMovement>();
+        InitializeComponents();
     }
 
     private void Update()
     {
-        if (Input.GetMouseButton(0) && cooldownTimer > attackCooldown && playerMovement.canAttack() && Time.timeScale > 0)
+        UpdateCooldownTimer();
+        CheckForAttack();
+    }
+
+    private void InitializeComponents()
+    {
+        anim = GetComponent<Animator>();
+        playerMovement = GetComponent<PlayerMovement>();
+    }
+
+    private void UpdateCooldownTimer()
+    {
+        cooldownTimer += Time.deltaTime;
+    }
+
+    private void CheckForAttack()
+    {
+        if (CanAttack())
         {
             Attack();
         }
+    }
 
-        cooldownTimer += Time.deltaTime;
+    private bool CanAttack()
+    {
+        return Input.GetMouseButton(0) && cooldownTimer > attackCooldown && playerMovement.canAttack() && Time.timeScale > 0;
     }
 
     private void Attack()
     {
+        if (!ValidateAttackComponents())
+        {
+            return;
+        }
+
+        PerformAttack();
+    }
+
+    private bool ValidateAttackComponents()
+    {
         if (SoundManager.instance == null)
         {
             Debug.LogError("SoundManager instance is not initialized.");
-            return;
+            return false;
         }
         if (fireballs == null || fireballs.Length == 0)
         {
             Debug.LogError("Fireballs array is not initialized or empty.");
-            return;
+            return false;
         }
         if (firePoint == null)
         {
             Debug.LogError("FirePoint is not assigned.");
-            return;
+            return false;
         }
+        return true;
+    }
 
+    private void PerformAttack()
+    {
         SoundManager.instance.PlaySound(fireballSound);
         anim.SetTrigger("attack");
         cooldownTimer = 0;
 
+        LaunchFireball();
+    }
+
+    private void LaunchFireball()
+    {
         int fireballIndex = FindFireball();
         if (fireballIndex != -1 && fireballs[fireballIndex] != null)
         {
-            fireballs[fireballIndex].transform.position = firePoint.position;
-            fireballs[fireballIndex].GetComponent<Projectile>().SetDirection(Mathf.Sign(transform.localScale.x));
+            GameObject fireball = fireballs[fireballIndex];
+            fireball.transform.position = firePoint.position;
+            fireball.GetComponent<Projectile>().SetDirection(Mathf.Sign(transform.localScale.x));
         }
         else
         {

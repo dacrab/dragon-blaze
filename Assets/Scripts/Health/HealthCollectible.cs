@@ -2,46 +2,69 @@ using UnityEngine;
 
 public class HealthCollectible : MonoBehaviour
 {
-    [SerializeField] private float healthValue; // Amount of health the collectible provides
-    [SerializeField] private AudioClip pickupSound; // Sound played when the collectible is picked up
-    [SerializeField] private GameObject pickupParticles; // Reference to the particle system GameObject
+    #region Serialized Fields
+    [SerializeField] private float healthValue;
+    [SerializeField] private AudioClip pickupSound;
+    [SerializeField] private GameObject pickupParticles;
+    #endregion
 
-    // OnTriggerEnter2D is called when the Collider2D other enters the trigger (2D physics only).
+    #region Unity Lifecycle Methods
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Player") // If the collider has the "Player" tag
+        if (collision.CompareTag("Player"))
         {
-            // Play pickup sound
-            if (SoundManager.instance != null && pickupSound != null)
-            {
-                SoundManager.instance.PlaySound(pickupSound);
-            }
-
-            // Add health to the player
-            Health playerHealth = collision.GetComponent<Health>();
-            if (playerHealth != null)
-            {
-                playerHealth.AddHealth(healthValue);
-            }
-
-            // Enable and play the particle system
-            if (pickupParticles != null)
-            {
-                pickupParticles.transform.position = transform.position;
-                pickupParticles.SetActive(true);
-                ParticleSystem particles = pickupParticles.GetComponent<ParticleSystem>();
-                if (particles != null)
-                {
-                    particles.Play();
-                }
-                else
-                {
-                    Debug.LogWarning("The pickupParticles GameObject does not have a ParticleSystem component.");
-                }
-            }
-
-            // Deactivate the collectible object
-            gameObject.SetActive(false);
+            HandlePickup(collision);
         }
     }
+    #endregion
+
+    #region Private Methods
+    private void HandlePickup(Collider2D playerCollider)
+    {
+        PlayPickupSound();
+        AddHealthToPlayer(playerCollider);
+        PlayParticleEffect();
+        DeactivateCollectible();
+    }
+
+    private void PlayPickupSound()
+    {
+        if (SoundManager.instance != null && pickupSound != null)
+        {
+            SoundManager.instance.PlaySound(pickupSound);
+        }
+    }
+
+    private void AddHealthToPlayer(Collider2D playerCollider)
+    {
+        Health playerHealth = playerCollider.GetComponent<Health>();
+        if (playerHealth != null)
+        {
+            playerHealth.AddHealth(healthValue);
+        }
+    }
+
+    private void PlayParticleEffect()
+    {
+        if (pickupParticles != null)
+        {
+            pickupParticles.transform.position = transform.position;
+            pickupParticles.SetActive(true);
+            ParticleSystem particles = pickupParticles.GetComponent<ParticleSystem>();
+            if (particles != null)
+            {
+                particles.Play();
+            }
+            else
+            {
+                Debug.LogWarning("The pickupParticles GameObject does not have a ParticleSystem component.");
+            }
+        }
+    }
+
+    private void DeactivateCollectible()
+    {
+        gameObject.SetActive(false);
+    }
+    #endregion
 }

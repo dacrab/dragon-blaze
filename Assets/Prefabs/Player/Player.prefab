@@ -183,12 +183,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bad90225a3078c64db7ad940e9a90d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultInvisibilityDuration: 5
-  invisibleColor: {r: 1, g: 1, b: 1, a: 0.5}
-  playerSpriteRenderer: {fileID: 339728066529960370}
-  defaultJumpMultiplier: 1.5
-  defaultSpeedBoostMultiplier: 1.5
-  defaultSpeedBoostDuration: 5
   jumpPower: 20
   speed: 10
   coyoteTime: 0.25
@@ -200,13 +194,22 @@ MonoBehaviour:
   maxFallingTime: 3
   deathParticlesPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   jumpParticlesPrefab: {fileID: 100000, guid: 83cd9cc9f9c88824ba18dc59b05ae328, type: 3}
+  wallSlideParticlesPrefab: {fileID: 1040608886635896, guid: a97415c6b57076f41a6621a7b51d63a3, type: 3}
   dashSound: {fileID: 8300000, guid: d3f57dc85a6106977ab25a395932df43, type: 3}
   dashParticlesPrefab: {fileID: 141433446842962269, guid: 9fe8f8b3288e45a44af36ff8aa04486e, type: 3}
   dashSpeed: 20
   dashDuration: 0.2
-  wallCheckDistance: 0.5
+  deathHeight: -10
+  defaultInvisibilityDuration: 5
+  invisibleColor: {r: 1, g: 1, b: 1, a: 0.5}
+  playerSpriteRenderer: {fileID: 339728066529960370}
+  defaultJumpMultiplier: 1.5
+  defaultSpeedBoostMultiplier: 1.5
+  defaultSpeedBoostDuration: 5
+  wallJumpTime: 0.2
   wallSlideSpeed: 2
-  maxWallJumps: 3
+  wallDistance: 0.5
+  wallJumpForce: 15
 --- !u!114 &339728066529960372
 MonoBehaviour:
   m_ObjectHideFlags: 0

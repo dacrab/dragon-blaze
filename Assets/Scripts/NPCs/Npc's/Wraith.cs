@@ -2,10 +2,13 @@ using UnityEngine;
 
 public class Wraith : NPC, ITalkable
 {
+    #region Serialized Fields
     [SerializeField] private DialogueText dialogueText;
     [SerializeField] private DialogueController dialogueController;
-    [SerializeField] private AudioClip dialogueSound; // Added this line
+    [SerializeField] private AudioClip dialogueSound;
+    #endregion
 
+    #region Public Methods
     public override void Interact()
     {
         Talk(dialogueText);
@@ -13,7 +16,7 @@ public class Wraith : NPC, ITalkable
 
     public void Talk(DialogueText dialogueText)
     {
-        //Start Converstation
-        dialogueController.DisplayNextParagraph(dialogueText, dialogueSound); // Pass the sound
+        dialogueController.DisplayNextParagraph(dialogueText, dialogueSound);
     }
+    #endregion
 }

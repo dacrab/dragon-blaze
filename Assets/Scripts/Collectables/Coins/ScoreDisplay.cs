@@ -1,20 +1,25 @@
 using UnityEngine;
-using TMPro; // Add this for TextMeshProUGUI
-using System.Collections; // Add this for IEnumerator
+using TMPro;
 
-public class ScoreDisplay : MonoBehaviour // Make sure to inherit from MonoBehaviour
+public class ScoreDisplay : MonoBehaviour
 {
-    public TextMeshProUGUI coinText;
+    [SerializeField] private TextMeshProUGUI coinText;
+
+    #region Unity Lifecycle Methods
 
     private void OnEnable()
     {
-        GameManager.OnScoreChanged += UpdateScoreDisplay;  // Subscribe to the correct event
+        GameManager.OnScoreChanged += UpdateScoreDisplay;
     }
 
     private void OnDisable()
     {
-        GameManager.OnScoreChanged -= UpdateScoreDisplay;  // Unsubscribe when disabled
+        GameManager.OnScoreChanged -= UpdateScoreDisplay;
     }
+
+    #endregion
+
+    #region Score Display Methods
 
     private void UpdateScoreDisplay(int score)
     {
@@ -23,4 +28,6 @@ public class ScoreDisplay : MonoBehaviour // Make sure to inherit from MonoBehav
             coinText.text = $": {score}";
         }
     }
+
+    #endregion
 }

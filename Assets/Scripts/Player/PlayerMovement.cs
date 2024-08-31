@@ -4,65 +4,70 @@ using System;
 
 public class PlayerMovement : MonoBehaviour
 {
-    //=========INVISIBILITY========
-    [Header("Invisibility PowerUp")]
-    [SerializeField] public float defaultInvisibilityDuration = 5f;
-    [SerializeField] public Color invisibleColor = new Color(1f, 1f, 1f, 0.5f);
-    [SerializeField] public SpriteRenderer playerSpriteRenderer;
-    private bool isInvisible = false;
+    #region Variables
 
-    //=====HIGHER JUMP=======
-    [Header("Higher Jump PowerUp")]
-    [SerializeField] private float defaultJumpMultiplier = 1.5f;
+    #region Component References
+    private Rigidbody2D body;
+    private Animator anim;
+    private BoxCollider2D boxCollider;
+    private PlayerRespawn playerRespawn;
+    private UIManager uiManagerInstance;
+    #endregion
 
-    //======SPEED BOOST======
-    [Header("Speed Boost PowerUp")]
-    [SerializeField] private float defaultSpeedBoostMultiplier = 1.5f;
-    [SerializeField] private float defaultSpeedBoostDuration = 5f;
-
-    //====MOVEMENT======
+    #region Movement
     [Header("Movement Parameters")]
     [SerializeField] public float jumpPower;
     [SerializeField] public float speed;
+    private float horizontalInput;
+    #endregion
 
-    //======COYOTE=======
+    #region Coyote Time
     [Header("Coyote Time")]
     [SerializeField] private float coyoteTime;
     private float coyoteCounter;
+    #endregion
 
-    //=====MULTIPLE JUMPS======
+    #region Multiple Jumps
     [Header("Multiple Jumps")]
     [SerializeField] private int extraJumps = 2;
     private int jumpCounter;
+    #endregion
 
-    //=======LAYERS=======
+    #region Layers
     [Header("Layers")]
     [SerializeField] private LayerMask groundLayer;
+    #endregion
 
-    //=========SOUNDS==========
+    #region Sounds
     [Header("Sounds")]
     [SerializeField] private AudioClip jumpSound;
+    #endregion
 
-    //========SCORE/COINS=========
+    #region Score/Coins
     [Header("Coins")]
     private int score = 0;
     public static event Action<int> OnScoreChanged;
+    #endregion
 
-    //========FALLING PARAMETERS=======
+    #region Falling Parameters
     [Header("Falling Parameters")]
     [SerializeField] private float maxFallingTime = 2f;
     private float fallingTimer = 0f;
-    private UIManager uiManagerInstance;
     private bool gameOverTriggered = false;
+    #endregion
 
-    //===========INTERACTIONS=========
+    #region Interactions
     private bool isInteracting;
+    #endregion
 
-    // Added for particle system
+    #region Particle System
     [SerializeField] private GameObject deathParticlesPrefab;
     [SerializeField] private GameObject jumpParticlesPrefab;
+    [SerializeField] private GameObject wallSlideParticlesPrefab;
+    private ParticleSystem wallSlideParticles;
+    #endregion
 
-    // Added for dash
+    #region Dash
     [Header("Dash Effects")]
     [SerializeField] private AudioClip dashSound;
     [SerializeField] private GameObject dashParticlesPrefab;
@@ -70,54 +75,98 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float dashDuration = 0.2f;
     private bool isDashing;
     private float dashTimer;
+    #endregion
 
-    // Added for wall slide
-    [Header("Wall Slide")]
-    private Transform wallCheck; // Added this line
-    [SerializeField]private float wallCheckDistance = 0.5f;
+    #region Fall Death
+    [Header("Fall Death")]
+    [SerializeField] private float deathHeight = -10f;
+    private bool isDead = false;
+    #endregion
+
+    #region PowerUps
+    [Header("Invisibility PowerUp")]
+    [SerializeField] public float defaultInvisibilityDuration = 5f;
+    [SerializeField] public Color invisibleColor = new Color(1f, 1f, 1f, 0.5f);
+    [SerializeField] public SpriteRenderer playerSpriteRenderer;
+    private bool isInvisible = false;
+
+    [Header("Higher Jump PowerUp")]
+    [SerializeField] private float defaultJumpMultiplier = 1.5f;
+
+    [Header("Speed Boost PowerUp")]
+    [SerializeField] private float defaultSpeedBoostMultiplier = 1.5f;
+    [SerializeField] private float defaultSpeedBoostDuration = 5f;
+    #endregion
+
+    #region Wall Jump Parameters
+    [Header("Wall Jump Parameters")]
+    [SerializeField] private float wallJumpTime = 0.2f;
+    [SerializeField] private float wallSlideSpeed = 0.3f;
+    [SerializeField] private float wallJumpForce = 15f;
     private bool isWallSliding = false;
-    [SerializeField] private float wallSlideSpeed = 2f; // Adjust the speed value as needed
+    private RaycastHit2D wallCheckHit;
+    private float wallJumpCounter;
+    #endregion
 
-    // Added for wall jump
-    [Header("Wall Jump")]
-    [SerializeField] private int maxWallJumps = 3;
-    private int wallJumpCount = 0;
+    #endregion
 
-    // Newly added declarations
-    private Rigidbody2D body;
-    private Animator anim;
-    private BoxCollider2D boxCollider;
-    private float horizontalInput;
+    #region Unity Lifecycle Methods
 
     private void Awake()
+    {
+        InitializeComponents();
+    }
+
+    private void Start()
+    {
+        SetCursorState();
+        wallSlideParticles = Instantiate(wallSlideParticlesPrefab, transform).GetComponent<ParticleSystem>();
+    }
+
+    private void Update()
+    {
+        if (!isDead)
+        {
+            HandlePlayerActions();
+            CheckFallDeath();
+        }
+    }
+
+    #endregion
+
+    #region Initialization Methods
+
+    private void InitializeComponents()
     {
         uiManagerInstance = FindObjectOfType<UIManager>();
         body = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider2D>();
         playerSpriteRenderer = GetComponent<SpriteRenderer>();
-        wallCheck = transform.Find("WallCheck"); // Ensure there's a child object named 'WallCheck' positioned appropriately
+        playerRespawn = GetComponent<PlayerRespawn>();
     }
 
-    private void Start()
+    private void SetCursorState()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    private void Update()
+    #endregion
+
+    #region Player Action Methods
+
+    private void HandlePlayerActions()
     {
         HandleFalling();
         HandleMovement();
         HandleJump();
         HandleDash();
-        CheckWallSliding();
-        HandleWallJump();
     }
 
     private void HandleFalling()
     {
-        if (!IsGrounded())
+        if (!IsGrounded() && !isWallSliding)
         {
             fallingTimer += Time.deltaTime;
 
@@ -138,6 +187,13 @@ public class PlayerMovement : MonoBehaviour
     {
         horizontalInput = Input.GetAxis("Horizontal");
 
+        UpdatePlayerScale();
+        UpdateAnimationState();
+        ApplyMovement();
+    }
+
+    private void UpdatePlayerScale()
+    {
         if (horizontalInput > 0.01f)
         {
             transform.localScale = Vector3.one;
@@ -146,7 +202,10 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(-1, 1, 1);
         }
+    }
 
+    private void UpdateAnimationState()
+    {
         if (isInteracting)
         {
             anim.SetBool("grounded", true);
@@ -157,14 +216,20 @@ public class PlayerMovement : MonoBehaviour
         }
 
         anim.SetBool("grounded", IsGrounded());
+    }
 
-        body.gravityScale = 7; // Ensure gravity is always applied
-        body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+    private void ApplyMovement()
+    {
+        if (wallJumpCounter <= 0)
+        {
+            body.gravityScale = 7;
+            body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+        }
     }
 
     private void HandleJump()
     {
-        if ((IsGrounded() || coyoteCounter > 0 || jumpCounter > 0) && Input.GetKeyDown(KeyCode.Space))
+        if ((IsGrounded() || coyoteCounter > 0 || jumpCounter > 0 || isWallSliding) && Input.GetKeyDown(KeyCode.Space))
             Jump();
 
         if (Input.GetKeyUp(KeyCode.Space) && body.velocity.y > 0)
@@ -177,6 +242,12 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             coyoteCounter -= Time.deltaTime;
+            CheckForWallSlide();
+        }
+
+        if (wallJumpCounter > 0)
+        {
+            wallJumpCounter -= Time.deltaTime;
         }
     }
 
@@ -194,28 +265,138 @@ public class PlayerMovement : MonoBehaviour
     {
         if (IsGrounded() || coyoteCounter > 0)
         {
-            body.velocity = new Vector2(body.velocity.x, jumpPower);
+            PerformJump();
             jumpCounter = extraJumps;
-            Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
-            AudioSource.PlayClipAtPoint(jumpSound, transform.position);  // Play jump sound
         }
         else if (jumpCounter > 0)
         {
-            body.velocity = new Vector2(body.velocity.x, jumpPower);
+            PerformJump();
             jumpCounter--;
-            Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
-            AudioSource.PlayClipAtPoint(jumpSound, transform.position);  // Play jump sound
         }
+        else if (isWallSliding)
+        {
+            PerformWallJump();
+        }
+    }
+
+    private void PerformJump()
+    {
+        body.velocity = new Vector2(body.velocity.x, jumpPower);
+        Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        AudioSource.PlayClipAtPoint(jumpSound, transform.position);
+    }
+
+    private void PerformWallJump()
+    {
+        isWallSliding = false;
+        wallJumpCounter = wallJumpTime;
+        
+        Vector2 wallJumpDirection = new Vector2(-transform.localScale.x, 1).normalized;
+        body.velocity = new Vector2(wallJumpDirection.x * wallJumpForce, wallJumpDirection.y * jumpPower);
+        
+        // Flip the player's direction
+        transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
+        
+        Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        AudioSource.PlayClipAtPoint(jumpSound, transform.position);
     }
 
     private bool IsGrounded()
     {
         float extraHeight = 0.1f;
-        // Assuming "Ground" is the name of the layer you want to check against
-        int groundLayerMask = LayerMask.GetMask("Ground"); 
+        int groundLayerMask = LayerMask.GetMask("Ground");
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0f, Vector2.down, extraHeight, groundLayerMask);
         return raycastHit.collider != null;
     }
+
+    private void CheckForWallSlide()
+    {
+        bool isTouchingWall = CheckWallTouch();
+        isWallSliding = isTouchingWall && !IsGrounded() && Mathf.Abs(horizontalInput) > 0.1f;
+
+        if (isWallSliding)
+        {
+            fallingTimer = 0f; // Reset falling timer when wall sliding
+            body.velocity = new Vector2(body.velocity.x, Mathf.Clamp(body.velocity.y, -wallSlideSpeed, float.MaxValue));
+            if (!wallSlideParticles.isPlaying)
+                wallSlideParticles.Play();
+        }
+        else
+        {
+            if (wallSlideParticles.isPlaying)
+                wallSlideParticles.Stop();
+        }
+    }
+
+    private bool CheckWallTouch()
+    {
+        float direction = transform.localScale.x;
+        Vector2 start = (Vector2)transform.position + new Vector2(direction * 0.4f, 0.2f);
+        Vector2 end = start + Vector2.down * 0.8f;
+        wallCheckHit = Physics2D.Linecast(start, end, groundLayer);
+        return wallCheckHit.collider != null;
+    }
+
+    private void HandleDash()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftShift) && Mathf.Abs(horizontalInput) > 0.01f)
+        {
+            PlayDashEffects();
+            if (!isDashing)
+            {
+                StartCoroutine(Dash());
+            }
+        }
+    }
+
+    private void PlayDashEffects()
+    {
+        if (dashSound != null)
+        {
+            AudioSource.PlayClipAtPoint(dashSound, transform.position);
+        }
+        else
+        {
+            Debug.LogWarning("Dash sound clip is not assigned.");
+        }
+
+        if (dashParticlesPrefab != null)
+        {
+            Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        else
+        {
+            Debug.LogWarning("Dash Particle System Prefab is not assigned.");
+        }
+    }
+
+    private IEnumerator Dash()
+    {
+        isDashing = true;
+        float originalSpeed = speed;
+        speed = dashSpeed;
+
+        Color originalColor = playerSpriteRenderer.color;
+        playerSpriteRenderer.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0.5f);
+
+        yield return new WaitForSeconds(dashDuration);
+
+        playerSpriteRenderer.color = originalColor;
+        speed = originalSpeed;
+        isDashing = false;
+    }
+
+    private void CheckFallDeath()
+    {
+        if (transform.position.y < deathHeight)
+        {
+            Die();
+        }
+    }
+
+    #endregion
+
+    #region Public Methods
 
     public bool IsInvisible()
     {
@@ -238,13 +419,6 @@ public class PlayerMovement : MonoBehaviour
         StartCoroutine(InvisibilityCoroutine(duration ?? defaultInvisibilityDuration));
     }
 
-    private IEnumerator InvisibilityCoroutine(float duration)
-    {
-        SetInvisibility(false);
-        yield return new WaitForSeconds(duration);
-        SetInvisibility(true);
-    }
-
     public void SetVisibility(bool isVisible)
     {
         playerSpriteRenderer.color = isVisible ? Color.white : invisibleColor;
@@ -260,25 +434,9 @@ public class PlayerMovement : MonoBehaviour
         StartCoroutine(HigherJumpCoroutine(multiplier));
     }
 
-    private IEnumerator HigherJumpCoroutine(float multiplier)
-    {
-        float originalJumpPower = jumpPower;
-        jumpPower *= multiplier;
-        yield return new WaitForSeconds(defaultSpeedBoostDuration);
-        jumpPower = originalJumpPower;
-    }
-
     public void ApplySpeedBoost(float? multiplier = null, float? duration = null)
     {
         StartCoroutine(SpeedBoostCoroutine(multiplier ?? defaultSpeedBoostMultiplier, duration ?? defaultSpeedBoostDuration));
-    }
-
-    private IEnumerator SpeedBoostCoroutine(float multiplier, float duration)
-    {
-        float originalSpeed = speed;
-        speed *= multiplier;
-        yield return new WaitForSeconds(duration);
-        speed = originalSpeed;
     }
 
     public void setInteracting(bool interacting)
@@ -301,8 +459,9 @@ public class PlayerMovement : MonoBehaviour
 
     public void Die()
     {
-        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f && !IsGrounded())
-            return;
+        if (isDead) return;
+
+        isDead = true;
 
         if (uiManagerInstance != null)
         {
@@ -329,6 +488,55 @@ public class PlayerMovement : MonoBehaviour
         }
 
         this.enabled = false;
+
+        // Trigger death animation
+        if (anim != null)
+        {
+            anim.SetTrigger("die");
+        }
+
+        // Disable player's collider
+        Collider2D playerCollider = GetComponent<Collider2D>();
+        if (playerCollider != null)
+        {
+            playerCollider.enabled = false;
+        }
+
+        // You might want to add a delay before resetting the player's position or reloading the level
+        StartCoroutine(ResetPlayerAfterDelay(2f));
+    }
+
+    private IEnumerator ResetPlayerAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // Reset player position to the last checkpoint or starting position
+        if (playerRespawn != null && playerRespawn.GetCurrentCheckpoint() != null)
+        {
+            transform.position = playerRespawn.GetCurrentCheckpoint().position;
+        }
+        else
+        {
+            Debug.LogWarning("No checkpoint found. Resetting to default position.");
+            transform.position = Vector3.zero; // Or any other default position
+        }
+
+        // Re-enable player
+        isDead = false;
+        this.enabled = true;
+
+        // Re-enable player's collider
+        Collider2D playerCollider = GetComponent<Collider2D>();
+        if (playerCollider != null)
+        {
+            playerCollider.enabled = true;
+        }
+
+        // Reset animation
+        if (anim != null)
+        {
+            anim.SetTrigger("respawn");
+        }
     }
 
     public int GetScore()
@@ -356,113 +564,32 @@ public class PlayerMovement : MonoBehaviour
         if (isInvisible) return;
     }
 
-    private void HandleDash()
+    #endregion
+
+    #region Coroutines
+
+    private IEnumerator InvisibilityCoroutine(float duration)
     {
-        // Check if the player is moving by checking the horizontal input
-        if (Input.GetKeyDown(KeyCode.LeftShift) && Mathf.Abs(horizontalInput) > 0.01f)
-        {
-            PlayDashEffects();
-            if (!isDashing)
-            {
-                StartCoroutine(Dash());
-            }
-        }
+        SetInvisibility(false);
+        yield return new WaitForSeconds(duration);
+        SetInvisibility(true);
     }
 
-    private void PlayDashEffects()
+    private IEnumerator HigherJumpCoroutine(float multiplier)
     {
-        // Play dash sound
-        if (dashSound != null)
-        {
-            AudioSource.PlayClipAtPoint(dashSound, transform.position);
-        }
-        else
-        {
-            Debug.LogWarning("Dash sound clip is not assigned.");
-        }
-
-        // Instantiate dash particles
-        if (dashParticlesPrefab != null)
-        {
-            Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
-        }
-        else
-        {
-            Debug.LogWarning("Dash Particle System Prefab is not assigned.");
-        }
+        float originalJumpPower = jumpPower;
+        jumpPower *= multiplier;
+        yield return new WaitForSeconds(defaultSpeedBoostDuration);
+        jumpPower = originalJumpPower;
     }
 
-    private IEnumerator Dash()
+    private IEnumerator SpeedBoostCoroutine(float multiplier, float duration)
     {
-        isDashing = true;
         float originalSpeed = speed;
-        speed = dashSpeed;
-
-        // Lower the opacity
-        Color originalColor = playerSpriteRenderer.color;
-        playerSpriteRenderer.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0.5f); // Set alpha to 0.5
-
-        yield return new WaitForSeconds(dashDuration);
-
-        // Reset opacity and speed
-        playerSpriteRenderer.color = originalColor;
+        speed *= multiplier;
+        yield return new WaitForSeconds(duration);
         speed = originalSpeed;
-        isDashing = false;
     }
 
-    private void CheckWallSliding()
-    {
-        if (wallCheck == null)
-        {
-            Debug.LogError("WallCheck Transform is not assigned in PlayerMovement script.");
-            return;
-        }
-
-        // Check for walls on both sides
-        RaycastHit2D hitLeft = Physics2D.Raycast(wallCheck.position, Vector2.left, wallCheckDistance, groundLayer);
-        RaycastHit2D hitRight = Physics2D.Raycast(wallCheck.position, Vector2.right, wallCheckDistance, groundLayer);
-
-        if ((hitLeft.collider != null || hitRight.collider != null) && !IsGrounded() && body.velocity.y < 0)
-        {
-            if (wallJumpCount < maxWallJumps)
-            {
-                StartWallSlide();
-            }
-        }
-        else
-        {
-            isWallSliding = false;
-            wallJumpCount = 0; // Reset wall jump count when not near a wall
-        }
-
-        if (isWallSliding)
-        {
-            body.velocity = new Vector2(body.velocity.x, -wallSlideSpeed); // Use wallSlideSpeed here
-        }
-    }
-
-    private void HandleWallJump()
-    {
-        if (isWallSliding && Input.GetKeyDown(KeyCode.Space))
-        {
-            WallJump();
-        }
-    }
-
-    private void WallJump()
-    {
-        float jumpDirection = transform.localScale.x > 0 ? -1 : 1; // Jump in the opposite direction of the wall
-        body.velocity = new Vector2(jumpPower * jumpDirection, jumpPower);
-        wallJumpCount++;
-        transform.localScale = new Vector3(-transform.localScale.x, 1, 1); // Flip player to face opposite direction
-        Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
-        AudioSource.PlayClipAtPoint(jumpSound, transform.position);  // Play jump sound
-        isWallSliding = false; // Exit wall sliding state immediately after jumping
-    }
-
-    private void StartWallSlide()
-    {
-        isWallSliding = true;
-        // Optionally play a sound or animate
-    }
+    #endregion
 }

@@ -1,55 +1,63 @@
 using UnityEngine;
 
-
 public class ArrowTrap : MonoBehaviour
 {
-    [SerializeField] private int damage; // Damage inflicted by the arrow
-    [SerializeField] private float attackCooldown; // Cooldown between attacks
-    [SerializeField] private Transform firePoint; // Point from which arrows are fired
-    [SerializeField] private GameObject[] arrows; // Array of arrow GameObjects
-    private float cooldownTimer; // Timer to track the cooldown period
+    #region Serialized Fields
+    [SerializeField] private int damage;
+    [SerializeField] private float attackCooldown;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private GameObject[] arrows;
 
     [Header("SFX")]
-    [SerializeField] private AudioClip arrowSound; // Sound clip for arrow firing
-    [SerializeField] private float soundRange = 10f; // Maximum distance to hear the sound
+    [SerializeField] private AudioClip arrowSound;
+    [SerializeField] private float soundRange = 10f;
+    #endregion
 
+    #region Private Fields
+    private float cooldownTimer;
+    #endregion
+
+    #region Unity Lifecycle Methods
+    private void Update()
+    {
+        cooldownTimer += Time.deltaTime;
+
+        if (cooldownTimer >= attackCooldown && PlayerIsVisible())
+        {
+            Attack();
+        }
+    }
+    #endregion
+
+    #region Private Methods
     private void Attack()
     {
-        cooldownTimer = 0; // Reset the cooldown timer
+        cooldownTimer = 0;
 
         if (Vector3.Distance(transform.position, GameObject.FindGameObjectWithTag("Player").transform.position) <= soundRange)
         {
-            SoundManager.instance.PlaySound(arrowSound); // Play the arrow firing sound
+            SoundManager.instance.PlaySound(arrowSound);
         }
-        arrows[FindArrow()].transform.position = firePoint.position; // Set the position of the arrow
-        arrows[FindArrow()].GetComponent<EnemyProjectile>().ActivateProjectile(); // Activate the arrow projectile
+
+        int arrowIndex = FindArrow();
+        arrows[arrowIndex].transform.position = firePoint.position;
+        arrows[arrowIndex].GetComponent<EnemyProjectile>().ActivateProjectile();
     }
 
     private int FindArrow()
     {
-        // Find an inactive arrow in the array to reuse
         for (int i = 0; i < arrows.Length; i++)
         {
             if (!arrows[i].activeInHierarchy)
                 return i;
         }
-        return 0; // Return the index of the first arrow if all are active
-    }
-
-    private void Update()
-    {
-        cooldownTimer += Time.deltaTime; // Update the cooldown timer
-
-        // If cooldown time has elapsed and player is visible, attack
-        if (cooldownTimer >= attackCooldown && PlayerIsVisible())
-        {
-            Attack();
-        }
+        return 0;
     }
 
     private bool PlayerIsVisible()
     {
         PlayerMovement playerMovement = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMovement>();
         return playerMovement != null && playerMovement.IsVisible();
-    }    
+    }
+    #endregion
 }

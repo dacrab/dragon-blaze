@@ -3,49 +3,46 @@ using System.Collections;
 
 public class Firetrap : MonoBehaviour
 {
+    #region Serialized Fields
     [SerializeField] private float damage;
 
     [Header("Firetrap Timers")]
     [SerializeField] private float activationDelay;
     [SerializeField] private float activeTime;
-    private Animator anim;
-    private SpriteRenderer spriteRend;
 
     [Header("SFX")]
     [SerializeField] private AudioClip firetrapSound;
+    #endregion
 
+    #region Private Fields
+    private Animator anim;
+    private SpriteRenderer spriteRend;
     private bool triggered; // When the trap gets triggered
     private bool active;    // When the trap is active and can hurt the player
-
     private Health playerHealth;  // Reference to PlayerHealth component
+    #endregion
 
+    #region Unity Lifecycle Methods
     private void Awake()
     {
-        anim = GetComponent<Animator>();
-        spriteRend = GetComponent<SpriteRenderer>();
+        InitializeComponents();
     }
 
     private void Update()
     {
-        if (playerHealth != null && active)
-            playerHealth.TakeDamage(damage); // Call TakeDamage method from PlayerHealth
+        ApplyDamageIfActive();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        if (!collision.CompareTag("Player")) return;
+
+        PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
+        if (playerMovement != null && playerMovement.IsVisible())
         {
-            PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
-            if (playerMovement != null && playerMovement.IsVisible())
-            {
-                playerHealth = collision.GetComponent<Health>(); // Get PlayerHealth component
-
-                if (!triggered)
-                    StartCoroutine(ActivateFiretrap());
-
-                if (active)
-                    playerHealth.TakeDamage(damage); // Call TakeDamage method from PlayerHealth
-            }
+            SetPlayerHealth(collision);
+            ActivateTrapIfNotTriggered();
+            ApplyDamageIfActive();
         }
     }
 
@@ -54,24 +51,60 @@ public class Firetrap : MonoBehaviour
         if (collision.CompareTag("Player"))
             playerHealth = null;
     }
+    #endregion
+
+    #region Private Methods
+    private void InitializeComponents()
+    {
+        anim = GetComponent<Animator>();
+        spriteRend = GetComponent<SpriteRenderer>();
+    }
+
+    private void ApplyDamageIfActive()
+    {
+        if (playerHealth != null && active)
+            playerHealth.TakeDamage(damage);
+    }
+
+    private void SetPlayerHealth(Collider2D collision)
+    {
+        playerHealth = collision.GetComponent<Health>();
+    }
+
+    private void ActivateTrapIfNotTriggered()
+    {
+        if (!triggered)
+            StartCoroutine(ActivateFiretrap());
+    }
 
     private IEnumerator ActivateFiretrap()
     {
-        // Turn the sprite red to notify the player and trigger the trap
+        SetTrapTriggered();
+        yield return new WaitForSeconds(activationDelay);
+        ActivateTrap();
+        yield return new WaitForSeconds(activeTime);
+        DeactivateTrap();
+    }
+
+    private void SetTrapTriggered()
+    {
         triggered = true;
         spriteRend.color = Color.red;
+    }
 
-        // Wait for delay, activate trap, turn on animation, return color back to normal
-        yield return new WaitForSeconds(activationDelay);
+    private void ActivateTrap()
+    {
         SoundManager.instance.PlaySound(firetrapSound);
-        spriteRend.color = Color.white; // Turn the sprite back to its initial color
+        spriteRend.color = Color.white;
         active = true;
         anim.SetBool("activated", true);
+    }
 
-        // Wait until X seconds, deactivate trap and reset all variables and animator
-        yield return new WaitForSeconds(activeTime);
+    private void DeactivateTrap()
+    {
         active = false;
         triggered = false;
         anim.SetBool("activated", false);
     }
+    #endregion
 }

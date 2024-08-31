@@ -3,35 +3,55 @@ using UnityEngine;
 public class MeleeEnemy : MonoBehaviour
 {
     [Header("Attack Parameters")]
-    [SerializeField] private float attackCooldown; // Cooldown time between attacks
-    [SerializeField] private float range; // Attack range
-    [SerializeField] private float damage; // Amount of damage inflicted as a float
+    [SerializeField] private float attackCooldown;
+    [SerializeField] private float range;
+    [SerializeField] private float damage;
 
     [Header("Movement Parameters")]
-    [SerializeField] private float moveSpeed = 3.0f; // Speed at which the enemy moves towards the player
+    [SerializeField] private float moveSpeed = 3.0f;
 
     [Header("Collider Parameters")]
-    [SerializeField] private BoxCollider2D boxCollider; // Reference to the attack collider
+    [SerializeField] private BoxCollider2D boxCollider;
 
     [Header("Player Layer")]
-    [SerializeField] private LayerMask playerLayer; // Layer mask for detecting the player
+    [SerializeField] private LayerMask playerLayer;
 
-    [SerializeField] private GameObject hitParticleSystemPrefab; // Particle system prefab for player hit effects
-    [SerializeField] private GameObject deathParticleSystemPrefab; // Particle system prefab for enemy death effects
+    [Header("Particle Systems")]
+    [SerializeField] private GameObject hitParticleSystemPrefab;
+    [SerializeField] private GameObject deathParticleSystemPrefab;
 
     [Header("Health Parameters")]
-    [SerializeField] private float health = 100f; // Enemy's health
+    [SerializeField] private float health = 100f;
 
-    private float cooldownTimer = Mathf.Infinity; // Timer for tracking attack cooldown
-    private Transform playerTransform; // Player's transform
-
-    // References
-    private Animator anim; // Animator component of the enemy
-    private Health playerHealth; // Player's health component
-    private EnemyPatrol enemyPatrol; // Enemy patrol script
-    private PlayerMovement playerMovement; // Reference to PlayerMovement script
+    private float cooldownTimer = Mathf.Infinity;
+    private Transform playerTransform;
+    private Animator anim;
+    private Health playerHealth;
+    private EnemyPatrol enemyPatrol;
+    private PlayerMovement playerMovement;
 
     private void Awake()
+    {
+        InitializeComponents();
+    }
+
+    private void Update()
+    {
+        if (!ValidateComponents()) return;
+
+        cooldownTimer += Time.deltaTime;
+
+        if (PlayerInSight() && PlayerWithinPatrolBounds())
+        {
+            HandlePlayerDetected();
+        }
+        else
+        {
+            enemyPatrol.enabled = true;
+        }
+    }
+
+    private void InitializeComponents()
     {
         anim = GetComponent<Animator>();
         enemyPatrol = GetComponentInParent<EnemyPatrol>();
@@ -39,7 +59,7 @@ public class MeleeEnemy : MonoBehaviour
         if (player != null)
         {
             playerTransform = player.transform;
-            playerMovement = player.GetComponent<PlayerMovement>();  // Ensure this line is correctly fetching the component
+            playerMovement = player.GetComponent<PlayerMovement>();
             if (playerMovement == null)
             {
                 Debug.LogError("PlayerMovement component not found on the Player object!");
@@ -56,41 +76,42 @@ public class MeleeEnemy : MonoBehaviour
         }
     }
 
-    private void Update()
+    private bool ValidateComponents()
     {
         if (playerMovement == null)
         {
             Debug.LogError("PlayerMovement component is not found!");
-            return; // Early exit to prevent further null reference issues
+            return false;
         }
 
         if (enemyPatrol == null || playerTransform == null)
         {
             Debug.LogError("EnemyPatrol or PlayerTransform is null!");
-            return; // Early exit
+            return false;
         }
 
-        cooldownTimer += Time.deltaTime;
+        return true;
+    }
 
-        if (PlayerInSight() && PlayerWithinPatrolBounds())
+    private void HandlePlayerDetected()
+    {
+        enemyPatrol.enabled = false;
+        if (CanMoveForward())
         {
-            enemyPatrol.enabled = false; // Disable patrol when player is in sight and within bounds
-            if (CanMoveForward())
-            {
-                FollowPlayer(); // Aggressively follow the player
-            }
+            FollowPlayer();
+        }
 
-            if (cooldownTimer >= attackCooldown)
-            {
-                cooldownTimer = 0;
-                anim.SetTrigger("meleeAttack");
-                DamagePlayer(); // Attack the player
-            }
-        }
-        else
+        if (cooldownTimer >= attackCooldown)
         {
-            enemyPatrol.enabled = true; // Enable patrol if the player is not in sight or out of bounds
+            Attack();
         }
+    }
+
+    private void Attack()
+    {
+        cooldownTimer = 0;
+        anim.SetTrigger("meleeAttack");
+        DamagePlayer();
     }
 
     private bool PlayerInSight()
@@ -114,9 +135,8 @@ public class MeleeEnemy : MonoBehaviour
         Vector2 direction = transform.right * transform.localScale.x;
         Vector2 checkPosition = (Vector2)transform.position + (direction * boxCollider.size.x);
 
-        // Check for ground and obstacles in front of the enemy
         Collider2D hit = Physics2D.OverlapBox(checkPosition, boxCollider.size, 0, LayerMask.GetMask("Default"));
-        return hit == null; // If nothing is hit, it's safe to move forward
+        return hit == null;
     }
 
     private void FollowPlayer()
@@ -139,13 +159,7 @@ public class MeleeEnemy : MonoBehaviour
         {
             if (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x)
             {
-                transform.position = new Vector3(proposedXPosition, transform.position.y, transform.position.z);
-                anim.SetBool("moving", true);
-
-                if (direction.x > 0)
-                    transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-                else if (direction.x < 0)
-                    transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+                MoveTowardsPlayer(proposedXPosition, direction);
             }
         }
         else
@@ -154,13 +168,22 @@ public class MeleeEnemy : MonoBehaviour
         }
     }
 
+    private void MoveTowardsPlayer(float proposedXPosition, Vector3 direction)
+    {
+        transform.position = new Vector3(proposedXPosition, transform.position.y, transform.position.z);
+        anim.SetBool("moving", true);
+
+        if (direction.x > 0)
+            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        else if (direction.x < 0)
+            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+    }
+
     private void DamagePlayer()
     {
         if (playerHealth != null)
         {
             playerHealth.TakeDamage(damage);
-
-            // Play particle system at player's position for hit effects
             Instantiate(hitParticleSystemPrefab, playerTransform.position, Quaternion.identity);
         }
     }
@@ -176,14 +199,8 @@ public class MeleeEnemy : MonoBehaviour
 
     private void Die()
     {
-        // Disable the BoxCollider2D component to prevent further interactions
         GetComponent<BoxCollider2D>().enabled = false;
-
-        // Play particle system at enemy's position for death effects
         Instantiate(deathParticleSystemPrefab, transform.position, Quaternion.identity);
-
-        // Other death-related logic
-        // For example, you might want to destroy the game object after some delay
         Destroy(gameObject);
     }
 }

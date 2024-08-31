@@ -2,79 +2,104 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro; // Add this
+using TMPro;
 
 public class PowerUpIndicatorManager : MonoBehaviour
 {
-    public GameObject indicatorPrefab; // Prefab for the indicator
-    public Transform indicatorsPanel; // Parent panel for indicators
+    [Header("References")]
+    public GameObject indicatorPrefab;
+    public Transform indicatorsPanel;
 
-    private List<GameObject> activeIndicators = new List<GameObject>(); // List to keep track of active indicators
+    [Header("Settings")]
+    private const int GAP = 10;
+    private const float MAX_INDICATOR_WIDTH = 200f;
+    private const float INITIAL_OPACITY = 0.5f;
+
+    private List<GameObject> activeIndicators = new List<GameObject>();
 
     public void ActivateIndicator(string powerUpName, Sprite powerUpImage, float duration)
     {
-        if (indicatorPrefab == null) {
-            Debug.LogError("indicatorPrefab is not set.");
-            return;
-        }
-        if (indicatorsPanel == null) {
-            Debug.LogError("indicatorsPanel is not set.");
-            return;
-        }
+        if (!ValidateReferences()) return;
 
         GameObject existingIndicator = FindIndicatorByName(powerUpName);
         if (existingIndicator != null)
         {
-            // Reset the timer and make sure it's active
-            existingIndicator.SetActive(true);
-            StopCoroutine(UpdateIndicator(existingIndicator, duration, existingIndicator.GetComponent<Image>()));
-            StartCoroutine(UpdateIndicator(existingIndicator, duration, existingIndicator.GetComponent<Image>()));
+            ResetExistingIndicator(existingIndicator, duration);
             return;
         }
 
+        CreateNewIndicator(powerUpName, powerUpImage, duration);
+    }
+
+    private bool ValidateReferences()
+    {
+        if (indicatorPrefab == null)
+        {
+            Debug.LogError("indicatorPrefab is not set.");
+            return false;
+        }
+        if (indicatorsPanel == null)
+        {
+            Debug.LogError("indicatorsPanel is not set.");
+            return false;
+        }
+        return true;
+    }
+
+    private void ResetExistingIndicator(GameObject indicator, float duration)
+    {
+        indicator.SetActive(true);
+        Image imageComponent = indicator.GetComponentInChildren<Image>();
+        StopCoroutine(UpdateIndicator(indicator, duration, imageComponent));
+        StartCoroutine(UpdateIndicator(indicator, duration, imageComponent));
+    }
+
+    private void CreateNewIndicator(string powerUpName, Sprite powerUpImage, float duration)
+    {
         GameObject newIndicator = Instantiate(indicatorPrefab, indicatorsPanel);
-        if (newIndicator == null) {
+        if (newIndicator == null)
+        {
             Debug.LogError("Failed to instantiate newIndicator.");
             return;
         }
 
-        Image imageComponent = newIndicator.transform.Find("Image").GetComponent<Image>();
-        if (imageComponent == null) {
-            Debug.LogError("Image component not found in newIndicator.");
+        SetupIndicatorComponents(newIndicator, powerUpName, powerUpImage, duration);
+        activeIndicators.Add(newIndicator);
+        UpdateIndicatorPositions();
+    }
+
+    private void SetupIndicatorComponents(GameObject indicator, string powerUpName, Sprite powerUpImage, float duration)
+    {
+        Image imageComponent = indicator.transform.Find("Image").GetComponent<Image>();
+        if (imageComponent == null)
+        {
+            Debug.LogError("Image component not found in indicator.");
             return;
         }
 
         imageComponent.sprite = powerUpImage;
-        imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, 0.5f); // Set to 50% opacity
+        imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, INITIAL_OPACITY);
 
-        StartCoroutine(UpdateIndicator(newIndicator, duration, imageComponent));
-        activeIndicators.Add(newIndicator);
-        UpdateIndicatorPositions();
-
-        // Set the name of the power-up
-        TMP_Text textComponent = newIndicator.GetComponentInChildren<TMP_Text>();
+        TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
         if (textComponent != null)
         {
-            // Apply bold and increase size
             textComponent.text = $"<b><size=120%>{powerUpName}</size></b>";
         }
         else
         {
-            Debug.LogError("Text component not found in newIndicator.");
+            Debug.LogError("Text component not found in indicator.");
         }
+
+        StartCoroutine(UpdateIndicator(indicator, duration, imageComponent));
     }
 
     private GameObject FindIndicatorByName(string powerUpName)
     {
-        foreach (GameObject indicator in activeIndicators)
+        return activeIndicators.Find(indicator => 
         {
             TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
-            if (textComponent != null && textComponent.text.Contains(powerUpName))
-            {
-                return indicator;
-            }
-        }
-        return null;
+            return textComponent != null && textComponent.text.Contains(powerUpName);
+        });
     }
 
     private IEnumerator UpdateIndicator(GameObject indicator, float duration, Image imageComponent)
@@ -91,39 +116,31 @@ public class PowerUpIndicatorManager : MonoBehaviour
             yield return null;
         }
 
-        // Optionally, remove and destroy the indicator if not needed anymore
         activeIndicators.Remove(indicator);
         Destroy(indicator);
         UpdateIndicatorPositions();
     }
 
-    private void UpdateIndicatorPositions() {
+    private void UpdateIndicatorPositions()
+    {
         float currentPositionX = 0;
         float maxHeight = 0;
-        int gap = 10; // Gap in pixels between indicators
 
-        foreach (GameObject indicator in activeIndicators) {
+        foreach (GameObject indicator in activeIndicators)
+        {
             RectTransform rect = indicator.GetComponent<RectTransform>();
             TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
 
-            // Calculate the required width and height
-            float indicatorWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(textComponent.rectTransform), 200); // Max width of 200
+            float indicatorWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(textComponent.rectTransform), MAX_INDICATOR_WIDTH);
             float indicatorHeight = LayoutUtility.GetPreferredHeight(textComponent.rectTransform);
 
-            // Set the position
             rect.localPosition = new Vector3(currentPositionX, 0, 0);
-
-            // Update the currentPositionX for the next indicator
-            currentPositionX += indicatorWidth + gap;
-
-            // Track the maximum height
-            if (indicatorHeight > maxHeight) {
-                maxHeight = indicatorHeight;
-            }
+            currentPositionX += indicatorWidth + GAP;
+            maxHeight = Mathf.Max(maxHeight, indicatorHeight);
         }
 
-        // Optionally adjust the height of the container if you want all indicators to align vertically
-        foreach (GameObject indicator in activeIndicators) {
+        foreach (GameObject indicator in activeIndicators)
+        {
             RectTransform rect = indicator.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(rect.sizeDelta.x, maxHeight);
         }

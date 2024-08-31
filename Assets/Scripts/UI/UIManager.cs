@@ -6,53 +6,58 @@ using TMPro;
 
 public class UIManager : MonoBehaviour
 {
+    #region Singleton
     public static UIManager instance;
 
     private void Awake()
     {
         if (instance != null && instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
+            return;
         }
-        else
-        {
-            instance = this;
-        }
+        instance = this;
     }
+    #endregion
 
-    [Header("Game Over")]
+    #region Serialized Fields
+    [Header("Screens")]
     [SerializeField] private GameObject gameOverScreen;
-    [SerializeField] private AudioClip gameOverSound;
-
-    [Header("Pause")]
     [SerializeField] private GameObject pauseScreen;
-
-    [Header("Level Transition")]
     [SerializeField] private GameObject loadingScreen;
-    [SerializeField] private Image loadingImage;
+    [SerializeField] private Image loadingBarFill;
 
-    [Header("Menu Options")]
+    [Header("UI Elements")]
+    [SerializeField] private Image loadingImage;
     [SerializeField] private Button continueButton;
     [SerializeField] private Button newGameButton;
-
-    [Header("Coin Display")]
     [SerializeField] private TextMeshProUGUI coinText;
 
-    public PlayerMovement playerMovement; // Assign this in the Unity Editor
+    [Header("Audio")]
+    [SerializeField] private AudioClip gameOverSound;
 
-    private void Start()
-    {
-        CheckSaveData();
-    }
+    [Header("Player Reference")]
+    [SerializeField] private PlayerMovement playerMovement;
+    #endregion
+
+    #region Properties
+    public bool IsPauseScreenActive => pauseScreen.activeInHierarchy;
+    public bool IsGameOverScreenActive => gameOverScreen.activeInHierarchy;
+    #endregion
+
+    #region Unity Lifecycle Methods
+    private void Start() => CheckSaveData();
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            PauseGame(!pauseScreen.activeInHierarchy);
+            PauseGame(!IsPauseScreenActive);
         }
     }
+    #endregion
 
+    #region Save Data Methods
     private void CheckSaveData()
     {
         if (GameManager.instance == null)
@@ -61,30 +66,33 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (SceneManager.GetActiveScene().buildIndex == 0)
+        if (SceneManager.GetActiveScene().buildIndex != 0) return;
+
+        bool saveExists = GameManager.instance.SaveDataExists();
+
+        SetButtonVisibility(continueButton, saveExists, "Continue button");
+        SetButtonVisibility(newGameButton, true, "New Game button");
+    }
+
+    private void SetButtonVisibility(Button button, bool isVisible, string buttonName)
+    {
+        if (button != null)
         {
-            bool saveExists = GameManager.instance.SaveDataExists();
-
-            if (continueButton != null)
-            {
-                continueButton.gameObject.SetActive(saveExists);
-            }
-            else
-            {
-                Debug.LogWarning("Continue button is not assigned in the Inspector.");
-            }
-
-            if (newGameButton != null)
-            {
-                newGameButton.gameObject.SetActive(true);
-            }
-            else
-            {
-                Debug.LogWarning("New Game button is not assigned in the Inspector.");
-            }
+            button.gameObject.SetActive(isVisible);
+        }
+        else
+        {
+            Debug.LogWarning($"{buttonName} is not assigned in the Inspector.");
         }
     }
 
+    public void SaveGame()
+    {
+        GameManager.instance?.SaveGame();
+    }
+    #endregion
+
+    #region Game Flow Methods
     public void NewGame()
     {
         GameManager.instance.ResetCoins();
@@ -93,109 +101,38 @@ public class UIManager : MonoBehaviour
         StartCoroutine(LoadNewGameByIndex());
     }
 
-    private IEnumerator LoadNewGameByIndex()
-    {
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1; // Increment the scene index
-        ShowLoadingScreen(true); // Use 'this' implicitly
-        AsyncOperation operation = SceneManager.LoadSceneAsync(nextSceneIndex);
-        operation.allowSceneActivation = false;
-
-        while (!operation.isDone)
-        {
-            float progress = Mathf.Clamp01(operation.progress / 0.9f);
-            UpdateLoadingImage(progress); // Use 'this' implicitly
-
-            if (operation.progress >= 0.9f)
-            {
-                operation.allowSceneActivation = true;
-            }
-
-            yield return null;
-        }
-
-        ShowLoadingScreen(false); // Use 'this' implicitly
-    }
-
     public void ContinueGame()
     {
-        SaveData saveData = GameManager.instance.LoadGame();
-        if (saveData != null)
-        {
-            Debug.Log("Loaded save data with level index: " + saveData.currentLevel);
-            SceneManager.LoadScene(saveData.currentLevel);
-        }
-        else
-        {
-            Debug.LogError("No save data found, cannot continue!");
-        }
+        int lastSavedLevelIndex = GameManager.instance.GetLastSavedLevelIndex();
+        LoadingManager.LoadSpecificLevel(lastSavedLevelIndex);
     }
 
-    public void Play(string sceneIndex)
-    {
-        StartCoroutine(LoadAsync(sceneIndex));
-    }
-
-    private IEnumerator LoadAsync(string sceneIndex)
-    {
-        loadingScreen.SetActive(true);
-        loadingImage.fillAmount = 0;
-        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneIndex);
-        operation.allowSceneActivation = false;
-
-        float simulatedProgress = 0f;
-        float fillSpeed = 0.1f; // Speed of the simulated loading progress
-        float simulatedDuration = 3f; // Simulated duration for loading
-
-        while (simulatedProgress < 1f)
-        {
-            simulatedProgress += Time.deltaTime / simulatedDuration;
-            loadingImage.fillAmount = Mathf.Lerp(loadingImage.fillAmount, simulatedProgress, fillSpeed);
-            Debug.Log("Current fill amount: " + loadingImage.fillAmount);
-            yield return null;
-        }
-
-        loadingImage.fillAmount = 1f;
-        Debug.Log("Loading complete. Fill amount: " + loadingImage.fillAmount);
-
-        yield return new WaitForSeconds(1); // Optional delay after filling
-        operation.allowSceneActivation = true;
-        yield return new WaitUntil(() => operation.isDone);
-        loadingScreen.SetActive(false);
-    }
+    public void Play(string sceneIndex) => StartCoroutine(LoadAsync(sceneIndex));
 
     public void GameOver()
     {
-        gameOverScreen.SetActive(true);
+        SetGameOverState(true);
         SoundManager.instance.PlaySound(gameOverSound);
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        ShowGameOverScreen(true);
     }
 
     public void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        Time.timeScale = 1;
-        ShowGameOverScreen(false);
+        SetGameOverState(false);
     }
 
     public void MainMenu()
     {
         SceneManager.LoadScene(0);
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        ShowGameOverScreen(false);
+        SetGameOverState(false);
+        ShowCursor();
     }
 
     public void Quit()
     {
-        if (GameManager.instance != null)
-        {
-            GameManager.instance.SaveGame();
-        }
-
+        GameManager.instance?.SaveGame();
+        ShowCursor();
         Application.Quit();
-
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
@@ -203,27 +140,20 @@ public class UIManager : MonoBehaviour
 
     public void PauseGame(bool status)
     {
-        if (gameOverScreen.activeInHierarchy)
-        {
-            return; // Do not allow pausing if the game over screen is active
-        }
+        if (IsGameOverScreenActive) return;
 
         pauseScreen.SetActive(status);
         Time.timeScale = status ? 0.01f : 1;
         Cursor.visible = status;
         Cursor.lockState = status ? CursorLockMode.None : CursorLockMode.Locked;
-        ShowPauseScreen(status);
+        TogglePlayerMovement(!status);
     }
+    #endregion
 
-    public void SoundVolume()
-    {
-        SoundManager.instance.ChangeSoundVolume(0.2f);
-    }
+    #region UI Update Methods
+    public void SoundVolume() => SoundManager.instance.ChangeSoundVolume(0.2f);
 
-    public void MusicVolume()
-    {
-        SoundManager.instance.ChangeMusicVolume(0.2f);
-    }
+    public void MusicVolume() => SoundManager.instance.ChangeMusicVolume(0.2f);
 
     public void ShowLoadingScreen(bool show)
     {
@@ -233,7 +163,8 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Loading screen GameObject is not assigned in the Inspector");
+            Debug.LogWarning("Loading screen GameObject is not assigned in the Inspector. Creating a temporary one.");
+            CreateTemporaryLoadingScreen(show);
         }
     }
 
@@ -249,19 +180,11 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SaveGame()
-    {
-        if (GameManager.instance != null)
-        {
-            GameManager.instance.SaveGame();
-        }
-    }
-
     public void UpdateCoinDisplay(int coins)
     {
         if (coinText != null)
         {
-            coinText.text = ": " + coins;
+            coinText.text = $": {coins}";
         }
         else
         {
@@ -277,14 +200,21 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public bool IsPauseScreenActive()
+    private void SetGameOverState(bool isGameOver)
     {
-        return pauseScreen.activeInHierarchy;
+        gameOverScreen.SetActive(isGameOver);
+        Cursor.visible = isGameOver;
+        Cursor.lockState = isGameOver ? CursorLockMode.None : CursorLockMode.Locked;
+        Time.timeScale = isGameOver ? 0 : 1;
+        TogglePlayerMovement(!isGameOver);
     }
+    #endregion
 
-    public bool IsGameOverScreenActive()
+    #region Utility Methods
+    private void ShowCursor()
     {
-        return gameOverScreen.activeInHierarchy;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void TogglePlayerMovement(bool enable)
@@ -292,16 +222,92 @@ public class UIManager : MonoBehaviour
         if (playerMovement != null)
             playerMovement.enabled = enable;
     }
+    #endregion
 
-    public void ShowPauseScreen(bool show)
+    #region Coroutines
+    private IEnumerator LoadNewGameByIndex()
     {
-        pauseScreen.SetActive(show);
-        TogglePlayerMovement(!show);
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        ShowLoadingScreen(true);
+        AsyncOperation operation = SceneManager.LoadSceneAsync(nextSceneIndex);
+        operation.allowSceneActivation = false;
+
+        while (!operation.isDone)
+        {
+            float progress = Mathf.Clamp01(operation.progress / 0.9f);
+            UpdateLoadingImage(progress);
+
+            if (operation.progress >= 0.9f)
+            {
+                operation.allowSceneActivation = true;
+            }
+
+            yield return null;
+        }
+
+        ShowLoadingScreen(false);
     }
 
-    public void ShowGameOverScreen(bool show)
+    private IEnumerator LoadAsync(string sceneIndex)
     {
-        gameOverScreen.SetActive(show);
-        TogglePlayerMovement(!show);
+        loadingScreen.SetActive(true);
+        loadingImage.fillAmount = 0;
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneIndex);
+        operation.allowSceneActivation = false;
+
+        float simulatedProgress = 0f;
+        float fillSpeed = 0.1f;
+        float simulatedDuration = 3f;
+
+        while (simulatedProgress < 1f)
+        {
+            simulatedProgress += Time.deltaTime / simulatedDuration;
+            loadingImage.fillAmount = Mathf.Lerp(loadingImage.fillAmount, simulatedProgress, fillSpeed);
+            yield return null;
+        }
+
+        loadingImage.fillAmount = 1f;
+        yield return new WaitForSeconds(1);
+        operation.allowSceneActivation = true;
+        yield return new WaitUntil(() => operation.isDone);
+        loadingScreen.SetActive(false);
     }
+    #endregion
+
+    #region Helper Methods
+    private void CreateTemporaryLoadingScreen(bool show)
+    {
+        if (show)
+        {
+            GameObject tempLoadingScreen = new GameObject("Temporary Loading Screen");
+            Canvas canvas = tempLoadingScreen.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 999;
+
+            Image backgroundImage = tempLoadingScreen.AddComponent<Image>();
+            backgroundImage.color = new Color(0, 0, 0, 0.5f);
+
+            GameObject loadingTextObj = new GameObject("Loading Text");
+            loadingTextObj.transform.SetParent(tempLoadingScreen.transform, false);
+            Text loadingText = loadingTextObj.AddComponent<Text>();
+            loadingText.text = "Loading...";
+            loadingText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            loadingText.fontSize = 24;
+            loadingText.color = Color.white;
+            loadingText.alignment = TextAnchor.MiddleCenter;
+
+            RectTransform rectTransform = loadingText.GetComponent<RectTransform>();
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.sizeDelta = Vector2.zero;
+
+            loadingScreen = tempLoadingScreen;
+        }
+        else if (loadingScreen != null)
+        {
+            Destroy(loadingScreen);
+            loadingScreen = null;
+        }
+    }
+    #endregion
 }

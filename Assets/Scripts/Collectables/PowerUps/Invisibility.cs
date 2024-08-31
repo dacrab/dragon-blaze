@@ -1,21 +1,27 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 
 public class Invisibility : PowerUpBase
 {
-    [SerializeField] private Sprite invisibilityImage; // Assign this in the inspector
+    [SerializeField] private Sprite invisibilityImage;
 
     protected override void ActivatePowerUp(PlayerMovement playerMovement)
     {
-        // Make the player invisible
-        playerMovement.SetInvisibility(false);
-        ActivateIndicator("Invisibility", invisibilityImage);
+        SetPlayerVisibility(playerMovement, false);
+        ActivateUIIndicator();
     }
 
     protected override void DeactivatePowerUp(PlayerMovement playerMovement)
     {
-        // Make the player visible again
-        playerMovement.SetInvisibility(true);
+        SetPlayerVisibility(playerMovement, true);
+    }
+
+    private void SetPlayerVisibility(PlayerMovement playerMovement, bool isVisible)
+    {
+        playerMovement.SetInvisibility(!isVisible);
+    }
+
+    private void ActivateUIIndicator()
+    {
+        ActivateIndicator("Invisibility", invisibilityImage);
     }
 }

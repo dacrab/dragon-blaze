@@ -1844,13 +1844,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverScreen: {fileID: 1507744785}
-  gameOverSound: {fileID: 8300000, guid: fdc5ae712861608d6b82f472a68b25ce, type: 3}
   pauseScreen: {fileID: 882176372}
   loadingScreen: {fileID: 2132130649}
+  loadingBarFill: {fileID: 0}
   loadingImage: {fileID: 482228774}
   continueButton: {fileID: 793324346}
   newGameButton: {fileID: 158620980}
   coinText: {fileID: 1242929331}
+  gameOverSound: {fileID: 8300000, guid: fdc5ae712861608d6b82f472a68b25ce, type: 3}
   playerMovement: {fileID: 0}
 --- !u!1 &1373849436
 GameObject:
@@ -2910,6 +2911,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aed9181343ba8f4bad5010064d61887, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  soundSource: {fileID: 1485914771}
+  musicSource: {fileID: 1373849438}
   musicSlider: {fileID: 746525071578753334}
   soundSlider: {fileID: 5104888965308927657}
 --- !u!82 &1952200056

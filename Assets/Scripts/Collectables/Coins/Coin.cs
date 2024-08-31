@@ -3,9 +3,10 @@ using UnityEngine;
 public class Coin : Collectable
 {
     [SerializeField] private int value = 1;
-    private int storedValue;
     [SerializeField] private AudioClip pickupSound;
     [SerializeField] private ParticleSystem pickupEffect;
+
+    private int storedValue;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -25,24 +26,38 @@ public class Coin : Collectable
         {
             return;
         }
-        // Play the pickup sound
+
+        PlayPickupSound();
+        PlayPickupEffect();
+        AddCoinsToGameManager();
+        DestroyCoin();
+    }
+
+    private void PlayPickupSound()
+    {
         if (SoundManager.instance != null && pickupSound != null)
         {
             SoundManager.instance.PlaySound(pickupSound);
         }
+    }
 
-        // Play the pickup particle effect
+    private void PlayPickupEffect()
+    {
         if (pickupEffect != null)
         {
             ParticleSystem effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
             effect.Play();
             Destroy(effect.gameObject, effect.main.duration);
         }
+    }
 
-        // Add the value of the coin to the GameManager's total coins
+    private void AddCoinsToGameManager()
+    {
         GameManager.instance.AddCoins(value);
+    }
 
-        // Destroy the coin
+    private void DestroyCoin()
+    {
         Destroy(gameObject);
     }
 

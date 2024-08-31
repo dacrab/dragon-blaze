@@ -2,29 +2,34 @@ using UnityEngine;
 
 public class EnemyPatrol : MonoBehaviour
 {
+    #region Serialized Fields
     [Header("Patrol Points")]
-    [SerializeField] private Transform leftEdge; // Left edge of the patrol area
-    [SerializeField] private Transform rightEdge; // Right edge of the patrol area
-
-    public Transform LeftEdge => leftEdge;
-    public Transform RightEdge => rightEdge;
+    [SerializeField] private Transform leftEdge;
+    [SerializeField] private Transform rightEdge;
 
     [Header("Enemy")]
-    [SerializeField] private Transform enemy; // Reference to the enemy's transform
+    [SerializeField] private Transform enemy;
 
-    [Header("Movement parameters")]
-    [SerializeField] private float speed; // Speed at which the enemy moves
-    private Vector3 initScale; // Initial scale of the enemy
-    private bool movingLeft; // Flag indicating whether the enemy is currently moving left
-
-    [Header("Idle Behaviour")]
-    [SerializeField] private float idleDuration; // Duration of idle time after reaching an edge
-    private float idleTimer; // Timer for tracking idle time
+    [Header("Movement Parameters")]
+    [SerializeField] private float speed;
+    [SerializeField] private float idleDuration;
 
     [Header("Enemy Animator")]
-    [SerializeField] private Animator anim; // Reference to the enemy's animator component
+    [SerializeField] private Animator anim;
+    #endregion
 
+    #region Properties
+    public Transform LeftEdge => leftEdge;
+    public Transform RightEdge => rightEdge;
+    #endregion
 
+    #region Private Fields
+    private Vector3 initScale;
+    private bool movingLeft;
+    private float idleTimer;
+    #endregion
+
+    #region Unity Lifecycle Methods
     private void Awake()
     {
         initScale = enemy.localScale;
@@ -32,53 +37,50 @@ public class EnemyPatrol : MonoBehaviour
 
     private void OnDisable()
     {
-        // Set the "moving" parameter in the animator to false when the enemy is disabled
         anim.SetBool("moving", false);
     }
 
     private void Update()
     {
-        // Check if the enemy should move left or right based on its current direction
         if (movingLeft)
         {
             if (enemy.position.x >= leftEdge.position.x)
-                MoveInDirection(-1); // Move left
+                MoveInDirection(-1);
             else
-                DirectionChange(); // Change direction if the left edge is reached
+                DirectionChange();
         }
         else
         {
             if (enemy.position.x <= rightEdge.position.x)
-                MoveInDirection(1); // Move right
+                MoveInDirection(1);
             else
-                DirectionChange(); // Change direction if the right edge is reached
+                DirectionChange();
         }
     }
+    #endregion
 
-    // Method to handle changing direction and idle behavior
+    #region Movement Methods
     private void DirectionChange()
     {
-        anim.SetBool("moving", false); // Stop moving animation
+        anim.SetBool("moving", false);
         idleTimer += Time.deltaTime;
 
         if (idleTimer > idleDuration)
         {
             movingLeft = !movingLeft;
-            idleTimer = 0; // Reset the idle timer only when direction changes
+            idleTimer = 0;
         }
     }
 
-    // Method to move the enemy in a specific direction
     private void MoveInDirection(int _direction)
     {
-        idleTimer = 0; // Reset the idle timer
-        anim.SetBool("moving", true); // Set the "moving" parameter to true in the animator
+        idleTimer = 0;
+        anim.SetBool("moving", true);
 
-        // Make the enemy face the specified direction
         enemy.localScale = new Vector3(Mathf.Abs(initScale.x) * _direction, initScale.y, initScale.z);
 
-        // Move the enemy in the specified direction
         enemy.position = new Vector3(enemy.position.x + Time.deltaTime * _direction * speed,
             enemy.position.y, enemy.position.z);
     }
+    #endregion
 }

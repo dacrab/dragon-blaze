@@ -11,58 +11,75 @@ public class SaveData
 
 public class GameManager : MonoBehaviour
 {
+    #region Singleton
     public static GameManager instance;
 
-    public delegate void ScoreChanged(int newScore);
-    public static event ScoreChanged OnScoreChanged;
-
-    private int totalCoins = 0;
-    private string saveFilePath;
-
-    public int TotalCoins
+    private void Awake()
     {
-        get { return totalCoins; }
+        InitializeSingleton();
+        InitializeSaveSystem();
     }
 
-    private void Awake()
+    private void InitializeSingleton()
     {
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject); // This will keep the GameManager alive across different scenes.
+            DontDestroyOnLoad(gameObject);
         }
         else if (instance != this)
         {
-            Destroy(gameObject); // This ensures that there aren't multiple GameManager instances.
+            Destroy(gameObject);
         }
+    }
+
+    private void InitializeSaveSystem()
+    {
         saveFilePath = Application.persistentDataPath + "/savefile.json";
         LoadGame();
     }
+    #endregion
 
+    #region Properties
+    private int totalCoins = 0;
+    public int TotalCoins => totalCoins;
+
+    private string saveFilePath;
+    #endregion
+
+    #region Events
+    public delegate void ScoreChanged(int newScore);
+    public static event ScoreChanged OnScoreChanged;
+    #endregion
+
+    #region Coin Management
     public void AddCoins(int value)
     {
         totalCoins += value;
-        OnScoreChanged?.Invoke(totalCoins);  // Fire the event whenever coins are added
+        OnScoreChanged?.Invoke(totalCoins);
         SaveGame();
-        UIManager uiManager = FindObjectOfType<UIManager>();
-        if (uiManager != null)
-            uiManager.UpdateCoinDisplay(totalCoins);
-        else
-            Debug.LogError("UIManager not found.");
+        UpdateUICoins();
     }
 
     public void ResetCoins()
     {
         totalCoins = 0;
-        OnScoreChanged?.Invoke(totalCoins);  // Fire the event when coins are reset
+        OnScoreChanged?.Invoke(totalCoins);
         SaveGame();
+        UpdateUICoins();
+    }
+
+    private void UpdateUICoins()
+    {
         UIManager uiManager = FindObjectOfType<UIManager>();
         if (uiManager != null)
             uiManager.UpdateCoinDisplay(totalCoins);
         else
             Debug.LogError("UIManager not found.");
     }
+    #endregion
 
+    #region Save/Load System
     public void SaveGame(bool isNewGame = false)
     {
         SaveData data = new SaveData
@@ -85,9 +102,26 @@ public class GameManager : MonoBehaviour
         {
             string json = File.ReadAllText(saveFilePath);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
-            totalCoins = data.totalCoins; // Ensure this is correctly updating the GameManager's state
+            totalCoins = data.totalCoins;
             return data;
         }
         return null;
     }
+
+    public int GetLastSavedLevelIndex()
+    {
+        SaveData saveData = LoadSaveData();
+        return saveData != null ? saveData.currentLevel : 1;
+    }
+
+    private SaveData LoadSaveData()
+    {
+        if (File.Exists(saveFilePath))
+        {
+            string json = File.ReadAllText(saveFilePath);
+            return JsonUtility.FromJson<SaveData>(json);
+        }
+        return null;
+    }
+    #endregion
 }
