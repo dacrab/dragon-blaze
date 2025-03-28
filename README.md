@@ -1,64 +1,71 @@
-# 🎮 Unity 2D Platformer: A Magical Adventure
+# 🎮 Unity 2D Platformer
 
-Welcome to an enchanting 2D platformer crafted with love using Unity! 🌟✨
+*Embark on a magical adventure in this enchanting 2D platformer crafted with Unity*
 
-## 📜 A Tale of Wonder
-Embark on an extraordinary journey through a breathtaking 2D realm! This Unity-powered masterpiece boasts silky-smooth controls, heart-pounding challenges, and a treasure trove of captivating mechanics. Designed to ignite the imagination of players young and old alike, our game promises an unforgettable adventure that blossoms with each magical update. 🌈🏰
+<div align="center">
+  
+[![Play Now](https://img.shields.io/badge/Play%20Now-itch.io-FA5C5C?style=for-the-badge&logo=itch.io)](https://dacrab.itch.io/unity-2d-platformer)
 
-## 🎮 Experience the Magic Now!
-Immerse yourself in the wonder - play directly in your browser:
+## 🎥 Gameplay Preview
+[<img src="https://img.shields.io/badge/Watch_Gameplay-4285F4?style=for-the-badge&logo=google-drive&logoColor=white" />](https://drive.google.com/file/d/1A_-qFr5LuwZUnVla1aqEab6fWn9i16fv/view?usp=drive_link)
 
-<iframe frameborder="0" src="https://itch.io/embed-upload/10842144?color=333333" allowfullscreen="" width="1920" height="1080"><a href="https://dacrab.itch.io/unity-2d-platformer">Embark on your Unity 2D Platformer journey on itch.io</a></iframe>
+</div>
 
-## ✨ Enchanting Features
-- 🏃‍♂️ Graceful, fluid player movement that dances across the screen
-- 🦘 Gravity-defying jumps with coyote time and mystical multi-jump abilities
-- 💨 Swift dash ability, leaving trails of stardust in your wake
-- 🏞️ A tapestry of levels, each more challenging and beautiful than the last
-- 🧗‍♀️ Ingenious level design brimming with diverse, magical challenges
-- 🎨 Stunning visuals and mesmerizing particle effects that bring the world to life
-- 🎵 An immersive soundscape that transports you to another world
-- 💾 Local save system to preserve your heroic journey
-- 🔀 Seamless scene transitions that maintain the magic
-- 🚩 Mystical checkpoint system to mark your progress
-- 🍄 Whimsical power-ups to enhance your abilities
-- 🧱 Wall sliding for gravity-defying platforming techniques
+## ✨ Features
+- 🎯 Fluid player movement and responsive controls
+- 🦸‍♂️ Advanced platforming mechanics:
+  - ⚡ Coyote time and multi-jump capabilities
+  - 🧗‍♂️ Smooth wall sliding
+  - 💨 Dynamic dash ability with particle effects
+- 🏗️ Meticulously crafted levels with progressive challenge
+- 🎨 Stunning visuals and particle systems
+- 🎵 Rich, immersive soundscape
+- 💾 Seamless save system with checkpoints
+- 🔄 Polished scene transitions
+- ⭐ Engaging power-up system
 
-## 🚀 Begin Your Quest
-To embark on your local adventure, follow these mystical steps:
-1. Summon the repository: `git clone https://github.com/dacrab/unity-game.git`
-2. Unlock the project's secrets in Unity
-3. Journey to the main scene
-4. Unleash the magic with Unity's play button
-5. Command your hero with arrow keys or A/D
-6. Soar through the air with Spacebar
-7. Harness the power of the dash with Left Shift while moving
-8. Navigate treacherous levels, outsmart obstacles, and claim victory at checkpoints!
+## 🚀 Getting Started
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/dacrab/unity-game.git
+   ```
+2. Open project in Unity
+3. Load the main scene
+4. Press Play to begin your adventure!
 
-## 🆕 Latest Enchantments
-- 🧱 Mastery of wall sliding, defying gravity itself
-- 💨 Dashing ability now leaves trails of sparkling stardust
-- 🦘 Enhanced jumping system, granting the gift of flight
-- ✨ Dazzling particle effects for jumps and dashes
-- 🏞️ Expanded realms with even more mystical challenges
-- 🌐 Our magical realm now accessible via WebGL on itch.io
+## 🎮 Controls
+| Action | Input |
+|--------|--------|
+| Move | Arrow keys or A/D |
+| Jump | Spacebar |
+| Dash | Left Shift (while moving) |
+| Wall Slide | Hold direction against wall |
 
-## 🔮 Future Wonders
-- 🌍 Unexplored realms with unique themes and arcane mechanics
-- 💰 Glittering coin system with a magical economy
-- 👑 Epic final confrontation with a legendary boss
-- 🛒 Mystical shop for ability enhancements and arcane power-ups
-- 🎮 Controls honed to perfection for ultimate responsiveness
-- 🏆 Legendary online leaderboards and heroic achievements
+## 🆕 Recent Updates
+- 🧗‍♂️ Implemented wall sliding mechanic
+- ✨ Enhanced dash with stunning particle trails
+- 🦘 Improved jump system physics
+- 🎆 Added new particle effects
+- 🏰 Expanded with additional levels
+- 🌐 Launched WebGL build on itch.io
 
-## 🙌 Gratitude to the Creators
-- Game lovingly crafted by [DaCrab](https://github.com/dacrab)
-- Empowered by the wizards at [Unity Technologies](https://unity.com/)
-- Artistic treasures from the [Asset Store](https://assetstore.unity.com/)
-- Enchanting melodies from [Freesound](https://freesound.org/)
+## 🗺️ Roadmap
+- 🌍 New themed worlds
+- 💰 Currency system
+- 👾 Epic boss battles
+- 🏪 Shop system
+- 🎯 Control refinements
+- 🏆 Online leaderboards
+- 🌟 Achievements system
 
-## 📄 Scroll of Rights
-This magical creation is protected under the MIT License - consult the [LICENSE](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt) scroll for details.
+## 👥 Credits
+- 👨‍💻 Developer: [DaCrab](https://github.com/dacrab)
+- 🎮 Engine: [Unity Technologies](https://unity.com/)
+- 🎨 Assets: [Unity Asset Store](https://assetstore.unity.com/)
+- 🎵 Sound: [Freesound](https://freesound.org/)
 
-## 📬 Share Your Tales
-Your voice shapes our world! For suggestions, reports of mystical bugs, or simply to share your adventures, reach out to us at [vkavouras@proton.me](mailto:vkavouras@proton.me). Together, let's weave an epic tale of gaming wonder! 🎭🌠
+## 📜 License
+MIT License - See [LICENSE](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt)
+
+## 📬 Contact
+For bug reports or suggestions: [vkavouras@proton.me](mailto:vkavouras@proton.me)
