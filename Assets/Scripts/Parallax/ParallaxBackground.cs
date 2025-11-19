@@ -6,6 +6,8 @@ public class ParallaxBackground : MonoBehaviour
     [SerializeField] private Vector2 parallaxEffectMultiplier;
     [SerializeField] private bool infiniteHorizontal;
     [SerializeField] private bool infiniteVertical;
+    [SerializeField] private bool followMouse; // Added for menu compatibility
+    [SerializeField] private float mouseSmoothTime = 0.3f;
     #endregion
 
     #region Private Fields
@@ -14,21 +16,38 @@ public class ParallaxBackground : MonoBehaviour
     private float textureUnitSizeX;
     private float textureUnitSizeY;
     private SpriteRenderer spriteRenderer;
+    
+    // Menu Specific
+    private Vector2 startPosition;
+    private Vector3 velocity;
     #endregion
 
     #region Unity Lifecycle Methods
     void Start()
     {
-        InitializeComponents();
-        SetupTextureSize();
+        if (!followMouse)
+        {
+            InitializeComponents();
+            SetupTextureSize();
+        }
+        else
+        {
+            startPosition = transform.position;
+        }
     }
 
     private void LateUpdate()
     {
-        if (cameraTransform == null) return;
-
-        ApplyParallaxEffect();
-        HandleInfiniteScrolling();
+        if (followMouse)
+        {
+            UpdateMouseParallax();
+        }
+        else
+        {
+            if (cameraTransform == null) return;
+            ApplyParallaxEffect();
+            HandleInfiniteScrolling();
+        }
     }
     #endregion
 
@@ -38,21 +57,18 @@ public class ParallaxBackground : MonoBehaviour
         cameraTransform = Camera.main?.transform;
         if (cameraTransform == null)
         {
-            Debug.LogError("Camera.main is not found. ParallaxBackground requires a main camera.");
+            // Optional: Debug.LogWarning for menu scenes where this might not matter
             return;
         }
 
         lastCameraPosition = cameraTransform.position;
         spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
-        {
-            Debug.LogError("SpriteRenderer component not found on the object.");
-            return;
-        }
     }
 
     private void SetupTextureSize()
     {
+        if (spriteRenderer == null) return;
+        
         Texture2D texture = spriteRenderer.sprite.texture;
         textureUnitSizeX = texture.width / spriteRenderer.sprite.pixelsPerUnit;
         textureUnitSizeY = texture.height / spriteRenderer.sprite.pixelsPerUnit;
@@ -67,6 +83,8 @@ public class ParallaxBackground : MonoBehaviour
 
     private void HandleInfiniteScrolling()
     {
+        if (spriteRenderer == null) return;
+
         if (infiniteHorizontal)
         {
             AdjustHorizontalPosition();
@@ -94,6 +112,16 @@ public class ParallaxBackground : MonoBehaviour
         {
             transform.position = new Vector3(transform.position.x, cameraTransform.position.y - offsetPositionY);
         }
+    }
+    
+    private void UpdateMouseParallax()
+    {
+        if (Camera.main == null) return;
+        
+        Vector2 offset = Camera.main.ScreenToViewportPoint(Input.mousePosition);
+        // Use parallaxEffectMultiplier.x as offset multiplier
+        Vector2 targetPosition = startPosition + (offset * parallaxEffectMultiplier.x);
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, mouseSmoothTime);
     }
     #endregion
 }

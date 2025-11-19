@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Core.Constants;
 
 public class LoadingManager : MonoBehaviour
 {
@@ -62,15 +63,23 @@ public class LoadingManager : MonoBehaviour
     {
         EnsureUIManager();
 
-        uiManager.ShowLoadingScreen(true);
+        if (uiManager) uiManager.ShowLoadingScreen(true);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
+        // Check for operation validity (scene index might be out of range)
+        if (operation == null)
+        {
+            Debug.LogError($"Scene index {levelIndex} could not be loaded.");
+            if (uiManager) uiManager.ShowLoadingScreen(false);
+            yield break;
+        }
+        
         operation.allowSceneActivation = false;
 
         while (!operation.isDone)
         {
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
-            uiManager.UpdateLoadingImage(progress);
+            if (uiManager) uiManager.UpdateLoadingImage(progress);
 
             if (operation.progress >= 0.9f)
             {
@@ -81,7 +90,7 @@ public class LoadingManager : MonoBehaviour
             yield return null;
         }
 
-        uiManager.ShowLoadingScreen(false);
+        if (uiManager) uiManager.ShowLoadingScreen(false);
     }
 
     private void EnsureUIManager()
@@ -89,11 +98,11 @@ public class LoadingManager : MonoBehaviour
         if (uiManager == null)
         {
             uiManager = FindObjectOfType<UIManager>();
+            // Don't create a temp UIManager blindly, as UIManager handles UI elements that must exist.
+            // If it's missing, loading screen won't show, but level loading should proceed.
             if (uiManager == null)
             {
-                Debug.LogWarning("UIManager not found in the scene. Creating a temporary one.");
-                GameObject tempUIManager = new GameObject("Temporary UIManager");
-                uiManager = tempUIManager.AddComponent<UIManager>();
+                Debug.LogWarning("UIManager not found. Loading screen will not be shown.");
             }
         }
     }

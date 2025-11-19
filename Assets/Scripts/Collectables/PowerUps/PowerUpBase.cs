@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using Core.Constants;
+using Player;
 
 public abstract class PowerUpBase : MonoBehaviour
 {
@@ -17,13 +19,22 @@ public abstract class PowerUpBase : MonoBehaviour
 
     protected virtual void OnTriggerEnter2D(Collider2D collision)
     {
-        PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
-        if (playerMovement != null)
+        if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+
+        PlayerPowerups playerPowerups = collision.GetComponent<PlayerPowerups>();
+        // Fallback to PlayerMovement shim if PlayerPowerups is not directly found (though it should be)
+        if (playerPowerups == null)
         {
-            ActivatePowerUp(playerMovement);
+             PlayerMovement pm = collision.GetComponent<PlayerMovement>();
+             if (pm != null) playerPowerups = pm.GetComponent<PlayerPowerups>();
+        }
+
+        if (playerPowerups != null)
+        {
+            ActivatePowerUp(playerPowerups);
             if (powerUpCoroutine != null)
                 StopCoroutine(powerUpCoroutine);
-            powerUpCoroutine = StartCoroutine(PowerUpTimer(playerMovement));
+            powerUpCoroutine = StartCoroutine(PowerUpTimer(playerPowerups));
             StartCoroutine(FadeOutAndInSprite());
 
             GetComponent<Collider2D>().enabled = false;
@@ -32,8 +43,8 @@ public abstract class PowerUpBase : MonoBehaviour
     #endregion
 
     #region Power-Up Methods
-    protected abstract void ActivatePowerUp(PlayerMovement playerMovement);
-    protected abstract void DeactivatePowerUp(PlayerMovement playerMovement);
+    protected abstract void ActivatePowerUp(PlayerPowerups playerPowerups);
+    protected abstract void DeactivatePowerUp(PlayerPowerups playerPowerups);
 
     protected void ActivateIndicator(string powerUpName, Sprite powerUpImage)
     {
@@ -42,10 +53,7 @@ public abstract class PowerUpBase : MonoBehaviour
         {
             indicatorManager.ActivateIndicator(powerUpName, powerUpImage, duration);
         }
-        else
-        {
-            Debug.LogWarning("PowerUpIndicatorManager not found in the scene.");
-        }
+        // Else suppress warning if manager is optional
     }
     #endregion
 
@@ -80,11 +88,11 @@ public abstract class PowerUpBase : MonoBehaviour
         }
     }
 
-    protected IEnumerator PowerUpTimer(PlayerMovement playerMovement)
+    protected IEnumerator PowerUpTimer(PlayerPowerups playerPowerups)
     {
         yield return new WaitForSeconds(duration);
-        DeactivatePowerUp(playerMovement);
-        GetComponent<Collider2D>().enabled = true;
+        DeactivatePowerUp(playerPowerups);
+        if (GetComponent<Collider2D>()) GetComponent<Collider2D>().enabled = true;
     }
     #endregion
 }

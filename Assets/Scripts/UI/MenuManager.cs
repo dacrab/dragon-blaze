@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Core.Constants;
+using Core.Systems;
 
 public class MenuManager : MonoBehaviour
 {
@@ -8,7 +10,10 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private RectTransform[] buttons;
     [SerializeField] private AudioClip changeSound;
     [SerializeField] private AudioClip interactSound;
-    [SerializeField] private UIManager uiManager;
+    // Removed UIManager reference as MainMenu usually doesn't share UIManager with Gameplay unless persistent.
+    // But UIManager has ContinueGame logic.
+    // Let's assume UIManager is present or we use GameManager/SaveSystem directly.
+    [SerializeField] private UIManager uiManager; 
     #endregion
 
     #region Private Fields
@@ -42,14 +47,16 @@ public class MenuManager : MonoBehaviour
 
     public void ContinueGame()
     {
-        if (uiManager != null)
-        {
-            uiManager.ContinueGame();
-        }
-        else
-        {
-            Debug.LogError("UIManager not assigned in MenuManager");
-        }
+        // Use SaveSystem directly or GameManager
+        // Original UIManager.ContinueGame() -> LoadingManager.LoadSpecificLevel(GameManager.GetLastSavedLevelIndex())
+        
+        // Since we refactored GameManager, we can access last saved level directly.
+        int levelIndex = GameManager.instance.GetLastSavedLevelIndex();
+        
+        // Use LoadingManager if available (static methods)
+        // But we need to be careful if LoadingManager exists in scene.
+        // Assuming LoadingManager is a persistent singleton or static helper.
+        LoadingManager.LoadSpecificLevel(levelIndex);
     }
     #endregion
 
@@ -101,7 +108,17 @@ public class MenuManager : MonoBehaviour
 
     private void StartGame()
     {
-        SceneManager.LoadScene(PlayerPrefs.GetInt("level", 1));
+        // Load level 1 (or next level). Assuming 1 is first level.
+        // Or check PlayerPrefs "level" if that's legacy.
+        // Refactored SaveSystem uses SaveData.currentLevel.
+        
+        // Assuming "Start Game" means New Game?
+        // If New Game, reset data.
+        GameManager.instance.ResetCoins();
+        GameManager.instance.SaveGame(true);
+        
+        // Load level 1
+        LoadingManager.LoadSpecificLevel(1);
     }
 
     private void QuitGame()
