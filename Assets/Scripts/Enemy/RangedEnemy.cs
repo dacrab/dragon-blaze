@@ -1,22 +1,24 @@
 using UnityEngine;
+using Core.Constants;
+using Core.Systems;
 
-public class RangedEnemy : MonoBehaviour
+public class RangedEnemy : EnemyBase
 {
     #region Serialized Fields
     [Header("Attack Parameters")]
     [SerializeField] private float attackCooldown;
     [SerializeField] private float range;
-    [SerializeField] private int damage;
+    // Damage inherited from Base
 
     [Header("Ranged Attack")]
     [SerializeField] private Transform firepoint;
-    [SerializeField] private GameObject[] fireballs;
+    [SerializeField] private GameObject[] fireballs; // Could use ObjectPool
 
     [Header("Collider Parameters")]
     [SerializeField] private float colliderDistance;
-    [SerializeField] private BoxCollider2D boxCollider;
+    // BoxCollider2D inherited as 'col'
 
-    [Header("Player Layer")]
+    [Header("Player Detection")]
     [SerializeField] private LayerMask playerLayer;
 
     [Header("Audio")]
@@ -25,38 +27,61 @@ public class RangedEnemy : MonoBehaviour
 
     #region Private Fields
     private float cooldownTimer = Mathf.Infinity;
-    private Animator anim;
     private EnemyPatrol enemyPatrol;
-    private PlayerMovement playerMovement;
+    private Player.PlayerController playerController; // Direct dependency on new system
+    private Transform playerTransform;
     #endregion
 
     #region Unity Lifecycle Methods
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake(); // Initializes anim, rb, col
         InitializeComponents();
     }
 
     private void Update()
     {
+        if (isDead) return;
+
         UpdateCooldownTimer();
-        HandleAttack();
-        UpdateEnemyPatrol();
+        
+        if (PlayerInSight())
+        {
+            if (cooldownTimer >= attackCooldown)
+            {
+                cooldownTimer = 0;
+                anim.SetTrigger("rangedAttack"); // Verify trigger name in Animator
+            }
+            
+            if (enemyPatrol != null) enemyPatrol.enabled = false;
+        }
+        else
+        {
+            if (enemyPatrol != null) enemyPatrol.enabled = true;
+        }
     }
     #endregion
 
     #region Initialization
     private void InitializeComponents()
     {
-        anim = GetComponent<Animator>();
         enemyPatrol = GetComponentInParent<EnemyPatrol>();
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        
+        GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
         if (player != null)
         {
-            playerMovement = player.GetComponent<PlayerMovement>();
-        }
-        else
-        {
-            Debug.LogError("Player object not found with tag 'Player'!");
+            playerTransform = player.transform;
+            // Senior Dev move: Depend on the abstraction/interface or the new Controller
+            playerController = player.GetComponent<Player.PlayerController>();
+            
+            // Fallback for migration phase if they haven't swapped yet
+            if (playerController == null)
+            {
+                // This handles the case where user still has PlayerMovement script
+                // We can try to get PlayerMovement and cast/use? 
+                // But user said "remove legacy". So we enforce PlayerController.
+                Debug.LogWarning("RangedEnemy: PlayerController not found on Player! Ensure Player has been migrated.");
+            }
         }
     }
     #endregion
@@ -66,64 +91,66 @@ public class RangedEnemy : MonoBehaviour
     {
         cooldownTimer += Time.deltaTime;
     }
-
-    private void HandleAttack()
-    {
-        if (PlayerInSight() && cooldownTimer >= attackCooldown)
-        {
-            cooldownTimer = 0;
-            anim.SetTrigger("rangedAttack");
-        }
-    }
-
-    private void UpdateEnemyPatrol()
-    {
-        if (enemyPatrol != null)
-            enemyPatrol.enabled = !PlayerInSight();
-    }
     #endregion
 
     #region Attack Methods
+    // Called by Animation Event
     private void RangedAttack()
     {
         SoundManager.instance.PlaySound(fireballSound);
         cooldownTimer = 0;
-        int fireballIndex = FindFireball();
-        fireballs[fireballIndex].transform.position = firepoint.position;
-        fireballs[fireballIndex].GetComponent<EnemyProjectile>().ActivateProjectile();
+        
+        // Use Object Pool if available, else fallback to array
+        // For now, sticking to array logic to minimize breaking changes in Inspector (assigning fireballs)
+        // But refining the search.
+        
+        GameObject fireball = GetFireball();
+        if (fireball != null)
+        {
+            fireball.transform.position = firepoint.position;
+            // ActivateProjectile on EnemyProjectile handles direction/activation
+            fireball.GetComponent<EnemyProjectile>().ActivateProjectile(); 
+        }
     }
 
-    private int FindFireball()
+    private GameObject GetFireball()
     {
         for (int i = 0; i < fireballs.Length; i++)
         {
             if (!fireballs[i].activeInHierarchy)
-                return i;
+                return fireballs[i];
         }
-        return 0;
+        return null;
     }
     #endregion
 
     #region Player Detection Methods
     private bool PlayerInSight()
     {
-        if (playerMovement.IsInvisible()) return false;
+        if (playerController == null || playerController.IsInvisible()) return false;
+
+        // Using inherited 'col' (needs cast if we want Bounds specifically from BoxCollider2D)
+        BoxCollider2D box = col as BoxCollider2D;
+        if (box == null) return false;
 
         RaycastHit2D hit = Physics2D.BoxCast(
-            boxCollider.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
-            new Vector3(boxCollider.bounds.size.x * range, boxCollider.bounds.size.y, boxCollider.bounds.size.z),
+            box.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
+            new Vector3(box.bounds.size.x * range, box.bounds.size.y, box.bounds.size.z),
             0, Vector2.left, 0, playerLayer);
 
-        return hit.collider != null;
+        return hit.collider != null && hit.collider.CompareTag(GameConstants.Tags.Player);
     }
     #endregion
 
     #region Gizmo Methods
     private void OnDrawGizmos()
     {
+        BoxCollider2D box = GetComponent<BoxCollider2D>();
+        if (box == null) return;
+
         Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(boxCollider.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
-            new Vector3(boxCollider.bounds.size.x * range, boxCollider.bounds.size.y, boxCollider.bounds.size.z));
+        Gizmos.DrawWireCube(box.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
+            new Vector3(box.bounds.size.x * range, box.bounds.size.y, box.bounds.size.z));
     }
     #endregion
 }

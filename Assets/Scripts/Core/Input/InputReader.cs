@@ -13,6 +13,7 @@ namespace Core.Input
         public event UnityAction JumpCanceledEvent;
         public event UnityAction DashEvent;
         public event UnityAction PauseEvent;
+        public event UnityAction InteractEvent;
 
         public void EnableInput()
         {
@@ -50,6 +51,11 @@ namespace Core.Input
             if (UnityEngine.Input.GetKeyDown(KeyCode.Escape))
             {
                 PauseEvent?.Invoke();
+            }
+
+            if (UnityEngine.Input.GetKeyDown(KeyCode.E))
+            {
+                InteractEvent?.Invoke();
             }
         }
     }

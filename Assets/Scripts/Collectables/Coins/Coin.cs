@@ -1,4 +1,5 @@
 using UnityEngine;
+using Core.Constants;
 
 public class Coin : Collectable
 {
@@ -10,11 +11,11 @@ public class Coin : Collectable
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if (other.gameObject.CompareTag(GameConstants.Tags.Player))
         {
             Collect();
         }
-        else if (other.gameObject.CompareTag("Checkpoint"))
+        else if (other.gameObject.CompareTag(GameConstants.Tags.Checkpoint))
         {
             storedValue = value;
         }

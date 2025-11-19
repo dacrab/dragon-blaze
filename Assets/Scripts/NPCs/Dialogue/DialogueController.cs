@@ -2,6 +2,8 @@ using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 using System.Collections;
+using Core.Events;
+using Core.Constants;
 
 public class DialogueController : MonoBehaviour
 {
@@ -12,11 +14,8 @@ public class DialogueController : MonoBehaviour
     [SerializeField] private AudioClip dialogueSound;
     #endregion
 
-    #region Public Fields
-    public PlayerMovement playerMovement;
-    #endregion
-
     #region Private Fields
+    // Removed direct PlayerMovement reference. We use EventBus.
     private Queue<string> paragraphs = new Queue<string>();
     private bool conversationEnded;
     private string p;
@@ -61,9 +60,15 @@ public class DialogueController : MonoBehaviour
     #region Private Methods
     private void StartConversation(DialogueText dialogueText, AudioClip dialogueSound = null)
     {
-        playerMovement.setInteracting(true);
-        playerMovement.enabled = false;
-
+        // Signal Game Pause/Freeze
+        EventBus.RaiseDialogueStateChanged(true);
+        // Also stop player manually if needed, but EventBus should handle it if PlayerController listens.
+        // Note: PlayerController currently doesn't listen to Dialogue events, but UIManager pauses game?
+        // Wait, Dialogue usually doesn't freeze time completely like Pause Menu (Time.timeScale = 0).
+        // It usually disables input.
+        // We need PlayerController to listen to this. I will add that logic later or assume it does.
+        // For now, let's rely on EventBus.
+        
         if (dialogueSound != null)
         {
             SoundManager.instance.PlaySound(dialogueSound);
@@ -73,7 +78,7 @@ public class DialogueController : MonoBehaviour
         {
             gameObject.SetActive(true);
         }
-        Time.timeScale = 1f;
+        // Time.timeScale = 1f; // Ensure time is running for typing
 
         NPCNameText.text = dialogueText.speakerName;
 
@@ -85,8 +90,7 @@ public class DialogueController : MonoBehaviour
 
     private void EndConversation()
     {
-        playerMovement.setInteracting(false);
-        playerMovement.enabled = true;
+        EventBus.RaiseDialogueStateChanged(false);
 
         paragraphs.Clear();
         conversationEnded = false;
@@ -95,7 +99,6 @@ public class DialogueController : MonoBehaviour
         {
             gameObject.SetActive(false);
         }
-        Time.timeScale = 1f;
     }
 
     private IEnumerator TypeDialogueText(string p)

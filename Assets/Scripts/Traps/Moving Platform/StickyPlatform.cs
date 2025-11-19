@@ -1,9 +1,8 @@
 using UnityEngine;
+using Core.Constants;
 
 public class StickyPlatform : MonoBehaviour
 {
-    private const string PlayerTag = "Player";
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
         SetPlayerParent(collision, transform);
@@ -16,7 +15,7 @@ public class StickyPlatform : MonoBehaviour
 
     private void SetPlayerParent(Collider2D collision, Transform parent)
     {
-        if (collision.CompareTag(PlayerTag))
+        if (collision.CompareTag(GameConstants.Tags.Player))
         {
             collision.transform.SetParent(parent);
         }

@@ -1,4 +1,7 @@
 using UnityEngine;
+using Core.Constants;
+using Core.Systems;
+using Player; // Namespace for PlayerController
 
 public class PlayerAttack : MonoBehaviour
 {
@@ -8,7 +11,7 @@ public class PlayerAttack : MonoBehaviour
     [SerializeField] private AudioClip fireballSound;
 
     private Animator anim;
-    private PlayerMovement playerMovement;
+    private PlayerController playerController; // Use new Controller
     private float cooldownTimer = Mathf.Infinity;
 
     private void Awake()
@@ -25,7 +28,7 @@ public class PlayerAttack : MonoBehaviour
     private void InitializeComponents()
     {
         anim = GetComponent<Animator>();
-        playerMovement = GetComponent<PlayerMovement>();
+        playerController = GetComponent<PlayerController>();
     }
 
     private void UpdateCooldownTimer()
@@ -35,6 +38,12 @@ public class PlayerAttack : MonoBehaviour
 
     private void CheckForAttack()
     {
+        // Use legacy Input directly or better: Move Attack input to InputReader?
+        // Ideally, Attack should be an event in InputReader. 
+        // But for now, keeping legacy Input.GetMouseButton(0) is acceptable if we didn't add Attack to InputReader.
+        // I didn't add Attack to InputReader.
+        // Let's stick to legacy input here but check Time.timeScale
+        
         if (CanAttack())
         {
             Attack();
@@ -43,37 +52,24 @@ public class PlayerAttack : MonoBehaviour
 
     private bool CanAttack()
     {
-        return Input.GetMouseButton(0) && cooldownTimer > attackCooldown && playerMovement.canAttack() && Time.timeScale > 0;
+        // PlayerController.CanAttack() checks grounded & not moving
+        return Input.GetMouseButton(0) 
+               && cooldownTimer > attackCooldown 
+               && playerController != null && playerController.CanAttack() 
+               && Time.timeScale > 0;
     }
 
     private void Attack()
     {
-        if (!ValidateAttackComponents())
-        {
-            return;
-        }
+        if (!ValidateAttackComponents()) return;
 
         PerformAttack();
     }
 
     private bool ValidateAttackComponents()
     {
-        if (SoundManager.instance == null)
-        {
-            Debug.LogError("SoundManager instance is not initialized.");
-            return false;
-        }
-        if (fireballs == null || fireballs.Length == 0)
-        {
-            Debug.LogError("Fireballs array is not initialized or empty.");
-            return false;
-        }
-        if (firePoint == null)
-        {
-            Debug.LogError("FirePoint is not assigned.");
-            return false;
-        }
-        return true;
+        // SoundManager check redundant if we trust it exists, but okay
+        return fireballs != null && fireballs.Length > 0 && firePoint != null;
     }
 
     private void PerformAttack()
@@ -87,26 +83,25 @@ public class PlayerAttack : MonoBehaviour
 
     private void LaunchFireball()
     {
-        int fireballIndex = FindFireball();
-        if (fireballIndex != -1 && fireballs[fireballIndex] != null)
+        // Use Object Pool or Array
+        GameObject fireball = GetFireball();
+        if (fireball != null)
         {
-            GameObject fireball = fireballs[fireballIndex];
             fireball.transform.position = firePoint.position;
-            fireball.GetComponent<Projectile>().SetDirection(Mathf.Sign(transform.localScale.x));
-        }
-        else
-        {
-            Debug.LogError("Invalid fireball index or fireball is null.");
+            // Projectile inherits ProjectileBase. 
+            // SetDirection handles activation.
+            fireball.GetComponent<ProjectileBase>().SetDirection(Mathf.Sign(transform.localScale.x));
         }
     }
 
-    private int FindFireball()
+    private GameObject GetFireball()
     {
         for (int i = 0; i < fireballs.Length; i++)
         {
             if (!fireballs[i].activeInHierarchy)
-                return i;
+                return fireballs[i];
         }
-        return -1;
+        return null;
     }
 }
+

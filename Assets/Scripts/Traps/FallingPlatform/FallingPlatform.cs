@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using Core.Constants;
 
 public class FallingPlatform : MonoBehaviour
 {
@@ -21,7 +22,7 @@ public class FallingPlatform : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag(GameConstants.Tags.Player))
         {
             StartCoroutine(Fall());
         }
@@ -50,6 +51,7 @@ public class FallingPlatform : MonoBehaviour
         gameObject.SetActive(true);
         transform.position = initialPosition;
         rb.bodyType = RigidbodyType2D.Static;
+        rb.velocity = Vector2.zero; // Ensure it stops moving
     }
     #endregion
 }

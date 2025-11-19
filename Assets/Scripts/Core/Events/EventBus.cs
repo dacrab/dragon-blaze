@@ -14,6 +14,10 @@ namespace Core.Events
         public static event Action<int> OnLevelLoaded;
         public static event Action<bool> OnGamePaused;
         public static event Action OnGameSaved;
+        public static event Action<bool> OnDialogueStateChanged; // true = start, false = end
+
+        // Health Events
+        public static event Action<float, float> OnHealthChanged; // current, max
 
         // Invocation Methods
         public static void RaiseScoreChanged(int newScore) => OnScoreChanged?.Invoke(newScore);
@@ -22,5 +26,7 @@ namespace Core.Events
         public static void RaiseLevelLoaded(int levelIndex) => OnLevelLoaded?.Invoke(levelIndex);
         public static void RaiseGamePaused(bool isPaused) => OnGamePaused?.Invoke(isPaused);
         public static void RaiseGameSaved() => OnGameSaved?.Invoke();
+        public static void RaiseHealthChanged(float current, float max) => OnHealthChanged?.Invoke(current, max);
+        public static void RaiseDialogueStateChanged(bool isOpen) => OnDialogueStateChanged?.Invoke(isOpen);
     }
 }

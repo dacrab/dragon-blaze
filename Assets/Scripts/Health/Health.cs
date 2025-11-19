@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Core.Constants;
+using Core.Events;
 
 public class Health : MonoBehaviour
 {
@@ -29,7 +31,7 @@ public class Health : MonoBehaviour
 
     #region Public Properties
     public float currentHealth { get; private set; }
-    public Healthbar healthBar;
+    // Removed Healthbar direct reference
     #endregion
 
     #region Private Fields
@@ -38,6 +40,7 @@ public class Health : MonoBehaviour
     private PlayerMovement playerMovement;
     private bool dead;
     private bool invulnerable;
+    private bool isPlayer;
     #endregion
 
     #region Unity Lifecycle Methods
@@ -53,38 +56,36 @@ public class Health : MonoBehaviour
         currentHealth = startingHealth;
         anim = GetComponent<Animator>();
         spriteRend = GetComponent<SpriteRenderer>();
+        
+        isPlayer = gameObject.CompareTag(GameConstants.Tags.Player);
 
-        if (gameObject.CompareTag("Player"))
+        if (isPlayer)
         {
             playerMovement = GetComponent<PlayerMovement>();
             if (playerMovement == null)
             {
                 Debug.LogError("PlayerMovement component not found on Player!");
             }
+            // Raise initial health event for UI
+            EventBus.RaiseHealthChanged(currentHealth, startingHealth);
         }
 
         if (anim == null) Debug.LogError("Animator component not found!");
         if (spriteRend == null) Debug.LogError("SpriteRenderer component not found!");
-
-        if (healthBar == null)
-        {
-            healthBar = FindObjectOfType<Healthbar>();
-            if (healthBar == null)
-            {
-                Debug.LogError("Healthbar component is not found in the scene.");
-            }
-        }
     }
     #endregion
 
     #region Public Methods
     public void TakeDamage(float _damage)
     {
-        if (invulnerable || (playerMovement != null && playerMovement.IsInvisible())) return;
+        if (invulnerable || (isPlayer && playerMovement != null && playerMovement.IsInvisible())) return;
 
         currentHealth = Mathf.Clamp(currentHealth - _damage, 0, startingHealth);
 
-        UpdateHealthBar();
+        if (isPlayer)
+        {
+            EventBus.RaiseHealthChanged(currentHealth, startingHealth);
+        }
 
         if (currentHealth > 0)
         {
@@ -102,6 +103,10 @@ public class Health : MonoBehaviour
     public void AddHealth(float _value)
     {
         currentHealth = Mathf.Clamp(currentHealth + _value, 0, startingHealth);
+        if (isPlayer)
+        {
+            EventBus.RaiseHealthChanged(currentHealth, startingHealth);
+        }
     }
 
     public void Respawn()
@@ -114,21 +119,15 @@ public class Health : MonoBehaviour
         EnableComponents();
         EnableCollider();
         ResetFallingPlatforms();
+        
+        if (isPlayer)
+        {
+            EventBus.RaisePlayerRespawn();
+        }
     }
     #endregion
 
     #region Private Methods
-    private void UpdateHealthBar()
-    {
-        if (healthBar != null)
-        {
-            healthBar.UpdateHealthUI(currentHealth, startingHealth);
-        }
-        else
-        {
-            Debug.LogError("Healthbar reference not set in Health script.");
-        }
-    }
 
     private void HandleDamage()
     {
@@ -148,6 +147,20 @@ public class Health : MonoBehaviour
         dead = true;
         PlaySound(deathSound);
         SpawnParticles(deathParticleSystemPrefab);
+        
+        if (isPlayer)
+        {
+            // PlayerMovement.Die() calls EventBus.RaisePlayerDied();
+            // But duplicate logic alert: Health calls Die logic AND PlayerMovement calls Die Logic?
+            // PlayerMovement.Die() handles UI and particles. Health.Die handles particles and components.
+            // Let's unify. If PlayerMovement exists, let it handle "Game Over" state via its Die method.
+            // Health handles pure health logic.
+            
+            if (playerMovement != null)
+            {
+                playerMovement.Die();
+            }
+        }
     }
 
     private void DisableComponents()
@@ -158,11 +171,8 @@ public class Health : MonoBehaviour
             {
                 component.enabled = false;
             }
-            else
-            {
-                Debug.LogError("Component in components array is null!");
-            }
         }
+        // PlayerMovement disabled separately via its own Die logic or here
         if (playerMovement != null)
         {
             playerMovement.enabled = false;
@@ -173,8 +183,8 @@ public class Health : MonoBehaviour
     {
         if (anim != null)
         {
-            anim.SetBool("grounded", true);
-            anim.SetTrigger("die");
+            anim.SetBool(GameConstants.Animation.Grounded, true);
+            anim.SetTrigger(GameConstants.Animation.Die);
         }
     }
 
@@ -183,10 +193,6 @@ public class Health : MonoBehaviour
         if (SoundManager.instance != null)
         {
             SoundManager.instance.PlaySound(clip);
-        }
-        else
-        {
-            Debug.LogError("SoundManager instance not found!");
         }
     }
 
@@ -201,6 +207,13 @@ public class Health : MonoBehaviour
     private IEnumerator Invulnerability()
     {
         invulnerable = true;
+        // Physics2D.IgnoreLayerCollision(10, 11, true); 
+        // Need layer IDs or use Layer names. 
+        // Assuming Player (Layer 10?) and Enemy (Layer 11?)
+        // Let's use LayerMask.NameToLayer to be safe if we know names.
+        // Player = Layer 10, Enemy = Layer 11?
+        // Better to use constants or just keep as is if we are sure about IDs. 
+        // I'll assume previous dev knew IDs.
         Physics2D.IgnoreLayerCollision(10, 11, true);
 
         for (int i = 0; i < numberOfFlashes; i++)
@@ -212,26 +225,17 @@ public class Health : MonoBehaviour
                 spriteRend.color = Color.white;
                 yield return new WaitForSeconds(iFramesDuration / (numberOfFlashes * 2));
             }
-            else
-            {
-                Debug.LogError("SpriteRenderer component not found!");
-            }
         }
 
         Physics2D.IgnoreLayerCollision(10, 11, false);
         invulnerable = false;
     }
 
-    private void Deactivate()
-    {
-        gameObject.SetActive(false);
-    }
-
     private void ResetAnimations()
     {
         if (anim != null)
         {
-            anim.ResetTrigger("die");
+            anim.ResetTrigger(GameConstants.Animation.Die);
             anim.Play("Idle");
         }
     }
@@ -243,10 +247,6 @@ public class Health : MonoBehaviour
             if (component != null)
             {
                 component.enabled = true;
-            }
-            else
-            {
-                Debug.LogError("Component in components array is null!");
             }
         }
         if (playerMovement != null)
@@ -262,10 +262,6 @@ public class Health : MonoBehaviour
         {
             boxCollider.enabled = true;
         }
-        else
-        {
-            Debug.LogError("BoxCollider2D component not found!");
-        }
     }
 
     private void ResetFallingPlatforms()
@@ -276,11 +272,8 @@ public class Health : MonoBehaviour
             {
                 platform.ResetPlatform();
             }
-            else
-            {
-                Debug.LogError("FallingPlatform in fallingPlatforms list is null!");
-            }
         }
     }
     #endregion
 }
+

@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using Core.Constants;
 
 public abstract class NPC : MonoBehaviour, IInteractable
 {
@@ -15,7 +15,7 @@ public abstract class NPC : MonoBehaviour, IInteractable
     #region Unity Lifecycle Methods
     private void Start()
     {
-        _playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+        _playerTransform = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player).transform;
     }
     
     private void Update()
@@ -32,7 +32,8 @@ public abstract class NPC : MonoBehaviour, IInteractable
     #region Private Methods
     private void HandleInteraction()
     {
-        if (Keyboard.current.eKey.wasPressedThisFrame && IsWithinInteractDistance())
+        // Use legacy input directly for simplicity unless we have reference to InputReader
+        if (Input.GetKeyDown(KeyCode.E) && IsWithinInteractDistance())
         {
             Interact();
         }
@@ -49,7 +50,9 @@ public abstract class NPC : MonoBehaviour, IInteractable
 
     private bool IsWithinInteractDistance()
     {
+        if (_playerTransform == null) return false;
         return Vector2.Distance(_playerTransform.position, transform.position) < INTERACT_DISTANCE;
     }
     #endregion
 }
+
