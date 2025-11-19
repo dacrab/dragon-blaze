@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Core.Constants;
 using Core.Events;
+using Player; // Added namespace for PlayerController
 
 public class Health : MonoBehaviour
 {
@@ -31,13 +32,12 @@ public class Health : MonoBehaviour
 
     #region Public Properties
     public float currentHealth { get; private set; }
-    // Removed Healthbar direct reference
     #endregion
 
     #region Private Fields
     private Animator anim;
     private SpriteRenderer spriteRend;
-    private PlayerMovement playerMovement;
+    private PlayerController playerController; // Replaced PlayerMovement
     private bool dead;
     private bool invulnerable;
     private bool isPlayer;
@@ -61,10 +61,11 @@ public class Health : MonoBehaviour
 
         if (isPlayer)
         {
-            playerMovement = GetComponent<PlayerMovement>();
-            if (playerMovement == null)
+            // Use PlayerController instead of PlayerMovement
+            playerController = GetComponent<PlayerController>();
+            if (playerController == null)
             {
-                Debug.LogError("PlayerMovement component not found on Player!");
+                Debug.LogError("PlayerController component not found on Player!");
             }
             // Raise initial health event for UI
             EventBus.RaiseHealthChanged(currentHealth, startingHealth);
@@ -78,7 +79,8 @@ public class Health : MonoBehaviour
     #region Public Methods
     public void TakeDamage(float _damage)
     {
-        if (invulnerable || (isPlayer && playerMovement != null && playerMovement.IsInvisible())) return;
+        // Use playerController.IsInvisible()
+        if (invulnerable || (isPlayer && playerController != null && playerController.IsInvisible())) return;
 
         currentHealth = Mathf.Clamp(currentHealth - _damage, 0, startingHealth);
 
@@ -150,16 +152,12 @@ public class Health : MonoBehaviour
         
         if (isPlayer)
         {
-            // PlayerMovement.Die() calls EventBus.RaisePlayerDied();
-            // But duplicate logic alert: Health calls Die logic AND PlayerMovement calls Die Logic?
-            // PlayerMovement.Die() handles UI and particles. Health.Die handles particles and components.
-            // Let's unify. If PlayerMovement exists, let it handle "Game Over" state via its Die method.
-            // Health handles pure health logic.
+            // Raise event directly instead of calling PlayerMovement.Die()
+            EventBus.RaisePlayerDied();
             
-            if (playerMovement != null)
-            {
-                playerMovement.Die();
-            }
+            // We can still play visuals if we want, via PlayerVisuals if accessible, 
+            // but Health handles death particles already.
+            // UIManager listens to EventBus.OnPlayerDied.
         }
     }
 
@@ -172,10 +170,10 @@ public class Health : MonoBehaviour
                 component.enabled = false;
             }
         }
-        // PlayerMovement disabled separately via its own Die logic or here
-        if (playerMovement != null)
+        
+        if (playerController != null)
         {
-            playerMovement.enabled = false;
+            playerController.enabled = false;
         }
     }
 
@@ -207,13 +205,6 @@ public class Health : MonoBehaviour
     private IEnumerator Invulnerability()
     {
         invulnerable = true;
-        // Physics2D.IgnoreLayerCollision(10, 11, true); 
-        // Need layer IDs or use Layer names. 
-        // Assuming Player (Layer 10?) and Enemy (Layer 11?)
-        // Let's use LayerMask.NameToLayer to be safe if we know names.
-        // Player = Layer 10, Enemy = Layer 11?
-        // Better to use constants or just keep as is if we are sure about IDs. 
-        // I'll assume previous dev knew IDs.
         Physics2D.IgnoreLayerCollision(10, 11, true);
 
         for (int i = 0; i < numberOfFlashes; i++)
@@ -249,9 +240,9 @@ public class Health : MonoBehaviour
                 component.enabled = true;
             }
         }
-        if (playerMovement != null)
+        if (playerController != null)
         {
-            playerMovement.enabled = true;
+            playerController.enabled = true;
         }
     }
 

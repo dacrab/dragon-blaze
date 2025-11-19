@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Player; // Added for PlayerController
 
 public abstract class TrapBase : MonoBehaviour
 {
@@ -9,6 +10,11 @@ public abstract class TrapBase : MonoBehaviour
     {
         if (collision.CompareTag(GameConstants.Tags.Player))
         {
+             // Check for visibility via PlayerController if needed, but generic traps often hit anyway.
+             // If we want to respect invisibility:
+             PlayerController pc = collision.GetComponent<PlayerController>();
+             if (pc != null && pc.IsInvisible()) return;
+             
              DealDamage(collision.gameObject);
         }
     }
@@ -21,9 +27,5 @@ public abstract class TrapBase : MonoBehaviour
         {
             playerHealth.TakeDamage(damage);
         }
-        
-        // Or maybe generic health?
-        // In this project, Health.cs is seemingly generic or for player?
-        // EnemyBase has health too. 
     }
 }

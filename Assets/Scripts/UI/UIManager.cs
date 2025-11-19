@@ -6,6 +6,7 @@ using TMPro;
 using Core.Events;
 using Core.Constants;
 using Core.Systems;
+using Player;
 
 public class UIManager : MonoBehaviour
 {
@@ -40,7 +41,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private AudioClip gameOverSound;
 
     [Header("Player Reference")]
-    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private PlayerController playerController; // Replaced PlayerMovement
     #endregion
 
     #region Properties
@@ -238,8 +239,8 @@ public class UIManager : MonoBehaviour
 
     public void TogglePlayerMovement(bool enable)
     {
-        if (playerMovement != null)
-            playerMovement.enabled = enable;
+        if (playerController != null)
+            playerController.enabled = enable;
     }
     #endregion
 
