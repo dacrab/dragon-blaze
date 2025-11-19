@@ -1,10 +1,11 @@
 using UnityEngine;
+using Core.Constants;
 
-public class Enemy_Sideways : MonoBehaviour
+public class Enemy_Sideways : TrapBase
 {
     [SerializeField] private float movementDistance;
     [SerializeField] private float speed;
-    [SerializeField] private float damage;
+    // Damage inherited from TrapBase
 
     private bool movingLeft;
     private float leftEdge;
@@ -20,9 +21,23 @@ public class Enemy_Sideways : MonoBehaviour
         MoveEnemy();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    // OnTriggerEnter2D inherited from TrapBase handles damage
+    
+    // But Enemy_Sideways logic had a check for IsVisible which TrapBase might not have.
+    // TrapBase just calls DealDamage.
+    // Let's override OnTriggerEnter2D to keep the IsVisible check if we want to be safe
+    // Or better, update DealDamage to check.
+    
+    protected override void OnTriggerEnter2D(Collider2D collision)
     {
-        HandleCollision(collision);
+        if (collision.CompareTag(GameConstants.Tags.Player))
+        {
+            PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
+            if (playerMovement != null && playerMovement.IsVisible())
+            {
+                base.OnTriggerEnter2D(collision);
+            }
+        }
     }
 
     private void CalculateEdges()
@@ -35,51 +50,26 @@ public class Enemy_Sideways : MonoBehaviour
     {
         if (movingLeft)
         {
-            MoveLeft();
-        }
-        else
-        {
-            MoveRight();
-        }
-    }
-
-    private void MoveLeft()
-    {
-        if (transform.position.x > leftEdge)
-        {
-            transform.position = new Vector3(transform.position.x - speed * Time.deltaTime, transform.position.y, transform.position.z);
-        }
-        else
-        {
-            movingLeft = false;
-        }
-    }
-
-    private void MoveRight()
-    {
-        if (transform.position.x < rightEdge)
-        {
-            transform.position = new Vector3(transform.position.x + speed * Time.deltaTime, transform.position.y, transform.position.z);
-        }
-        else
-        {
-            movingLeft = true;
-        }
-    }
-
-    private void HandleCollision(Collider2D collision)
-    {
-        if (collision.CompareTag("Player"))
-        {
-            PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
-            if (playerMovement != null && playerMovement.IsVisible())
+            if (transform.position.x > leftEdge)
             {
-                Health playerHealth = collision.GetComponent<Health>();
-                if (playerHealth != null)
-                {
-                    playerHealth.TakeDamage(damage);
-                }
+                transform.position = new Vector3(transform.position.x - speed * Time.deltaTime, transform.position.y, transform.position.z);
+            }
+            else
+            {
+                movingLeft = false;
+            }
+        }
+        else
+        {
+            if (transform.position.x < rightEdge)
+            {
+                transform.position = new Vector3(transform.position.x + speed * Time.deltaTime, transform.position.y, transform.position.z);
+            }
+            else
+            {
+                movingLeft = true;
             }
         }
     }
 }
+

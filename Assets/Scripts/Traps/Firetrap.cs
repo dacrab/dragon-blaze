@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Collections;
+using Core.Constants;
 
-public class Firetrap : MonoBehaviour
+public class Firetrap : TrapBase
 {
     #region Serialized Fields
-    [SerializeField] private float damage;
+    // Damage inherited from TrapBase
 
     [Header("Firetrap Timers")]
     [SerializeField] private float activationDelay;
@@ -33,22 +34,31 @@ public class Firetrap : MonoBehaviour
         ApplyDamageIfActive();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    // Firetrap logic: 
+    // 1. Triggered by Player Enter -> Wait Delay -> Active (Damage) -> Wait Time -> Deactive.
+    // 2. If Player stays inside while Active, it deals damage continuously (per frame update).
+    
+    // TrapBase OnTriggerEnter2D deals one-shot damage. We need to override it.
+    protected override void OnTriggerEnter2D(Collider2D collision)
     {
-        if (!collision.CompareTag("Player")) return;
+        if (!collision.CompareTag(GameConstants.Tags.Player)) return;
 
         PlayerMovement playerMovement = collision.GetComponent<PlayerMovement>();
         if (playerMovement != null && playerMovement.IsVisible())
         {
             SetPlayerHealth(collision);
             ActivateTrapIfNotTriggered();
-            ApplyDamageIfActive();
+            // Don't call base.OnTriggerEnter2D because Firetrap waits for delay.
+            // If it's already active, Update loop handles damage.
+            // Actually, if it's already active and player enters, Update will handle it?
+            // Yes, ApplyDamageIfActive checks playerHealth != null.
+            // So just setting playerHealth is enough.
         }
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        if (collision.CompareTag(GameConstants.Tags.Player))
             playerHealth = null;
     }
     #endregion
@@ -63,7 +73,12 @@ public class Firetrap : MonoBehaviour
     private void ApplyDamageIfActive()
     {
         if (playerHealth != null && active)
+        {
+            // Original logic: TakeDamage every frame?
+            // Health.TakeDamage usually handles invulnerability frames.
+            // If not, this will insta-kill. Assuming Health handles iframes.
             playerHealth.TakeDamage(damage);
+        }
     }
 
     private void SetPlayerHealth(Collider2D collision)
@@ -89,7 +104,7 @@ public class Firetrap : MonoBehaviour
     private void SetTrapTriggered()
     {
         triggered = true;
-        spriteRend.color = Color.red;
+        spriteRend.color = Color.red; // Visual cue
     }
 
     private void ActivateTrap()
@@ -108,3 +123,4 @@ public class Firetrap : MonoBehaviour
     }
     #endregion
 }
+

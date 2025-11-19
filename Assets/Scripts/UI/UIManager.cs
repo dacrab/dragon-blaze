@@ -3,6 +3,9 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.UI;
 using TMPro;
+using Core.Events;
+using Core.Constants;
+using Core.Systems;
 
 public class UIManager : MonoBehaviour
 {
@@ -46,6 +49,21 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region Unity Lifecycle Methods
+    private void OnEnable()
+    {
+        // Subscribe to Events
+        EventBus.OnScoreChanged += UpdateCoinDisplay;
+        EventBus.OnPlayerDied += GameOver;
+        // We could also subscribe to Pause events if they were raised by InputReader directly
+    }
+
+    private void OnDisable()
+    {
+        // Unsubscribe
+        EventBus.OnScoreChanged -= UpdateCoinDisplay;
+        EventBus.OnPlayerDied -= GameOver;
+    }
+
     private void Start() => CheckSaveData();
 
     private void Update()
@@ -66,9 +84,9 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (SceneManager.GetActiveScene().buildIndex != 0) return;
+        if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
 
-        bool saveExists = GameManager.instance.SaveDataExists();
+        bool saveExists = SaveSystem.SaveExists();
 
         SetButtonVisibility(continueButton, saveExists, "Continue button");
         SetButtonVisibility(newGameButton, true, "New Game button");
@@ -97,7 +115,7 @@ public class UIManager : MonoBehaviour
     {
         GameManager.instance.ResetCoins();
         GameManager.instance.SaveGame(true);
-        UpdateCoinDisplay(0);
+        // UpdateCoinDisplay(0); // Handled by EventBus in GameManager.ResetCoins
         StartCoroutine(LoadNewGameByIndex());
     }
 
@@ -111,6 +129,8 @@ public class UIManager : MonoBehaviour
 
     public void GameOver()
     {
+        if (IsGameOverScreenActive) return; // Prevent double calling
+        
         SetGameOverState(true);
         SoundManager.instance.PlaySound(gameOverSound);
     }
@@ -123,7 +143,7 @@ public class UIManager : MonoBehaviour
 
     public void MainMenu()
     {
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene(GameConstants.Scenes.MainMenu);
         SetGameOverState(false);
         ShowCursor();
     }
@@ -147,6 +167,8 @@ public class UIManager : MonoBehaviour
         Cursor.visible = status;
         Cursor.lockState = status ? CursorLockMode.None : CursorLockMode.Locked;
         TogglePlayerMovement(!status);
+        
+        EventBus.RaiseGamePaused(status);
     }
     #endregion
 
@@ -186,10 +208,7 @@ public class UIManager : MonoBehaviour
         {
             coinText.text = $": {coins}";
         }
-        else
-        {
-            Debug.LogError("Coin TextMeshProUGUI not assigned in UIManager.");
-        }
+        // Else: Might be in main menu where coinText isn't assigned
     }
 
     public void RefreshUI()

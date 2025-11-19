@@ -1,6 +1,7 @@
 using UnityEngine;
+using Core.Constants;
 
-public class Spikehead : EnemyDamage
+public class Spikehead : TrapBase
 {
     #region Serialized Fields
     [Header("SpikeHead Attributes")]
@@ -38,11 +39,29 @@ public class Spikehead : EnemyDamage
         }
     }
 
-    private new void OnTriggerEnter2D(Collider2D collision)
+    protected override void OnTriggerEnter2D(Collider2D collision)
     {
+        // Spikehead plays sound on ANY impact (including walls?)
+        // Original code called SoundManager then base.OnTriggerEnter2D
+        
         SoundManager.instance.PlaySound(impactSound);
-        base.OnTriggerEnter2D(collision);
-        Stop();
+        
+        // base.OnTriggerEnter2D(collision) in TrapBase checks for Player tag and deals damage
+        // Original EnemyDamage did the same but with explicit IsVisible check.
+        // We should check here before calling base if we want to maintain IsVisible check strictly
+        // Or assume TrapBase handles damage and we just add sound.
+        
+        if (collision.CompareTag(GameConstants.Tags.Player))
+        {
+            // Check visibility
+            PlayerMovement player = collision.GetComponent<PlayerMovement>();
+            if (player != null && player.IsVisible())
+            {
+                base.OnTriggerEnter2D(collision);
+            }
+        }
+        
+        Stop(); // Stop on impact with anything
     }
     #endregion
 
@@ -101,3 +120,4 @@ public class Spikehead : EnemyDamage
     }
     #endregion
 }
+

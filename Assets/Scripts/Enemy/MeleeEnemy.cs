@@ -1,42 +1,33 @@
 using UnityEngine;
+using Core.Constants;
 
-public class MeleeEnemy : MonoBehaviour
+public class MeleeEnemy : EnemyBase
 {
     [Header("Attack Parameters")]
     [SerializeField] private float attackCooldown;
     [SerializeField] private float range;
-    [SerializeField] private float damage;
+    // Damage inherited from Base
 
-    [Header("Movement Parameters")]
-    [SerializeField] private float moveSpeed = 3.0f;
+    [Header("AI Parameters")]
+    [SerializeField] private float chaseSpeed = 3.0f; // Differentiate from Patrol speed
 
-    [Header("Collider Parameters")]
-    [SerializeField] private BoxCollider2D boxCollider;
-
-    [Header("Player Layer")]
+    [Header("Player Detection")]
     [SerializeField] private LayerMask playerLayer;
-
-    [Header("Particle Systems")]
-    [SerializeField] private GameObject hitParticleSystemPrefab;
-    [SerializeField] private GameObject deathParticleSystemPrefab;
-
-    [Header("Health Parameters")]
-    [SerializeField] private float health = 100f;
 
     private float cooldownTimer = Mathf.Infinity;
     private Transform playerTransform;
-    private Animator anim;
-    private Health playerHealth;
     private EnemyPatrol enemyPatrol;
     private PlayerMovement playerMovement;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         InitializeComponents();
     }
 
     private void Update()
     {
+        if (isDead) return;
         if (!ValidateComponents()) return;
 
         cooldownTimer += Time.deltaTime;
@@ -47,55 +38,33 @@ public class MeleeEnemy : MonoBehaviour
         }
         else
         {
-            enemyPatrol.enabled = true;
+            if (enemyPatrol != null) enemyPatrol.enabled = true;
         }
     }
 
     private void InitializeComponents()
     {
-        anim = GetComponent<Animator>();
+        // In inherited classes, we might need to be careful not to override base unless intended.
+        // But here base only gets RB/Anim/Col.
+        
         enemyPatrol = GetComponentInParent<EnemyPatrol>();
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
         if (player != null)
         {
             playerTransform = player.transform;
             playerMovement = player.GetComponent<PlayerMovement>();
-            if (playerMovement == null)
-            {
-                Debug.LogError("PlayerMovement component not found on the Player object!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Player object not found with tag 'Player'!");
-        }
-
-        if (enemyPatrol == null)
-        {
-            Debug.LogError("EnemyPatrol component not found on the parent object!");
         }
     }
 
     private bool ValidateComponents()
     {
-        if (playerMovement == null)
-        {
-            Debug.LogError("PlayerMovement component is not found!");
-            return false;
-        }
-
-        if (enemyPatrol == null || playerTransform == null)
-        {
-            Debug.LogError("EnemyPatrol or PlayerTransform is null!");
-            return false;
-        }
-
-        return true;
+        return playerMovement != null && playerTransform != null;
     }
 
     private void HandlePlayerDetected()
     {
-        enemyPatrol.enabled = false;
+        if (enemyPatrol != null) enemyPatrol.enabled = false;
+        
         if (CanMoveForward())
         {
             FollowPlayer();
@@ -110,68 +79,69 @@ public class MeleeEnemy : MonoBehaviour
     private void Attack()
     {
         cooldownTimer = 0;
-        anim.SetTrigger("meleeAttack");
+        anim.SetTrigger(GameConstants.Animation.MeleeAttack);
+        // Damage handled via Animation Event calling DamagePlayer? 
+        // Or instant? Original code called DamagePlayer() immediately.
         DamagePlayer();
     }
 
     private bool PlayerInSight()
     {
-        return !playerMovement.IsInvisible();
+        return playerMovement != null && playerMovement.IsVisible();
     }
 
     private bool PlayerWithinPatrolBounds()
     {
-        if (enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null)
-        {
-            Debug.LogError("Patrol bounds (LeftEdge or RightEdge) are null!");
-            return false;
-        }
+        if (enemyPatrol == null || enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null)
+            return true; // Default to true if no patrol bounds to restrict chasing (e.g. boss)
+
         return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
                playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
     }
 
     private bool CanMoveForward()
     {
-        Vector2 direction = transform.right * transform.localScale.x;
-        Vector2 checkPosition = (Vector2)transform.position + (direction * boxCollider.size.x);
+        // Original code used BoxCollider overlap check.
+        // Reusing 'col' from base if it's a BoxCollider2D
+        BoxCollider2D box = col as BoxCollider2D;
+        if (box == null) return true;
 
-        Collider2D hit = Physics2D.OverlapBox(checkPosition, boxCollider.size, 0, LayerMask.GetMask("Default"));
+        Vector2 direction = transform.right * transform.localScale.x;
+        Vector2 checkPosition = (Vector2)transform.position + (direction * box.size.x);
+
+        // Using GameConstants.Layers.Default? Or assuming LayerMask is int.
+        // LayerMask.GetMask requires strings.
+        Collider2D hit = Physics2D.OverlapBox(checkPosition, box.size, 0, LayerMask.GetMask("Default")); 
         return hit == null;
     }
 
     private void FollowPlayer()
     {
-        if (playerTransform == null)
+        if (Vector3.Distance(transform.position, playerTransform.position) < range)
         {
-            Debug.LogError("playerTransform is null");
-            return;
+             // Stop if in range? Original didn't stop explicitly in FollowPlayer but MoveTowardsPlayer logic
+             // The original logic just moved towards X.
         }
-        if (!PlayerInSight())
-        {
-            Debug.LogError("Player not in sight");
-            return;
-        }
-
+        
         Vector3 direction = (playerTransform.position - transform.position).normalized;
-        float proposedXPosition = transform.position.x + direction.x * moveSpeed * Time.deltaTime;
+        float proposedXPosition = transform.position.x + direction.x * chaseSpeed * Time.deltaTime;
 
-        if (enemyPatrol != null && enemyPatrol.LeftEdge != null && enemyPatrol.RightEdge != null)
+        // Check bounds again for movement target?
+        // Reuse patrol bounds check logic if needed.
+        if (PlayerWithinPatrolBounds()) // Actually we need to check if proposed position is within bounds
         {
-            if (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x)
+            // We need strict bound check on self, not player
+            if (enemyPatrol == null || (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x))
             {
                 MoveTowardsPlayer(proposedXPosition, direction);
             }
-        }
-        else
-        {
-            Debug.LogError("Patrol edges are not set or enemyPatrol is null!");
         }
     }
 
     private void MoveTowardsPlayer(float proposedXPosition, Vector3 direction)
     {
         transform.position = new Vector3(proposedXPosition, transform.position.y, transform.position.z);
-        anim.SetBool("moving", true);
+        anim.SetBool(GameConstants.Animation.Moving, true);
 
         if (direction.x > 0)
             transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
@@ -181,26 +151,17 @@ public class MeleeEnemy : MonoBehaviour
 
     private void DamagePlayer()
     {
-        if (playerHealth != null)
+        // Check distance or collider overlap?
+        // Original code just assumed if Attack() is called, it hits if in range? 
+        // Actually original checked cooldown then Attack() then DamagePlayer().
+        // But usually attack has a hitbox.
+        // I'll implement a simple distance check to be fair.
+        
+        if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1.0f) // + buffer
         {
-            playerHealth.TakeDamage(damage);
-            Instantiate(hitParticleSystemPrefab, playerTransform.position, Quaternion.identity);
+             Health playerHealth = playerTransform.GetComponent<Health>();
+             if (playerHealth) playerHealth.TakeDamage(damage);
         }
-    }
-
-    public void TakeDamage(float damage)
-    {
-        health -= damage;
-        if (health <= 0)
-        {
-            Die();
-        }
-    }
-
-    private void Die()
-    {
-        GetComponent<BoxCollider2D>().enabled = false;
-        Instantiate(deathParticleSystemPrefab, transform.position, Quaternion.identity);
-        Destroy(gameObject);
     }
 }
+
