@@ -1,0 +1,93 @@
+using UnityEngine;
+using Core.Constants;
+
+namespace Player
+{
+    [RequireComponent(typeof(Animator))]
+    public class PlayerVisuals : MonoBehaviour
+    {
+        [Header("Particles")]
+        [SerializeField] private ParticleSystem wallSlideParticles;
+        [SerializeField] private GameObject jumpParticlesPrefab;
+        [SerializeField] private GameObject dashParticlesPrefab;
+        [SerializeField] private GameObject deathParticlesPrefab;
+        
+        [Header("Renderer")]
+        [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] private Color invisibleColor = new Color(1f, 1f, 1f, 0.5f);
+
+        private Animator anim;
+        private PlayerLocomotion locomotion;
+
+        private void Awake()
+        {
+            anim = GetComponent<Animator>();
+            locomotion = GetComponent<PlayerLocomotion>();
+            
+            // Ensure we have a reference if not assigned
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        private void Update()
+        {
+            UpdateAnimations();
+            UpdateParticles();
+        }
+
+        private void UpdateAnimations()
+        {
+            // Uses locomotion state to drive animator
+            // "grounded"
+            anim.SetBool(GameConstants.Animation.Grounded, locomotion.IsGrounded);
+            
+            // "run"
+            bool isRunning = locomotion.IsMoving;
+            anim.SetBool(GameConstants.Animation.Run, isRunning);
+        }
+
+        private void UpdateParticles()
+        {
+            // Wall Slide
+            if (locomotion.IsWallSliding)
+            {
+                if (wallSlideParticles != null && !wallSlideParticles.isPlaying)
+                    wallSlideParticles.Play();
+            }
+            else
+            {
+                if (wallSlideParticles != null && wallSlideParticles.isPlaying)
+                    wallSlideParticles.Stop();
+            }
+        }
+
+        public void PlayJumpEffect()
+        {
+            if (jumpParticlesPrefab != null)
+                Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        }
+
+        public void PlayDashEffect()
+        {
+            if (dashParticlesPrefab != null)
+                Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
+        }
+
+        public void PlayDeathEffect()
+        {
+            if (deathParticlesPrefab != null)
+                Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
+            
+            anim.SetTrigger(GameConstants.Animation.Die);
+        }
+
+        public void PlayRespawnEffect()
+        {
+            anim.SetTrigger(GameConstants.Animation.Respawn);
+        }
+        
+        public void SetInvisibility(bool isInvisible)
+        {
+            spriteRenderer.color = isInvisible ? invisibleColor : Color.white;
+        }
+    }
+}
