@@ -1,8 +1,9 @@
 using UnityEngine;
 using Core.Constants;
-using Core.Systems;
 using Core.Managers;
 using Gameplay.Combat;
+using Core.Input;
+using Core.Optimization;
 
 namespace Gameplay.Characters.Player
 {
@@ -10,11 +11,12 @@ namespace Gameplay.Characters.Player
     {
         [SerializeField] private float attackCooldown;
         [SerializeField] private Transform firePoint;
-        [SerializeField] private GameObject[] fireballs;
+        [SerializeField] private string projectileTag = "Fireball"; // Replaced direct prefab ref with tag for pool
         [SerializeField] private AudioClip fireballSound;
+        [SerializeField] private InputReader inputReader;
 
         private Animator anim;
-        private PlayerController playerController; // Use new Controller
+        private PlayerController playerController;
         private float cooldownTimer = Mathf.Infinity;
 
         private void Awake()
@@ -22,10 +24,25 @@ namespace Gameplay.Characters.Player
             InitializeComponents();
         }
 
+        private void OnEnable()
+        {
+            if (inputReader != null)
+            {
+                inputReader.AttackEvent += OnAttack;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (inputReader != null)
+            {
+                inputReader.AttackEvent -= OnAttack;
+            }
+        }
+
         private void Update()
         {
             UpdateCooldownTimer();
-            CheckForAttack();
         }
 
         private void InitializeComponents()
@@ -39,36 +56,25 @@ namespace Gameplay.Characters.Player
             cooldownTimer += Time.deltaTime;
         }
 
-        private void CheckForAttack()
+        private void OnAttack()
         {
             if (CanAttack())
             {
-                Attack();
+                PerformAttack();
             }
         }
 
         private bool CanAttack()
         {
-            return Input.GetMouseButton(0) 
-                   && cooldownTimer > attackCooldown 
+            return cooldownTimer > attackCooldown 
                    && playerController != null && playerController.CanAttack() 
                    && Time.timeScale > 0;
         }
 
-        private void Attack()
-        {
-            if (!ValidateAttackComponents()) return;
-
-            PerformAttack();
-        }
-
-        private bool ValidateAttackComponents()
-        {
-            return fireballs != null && fireballs.Length > 0 && firePoint != null;
-        }
-
         private void PerformAttack()
         {
+            if (firePoint == null) return;
+
             SoundManager.instance.PlaySound(fireballSound);
             anim.SetTrigger("attack");
             cooldownTimer = 0;
@@ -78,22 +84,18 @@ namespace Gameplay.Characters.Player
 
         private void LaunchFireball()
         {
-            GameObject fireball = GetFireball();
-            if (fireball != null)
+            if (ObjectPoolManager.Instance != null)
             {
-                fireball.transform.position = firePoint.position;
-                fireball.GetComponent<ProjectileBase>().SetDirection(Mathf.Sign(transform.localScale.x));
+                GameObject fireball = ObjectPoolManager.Instance.SpawnFromPool(projectileTag, firePoint.position, Quaternion.identity);
+                if (fireball != null)
+                {
+                    fireball.GetComponent<ProjectileBase>().SetDirection(Mathf.Sign(transform.localScale.x));
+                }
             }
-        }
-
-        private GameObject GetFireball()
-        {
-            for (int i = 0; i < fireballs.Length; i++)
+            else
             {
-                if (!fireballs[i].activeInHierarchy)
-                    return fireballs[i];
+                Debug.LogWarning("ObjectPoolManager missing! Cannot spawn fireball.");
             }
-            return null;
         }
     }
 }

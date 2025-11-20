@@ -5,6 +5,9 @@ namespace Gameplay.Characters.Player
 {
     public class PlayerPowerups : MonoBehaviour
     {
+        [Header("Config")]
+        [SerializeField] private PlayerConfigSO config;
+
         [Header("Invisibility")]
         [SerializeField] private float defaultInvisibilityDuration = 5f;
         
@@ -34,11 +37,13 @@ namespace Gameplay.Characters.Player
 
         public void ApplyHigherJump(float multiplier)
         {
-            // Logic to modify jump power in locomotion
-            // This requires Locomotion to expose a way to modify stats temporarily
-            // For now, I'll assume we can just set it
-            // But Locomotion has 'SetJumpPower' I added.
             StartCoroutine(HigherJumpCoroutine(multiplier));
+        }
+        
+        // Overload or alternate method if we want to use default settings from just a trigger
+        public void ApplyHigherJump()
+        {
+             StartCoroutine(HigherJumpCoroutine(defaultJumpMultiplier));
         }
 
         public void ApplySpeedBoost(float? multiplier = null, float? duration = null)
@@ -58,8 +63,9 @@ namespace Gameplay.Characters.Player
         private IEnumerator HigherJumpCoroutine(float multiplier)
         {
             float originalJumpPower = locomotion.GetJumpPower();
+            // Note: Locomotion now uses config, but 'SetJumpPower' overrides local runtime var
             locomotion.SetJumpPower(originalJumpPower * multiplier);
-            yield return new WaitForSeconds(defaultSpeedBoostDuration); // Should this be a separate duration? Assuming yes for now.
+            yield return new WaitForSeconds(defaultSpeedBoostDuration); // Should be jump boost duration, usually same or separate
             locomotion.SetJumpPower(originalJumpPower);
         }
 

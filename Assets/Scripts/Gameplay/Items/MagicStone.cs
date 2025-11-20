@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Managers;
 using UI.Managers;
+using UI.Menus;
 using UnityEngine.InputSystem;
 using System.Collections;
 using UnityEngine.SceneManagement;
@@ -133,9 +134,9 @@ namespace Gameplay.Items
         #region Game State Management
         private void SaveGame()
         {
-            if (GameManager.instance != null)
+            if (GameManager.Instance != null)
             {
-                GameManager.instance.SaveGame();
+                GameManager.Instance.SaveGame();
             }
         }
         #endregion

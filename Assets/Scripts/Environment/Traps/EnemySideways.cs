@@ -1,22 +1,43 @@
 using UnityEngine;
 using Core.Constants;
 using Gameplay.Characters.Player;
+using Environment.Traps.Stats;
 
 namespace Environment.Traps
 {
     public class EnemySideways : TrapBase
     {
-        [SerializeField] private float movementDistance;
-        [SerializeField] private float speed;
-        // Damage inherited from TrapBase
+        [Header("Configuration")]
+        [SerializeField] private TrapStatsSO stats;
 
+        private float movementDistance;
+        private float speed;
+        
         private bool movingLeft;
         private float leftEdge;
         private float rightEdge;
 
         private void Awake()
         {
+            InitializeStats();
             CalculateEdges();
+        }
+
+        private void InitializeStats()
+        {
+            if (stats != null)
+            {
+                movementDistance = stats.movementDistance;
+                speed = stats.speed;
+                damage = stats.damage;
+            }
+            else
+            {
+                // Fallback
+                movementDistance = 3f;
+                speed = 2f;
+                damage = 1f;
+            }
         }
 
         private void Update()

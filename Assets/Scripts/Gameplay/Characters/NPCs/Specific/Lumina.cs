@@ -1,4 +1,7 @@
 using UnityEngine;
+using Gameplay.Characters.NPCs;
+using Gameplay.Interaction;
+using UI.Dialogue;
 
 public class Lumina : NPC, ITalkable
 {
@@ -10,6 +13,11 @@ public class Lumina : NPC, ITalkable
 
     #region Public Methods
     public override void Interact()
+    {
+        Talk();
+    }
+
+    public void Talk()
     {
         Talk(dialogueText);
     }

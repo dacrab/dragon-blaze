@@ -51,7 +51,7 @@ namespace Gameplay.Characters.Player
         private void InitializeComponents()
         {
             playerHealth = GetComponent<Health.Health>();
-            uiManager = FindObjectOfType<UIManager>();
+            uiManager = FindFirstObjectByType<UIManager>();
         }
 
         private void HandleCheckpointCollision(Collider2D collision)

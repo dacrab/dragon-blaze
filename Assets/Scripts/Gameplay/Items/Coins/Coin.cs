@@ -26,7 +26,7 @@ namespace Gameplay.Items
 
         public override void Collect()
         {
-            if (GameManager.instance == null)
+            if (GameManager.Instance == null)
             {
                 return;
             }
@@ -57,7 +57,7 @@ namespace Gameplay.Items
 
         private void AddCoinsToGameManager()
         {
-            GameManager.instance.AddCoins(value);
+            GameManager.Instance.AddCoins(value);
         }
 
         private void DestroyCoin()

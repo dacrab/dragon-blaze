@@ -53,7 +53,7 @@ namespace Environment.Platforms
             gameObject.SetActive(true);
             transform.position = initialPosition;
             rb.bodyType = RigidbodyType2D.Static;
-            rb.velocity = Vector2.zero; // Ensure it stops moving
+            rb.linearVelocity = Vector2.zero; // Ensure it stops moving
         }
         #endregion
     }

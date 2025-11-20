@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Environment.Parallax
 {
@@ -120,10 +121,13 @@ namespace Environment.Parallax
         {
             if (Camera.main == null) return;
             
-            Vector2 offset = Camera.main.ScreenToViewportPoint(UnityEngine.Input.mousePosition);
-            // Use parallaxEffectMultiplier.x as offset multiplier
-            Vector2 targetPosition = startPosition + (offset * parallaxEffectMultiplier.x);
-            transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, mouseSmoothTime);
+            if (Mouse.current != null)
+            {
+                Vector2 mousePos = Mouse.current.position.ReadValue();
+                Vector2 offset = Camera.main.ScreenToViewportPoint(mousePos);
+                Vector2 targetPosition = startPosition + (offset * parallaxEffectMultiplier.x);
+                transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, mouseSmoothTime);
+            }
         }
         #endregion
     }

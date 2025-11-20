@@ -8,10 +8,7 @@ namespace Gameplay.Characters.Player
     {
         [Header("Dependencies")]
         [SerializeField] private InputReader inputReader;
-        
-        [Header("Jump Settings")]
-        [SerializeField] private int extraJumps = 2;
-        [SerializeField] private float coyoteTime = 0.2f;
+        // [Header("Jump Settings")] Removed serialized fields as they are now in config via Locomotion
 
         private PlayerLocomotion locomotion;
         private PlayerVisuals visuals;
@@ -70,8 +67,8 @@ namespace Gameplay.Characters.Player
             // Update Timers
             if (locomotion.IsGrounded)
             {
-                coyoteCounter = coyoteTime;
-                jumpCounter = extraJumps;
+                coyoteCounter = locomotion.CoyoteTime;
+                jumpCounter = locomotion.ExtraJumps;
             }
             else
             {
@@ -127,7 +124,7 @@ namespace Gameplay.Characters.Player
                 }
                 else if (locomotion.IsWallSliding)
                 {
-                    jumpCounter = extraJumps; 
+                    jumpCounter = locomotion.ExtraJumps; 
                 }
                 
                 if (isCoyoteAllowed) coyoteCounter = 0;

@@ -16,7 +16,7 @@ namespace UI.Menus
             {
                 if (instance == null)
                 {
-                    instance = FindObjectOfType<LoadingManager>();
+                    instance = FindFirstObjectByType<LoadingManager>();
                     if (instance == null)
                     {
                         GameObject obj = new GameObject();
@@ -98,7 +98,7 @@ namespace UI.Menus
         {
             if (uiManager == null)
             {
-                uiManager = FindObjectOfType<UIManager>();
+                uiManager = FindFirstObjectByType<UIManager>();
                 if (uiManager == null)
                 {
                     Debug.LogWarning("UIManager not found. Loading screen will not be shown.");

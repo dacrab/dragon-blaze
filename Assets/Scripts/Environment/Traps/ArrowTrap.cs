@@ -3,6 +3,7 @@ using Core.Managers;
 using Core.Constants;
 using Gameplay.Characters.Player;
 using Gameplay.Combat;
+using Core.Optimization;
 
 namespace Environment.Traps
 {
@@ -11,7 +12,7 @@ namespace Environment.Traps
         #region Serialized Fields
         [SerializeField] private float attackCooldown;
         [SerializeField] private Transform firePoint;
-        [SerializeField] private GameObject[] arrows;
+        [SerializeField] private string arrowTag = "Arrow"; // Tag for pooling
 
         [Header("SFX")]
         [SerializeField] private AudioClip arrowSound;
@@ -20,9 +21,21 @@ namespace Environment.Traps
 
         #region Private Fields
         private float cooldownTimer;
+        private Transform playerTransform;
+        private PlayerController playerController;
         #endregion
 
         #region Unity Lifecycle Methods
+        private void Start()
+        {
+            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (player != null)
+            {
+                playerTransform = player.transform;
+                playerController = player.GetComponent<PlayerController>();
+            }
+        }
+
         private void Update()
         {
             cooldownTimer += Time.deltaTime;
@@ -45,33 +58,23 @@ namespace Environment.Traps
         {
             cooldownTimer = 0;
 
-            // Use FindGameObjectsWithTag instead of specific lookup if possible, but AudioSource.PlayClipAtPoint is simple
-            if (Vector3.Distance(transform.position, GameObject.FindGameObjectWithTag(GameConstants.Tags.Player).transform.position) <= soundRange)
+            if (playerTransform != null && Vector3.Distance(transform.position, playerTransform.position) <= soundRange)
             {
                 SoundManager.instance.PlaySound(arrowSound);
             }
 
-            int arrowIndex = FindArrow();
-            arrows[arrowIndex].transform.position = firePoint.position;
-            arrows[arrowIndex].GetComponent<EnemyProjectile>().ActivateProjectile();
-        }
-
-        private int FindArrow()
-        {
-            for (int i = 0; i < arrows.Length; i++)
+            if (ObjectPoolManager.Instance != null)
             {
-                if (!arrows[i].activeInHierarchy)
-                    return i;
+                GameObject arrow = ObjectPoolManager.Instance.SpawnFromPool(arrowTag, firePoint.position, firePoint.rotation);
+                if (arrow != null)
+                {
+                     arrow.GetComponent<EnemyProjectile>().ActivateProjectile();
+                }
             }
-            return 0;
         }
 
         private bool PlayerIsVisible()
         {
-            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player == null) return false;
-            
-            PlayerController playerController = player.GetComponent<PlayerController>();
             return playerController != null && !playerController.IsInvisible();
         }
         #endregion

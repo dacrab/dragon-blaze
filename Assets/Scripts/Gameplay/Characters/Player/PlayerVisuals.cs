@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Events;
 
 namespace Gameplay.Characters.Player
 {
@@ -24,8 +25,19 @@ namespace Gameplay.Characters.Player
             anim = GetComponent<Animator>();
             locomotion = GetComponent<PlayerLocomotion>();
             
-            // Ensure we have a reference if not assigned
             if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        private void OnEnable()
+        {
+            EventBus.OnPlayerDied += PlayDeathEffect;
+            EventBus.OnPlayerRespawn += PlayRespawnEffect;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnPlayerDied -= PlayDeathEffect;
+            EventBus.OnPlayerRespawn -= PlayRespawnEffect;
         }
 
         private void Update()

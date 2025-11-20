@@ -1,4 +1,5 @@
 using UnityEngine;
+using Core.Managers;
 
 namespace Gameplay.Characters.Player
 {
@@ -10,14 +11,12 @@ namespace Gameplay.Characters.Player
         
         public void PlayJumpSound()
         {
-            if (jumpSound != null)
-                AudioSource.PlayClipAtPoint(jumpSound, transform.position);
+            SoundManager.instance.PlaySound(jumpSound);
         }
 
         public void PlayDashSound()
         {
-            if (dashSound != null)
-                AudioSource.PlayClipAtPoint(dashSound, transform.position);
+            SoundManager.instance.PlaySound(dashSound);
         }
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Gameplay.Interaction;
+using UnityEngine.InputSystem;
 
 namespace Gameplay.Characters.NPCs
 {
@@ -37,7 +38,7 @@ namespace Gameplay.Characters.NPCs
         #region Private Methods
         private void HandleInteraction()
         {
-            if (Input.GetKeyDown(KeyCode.E) && IsWithinInteractDistance())
+            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame && IsWithinInteractDistance())
             {
                 Interact();
             }

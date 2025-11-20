@@ -42,7 +42,7 @@ namespace Cainos.PixelArtPlatformer_VillageProps
                 if (onPlatformObjects.Contains(collision.transform)) return;
 
                 onPlatformObjects.Add(collision.transform);
-                if (collision.attachedRigidbody) collision.attachedRigidbody.velocity -= velocity * velocityInheritPercent;
+                if (collision.attachedRigidbody) collision.attachedRigidbody.linearVelocity -= velocity * velocityInheritPercent;
             }
         }
 
@@ -53,7 +53,7 @@ namespace Cainos.PixelArtPlatformer_VillageProps
                 if (onPlatformObjects.Contains(collision.transform) == false) return;
                 onPlatformObjects.Remove(collision.transform);
 
-                if (collision.attachedRigidbody) collision.attachedRigidbody.velocity += velocity * velocityInheritPercent;
+                if (collision.attachedRigidbody) collision.attachedRigidbody.linearVelocity += velocity * velocityInheritPercent;
             }
         }
     }

@@ -6,20 +6,19 @@ namespace Gameplay.Characters.Player
     [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
     public class PlayerLocomotion : MonoBehaviour
     {
-        [Header("Movement Settings")]
-        [SerializeField] private float speed = 10f;
-        [SerializeField] private float jumpPower = 15f;
-        [SerializeField] private float wallSlideSpeed = 0.3f;
-        [SerializeField] private float wallJumpForce = 15f;
-        [SerializeField] private float wallJumpTime = 0.2f;
-        
-        [Header("Dash Settings")]
-        [SerializeField] private float dashSpeed = 20f;
-        [SerializeField] private float dashDuration = 0.2f;
-        
-        [Header("Environment Check")]
-        [SerializeField] private LayerMask groundLayer;
-        [SerializeField] private float extraHeight = 0.1f;
+        [Header("Configuration")]
+        [SerializeField] private PlayerConfigSO config;
+
+        // Local runtime overrides (initialized from config)
+        private float speed;
+        private float jumpPower;
+        private float wallSlideSpeed;
+        private float wallJumpForce;
+        private float wallJumpTime;
+        private float dashSpeed;
+        private float dashDuration;
+        private LayerMask groundLayer;
+        private float extraHeight;
 
         private Rigidbody2D body;
         private BoxCollider2D boxCollider;
@@ -32,13 +31,37 @@ namespace Gameplay.Characters.Player
         // Properties for other components
         public bool IsGrounded { get; private set; }
         public bool IsWallSliding => isWallSliding;
-        public bool IsMoving => Mathf.Abs(body.velocity.x) > 0.1f;
-        public Vector2 Velocity => body.velocity;
+        public bool IsMoving => Mathf.Abs(body.linearVelocity.x) > 0.1f;
+        public Vector2 Velocity => body.linearVelocity;
 
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
             boxCollider = GetComponent<BoxCollider2D>();
+            InitializeConfig();
+        }
+
+        private void InitializeConfig()
+        {
+            if (config != null)
+            {
+                speed = config.speed;
+                jumpPower = config.jumpPower;
+                wallSlideSpeed = config.wallSlideSpeed;
+                wallJumpForce = config.wallJumpForce;
+                wallJumpTime = config.wallJumpTime;
+                dashSpeed = config.dashSpeed;
+                dashDuration = config.dashDuration;
+                groundLayer = config.groundLayer;
+                extraHeight = config.groundCheckExtraHeight;
+            }
+            else
+            {
+                Debug.LogWarning("PlayerConfigSO missing on PlayerLocomotion. Using fallback defaults.");
+                speed = 10f;
+                jumpPower = 15f;
+                // ... other defaults could be set here or rely on serialized defaults if we kept them
+            }
         }
 
         private void Update()
@@ -64,7 +87,7 @@ namespace Gameplay.Characters.Player
             // Standard Movement
             if (!isDashing)
             {
-                body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+                body.linearVelocity = new Vector2(horizontalInput * speed, body.linearVelocity.y);
             }
             
             // Flip logic
@@ -92,9 +115,9 @@ namespace Gameplay.Characters.Player
 
         public void CancelJump()
         {
-            if (body.velocity.y > 0)
+            if (body.linearVelocity.y > 0)
             {
-                body.velocity = new Vector2(body.velocity.x, body.velocity.y * 0.5f);
+                body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f);
             }
         }
 
@@ -115,7 +138,7 @@ namespace Gameplay.Characters.Player
             // Preserve vertical velocity or zero it? Original code didn't specify but usually dash overrides gravity
             float originalGravity = body.gravityScale;
             body.gravityScale = 0f;
-            body.velocity = new Vector2(transform.localScale.x * dashSpeed, 0f);
+            body.linearVelocity = new Vector2(transform.localScale.x * dashSpeed, 0f);
 
             yield return new WaitForSeconds(dashDuration);
 
@@ -137,7 +160,7 @@ namespace Gameplay.Characters.Player
             // Apply separate forces
             Vector2 force = new Vector2(jumpDir.x * wallJumpForce, jumpDir.y * jumpPower);
             
-            body.velocity = force; // Reset velocity for consistent jump
+            body.linearVelocity = force; // Reset velocity for consistent jump
             
             // Force flip since we are jumping away
             Flip();
@@ -145,8 +168,8 @@ namespace Gameplay.Characters.Player
 
         private void ApplyJumpForce(Vector2 force)
         {
-            body.velocity = new Vector2(body.velocity.x, 0); // Reset Y velocity for consistent jump height
-            body.velocity += force; // Adding force (impulse-like via velocity change)
+            body.linearVelocity = new Vector2(body.linearVelocity.x, 0); // Reset Y velocity for consistent jump height
+            body.linearVelocity += force; // Adding force (impulse-like via velocity change)
         }
 
         private void Flip()
@@ -183,7 +206,7 @@ namespace Gameplay.Characters.Player
 
             if (isWallSliding)
             {
-                body.velocity = new Vector2(body.velocity.x, Mathf.Clamp(body.velocity.y, -wallSlideSpeed, float.MaxValue));
+                body.linearVelocity = new Vector2(body.linearVelocity.x, Mathf.Clamp(body.linearVelocity.y, -wallSlideSpeed, float.MaxValue));
             }
         }
 
@@ -192,5 +215,9 @@ namespace Gameplay.Characters.Player
         
         public float GetSpeed() => speed;
         public float GetJumpPower() => jumpPower;
+        
+        // Getter for config values if needed by Controller
+        public int ExtraJumps => config != null ? config.extraJumps : 2;
+        public float CoyoteTime => config != null ? config.coyoteTime : 0.2f;
     }
 }

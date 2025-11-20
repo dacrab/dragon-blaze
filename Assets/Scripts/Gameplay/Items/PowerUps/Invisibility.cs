@@ -1,23 +1,28 @@
 using UnityEngine;
+using Gameplay.Characters.Player;
 
 public class Invisibility : PowerUpBase
 {
     [SerializeField] private Sprite invisibilityImage;
 
-    protected override void ActivatePowerUp(PlayerMovement playerMovement)
+    protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
     {
-        SetPlayerVisibility(playerMovement, false);
+        SetPlayerVisibility(playerPowerups, false);
         ActivateUIIndicator();
     }
 
-    protected override void DeactivatePowerUp(PlayerMovement playerMovement)
+    protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
     {
-        SetPlayerVisibility(playerMovement, true);
+        SetPlayerVisibility(playerPowerups, true);
     }
 
-    private void SetPlayerVisibility(PlayerMovement playerMovement, bool isVisible)
+    private void SetPlayerVisibility(PlayerPowerups playerPowerups, bool isVisible)
     {
-        playerMovement.SetInvisibility(!isVisible);
+        PlayerController controller = playerPowerups.GetComponent<PlayerController>();
+        if (controller != null)
+        {
+            controller.SetInvisibility(!isVisible);
+        }
     }
 
     private void ActivateUIIndicator()

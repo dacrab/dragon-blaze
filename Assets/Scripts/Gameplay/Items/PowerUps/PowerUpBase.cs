@@ -22,12 +22,6 @@ public abstract class PowerUpBase : MonoBehaviour
         if (!collision.CompareTag(GameConstants.Tags.Player)) return;
 
         PlayerPowerups playerPowerups = collision.GetComponent<PlayerPowerups>();
-        // Fallback to PlayerMovement shim if PlayerPowerups is not directly found (though it should be)
-        if (playerPowerups == null)
-        {
-             PlayerMovement pm = collision.GetComponent<PlayerMovement>();
-             if (pm != null) playerPowerups = pm.GetComponent<PlayerPowerups>();
-        }
 
         if (playerPowerups != null)
         {
@@ -48,7 +42,7 @@ public abstract class PowerUpBase : MonoBehaviour
 
     protected void ActivateIndicator(string powerUpName, Sprite powerUpImage)
     {
-        PowerUpIndicatorManager indicatorManager = FindObjectOfType<PowerUpIndicatorManager>();
+        PowerUpIndicatorManager indicatorManager = FindFirstObjectByType<PowerUpIndicatorManager>();
         if (indicatorManager != null)
         {
             indicatorManager.ActivateIndicator(powerUpName, powerUpImage, duration);

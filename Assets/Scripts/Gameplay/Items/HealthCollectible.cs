@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Managers;
+using Gameplay.Health;
 
 public class HealthCollectible : MonoBehaviour
 {

@@ -163,8 +163,12 @@ namespace Gameplay.Characters.Enemies
             
             if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1.0f) // + buffer
             {
-                 Health playerHealth = playerTransform.GetComponent<Health>();
-                 if (playerHealth) playerHealth.TakeDamage(damage);
+                var playerHealth = playerTransform.GetComponent<Gameplay.Health.Health>();
+                if (playerHealth != null)
+                {
+                    float dmg = stats != null ? stats.damage : 10f;
+                    playerHealth.TakeDamage(dmg);
+                }
             }
         }
     }

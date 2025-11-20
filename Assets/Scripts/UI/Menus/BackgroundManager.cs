@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 namespace UI.Menus
 {
@@ -41,7 +42,7 @@ namespace UI.Menus
 
         private void CheckForMenuInput()
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
             {
                 LoadMenuLevel();
             }

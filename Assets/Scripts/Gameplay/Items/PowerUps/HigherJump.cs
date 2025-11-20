@@ -1,4 +1,5 @@
 using UnityEngine;
+using Gameplay.Characters.Player;
 
 public class HigherJump : PowerUpBase
 {
@@ -7,26 +8,34 @@ public class HigherJump : PowerUpBase
 
     private float originalJumpPower;
 
-    protected override void ActivatePowerUp(PlayerMovement playerMovement)
+    protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
     {
-        StoreOriginalJumpPower(playerMovement);
-        ApplyJumpMultiplier(playerMovement);
+        PlayerLocomotion locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
+        if (locomotion != null)
+        {
+            StoreOriginalJumpPower(locomotion);
+            ApplyJumpMultiplier(locomotion);
+        }
         ActivateUIIndicator();
     }
 
-    protected override void DeactivatePowerUp(PlayerMovement playerMovement)
+    protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
     {
-        ResetJumpPower(playerMovement);
+        PlayerLocomotion locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
+        if (locomotion != null)
+        {
+            ResetJumpPower(locomotion);
+        }
     }
 
-    private void StoreOriginalJumpPower(PlayerMovement playerMovement)
+    private void StoreOriginalJumpPower(PlayerLocomotion locomotion)
     {
-        originalJumpPower = playerMovement.jumpPower;
+        originalJumpPower = locomotion.GetJumpPower();
     }
 
-    private void ApplyJumpMultiplier(PlayerMovement playerMovement)
+    private void ApplyJumpMultiplier(PlayerLocomotion locomotion)
     {
-        playerMovement.jumpPower = originalJumpPower * jumpMultiplier;
+        locomotion.SetJumpPower(originalJumpPower * jumpMultiplier);
     }
 
     private void ActivateUIIndicator()
@@ -34,8 +43,8 @@ public class HigherJump : PowerUpBase
         ActivateIndicator("Higher Jump", higherJumpImage);
     }
 
-    private void ResetJumpPower(PlayerMovement playerMovement)
+    private void ResetJumpPower(PlayerLocomotion locomotion)
     {
-        playerMovement.jumpPower = originalJumpPower;
+        locomotion.SetJumpPower(originalJumpPower);
     }
 }

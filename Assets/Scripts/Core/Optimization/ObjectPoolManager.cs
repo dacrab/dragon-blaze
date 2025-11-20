@@ -1,10 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Core.Constants;
 
 namespace Core.Optimization
 {
-    public class SimpleObjectPool : MonoBehaviour
+    public class ObjectPoolManager : MonoBehaviour
     {
+        public static ObjectPoolManager Instance { get; private set; }
+
         [System.Serializable]
         public class Pool
         {
@@ -13,15 +16,25 @@ namespace Core.Optimization
             public int size;
         }
 
-        public static SimpleObjectPool instance;
-        public List<Pool> pools;
-        public Dictionary<string, Queue<GameObject>> poolDictionary;
+        [SerializeField] private List<Pool> pools;
+        private Dictionary<string, Queue<GameObject>> poolDictionary;
 
         private void Awake()
         {
-            if (instance == null) instance = this;
-            else Destroy(gameObject);
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+                InitializePools();
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
+        private void InitializePools()
+        {
             poolDictionary = new Dictionary<string, Queue<GameObject>>();
 
             foreach (Pool pool in pools)
@@ -32,7 +45,6 @@ namespace Core.Optimization
                 {
                     GameObject obj = Instantiate(pool.prefab);
                     obj.SetActive(false);
-                    obj.transform.SetParent(transform); // Keep hierarchy clean
                     objectPool.Enqueue(obj);
                 }
 
@@ -50,36 +62,13 @@ namespace Core.Optimization
 
             GameObject objectToSpawn = poolDictionary[tag].Dequeue();
 
-            // If active, we might need to grow pool or skip. 
-            // Simple implementation: Re-enqueue immediately at back.
-            // Better: Instantiate new if empty.
-            if (objectToSpawn.activeInHierarchy)
-            {
-                 // Optional: Grow pool
-                 // For now, just reuse oldest (might look weird if it vanishes) or better: create temp
-                 objectToSpawn.SetActive(false); 
-            }
-
             objectToSpawn.SetActive(true);
             objectToSpawn.transform.position = position;
             objectToSpawn.transform.rotation = rotation;
 
-            // Re-enqueue
             poolDictionary[tag].Enqueue(objectToSpawn);
-
-            // Trigger any OnSpawn interface if exists
-            IPooledObject pooledObj = objectToSpawn.GetComponent<IPooledObject>();
-            if (pooledObj != null)
-            {
-                pooledObj.OnObjectSpawn();
-            }
 
             return objectToSpawn;
         }
-    }
-
-    public interface IPooledObject
-    {
-        void OnObjectSpawn();
     }
 }

@@ -2,15 +2,17 @@ using UnityEngine;
 using Core.Managers;
 using Core.Constants;
 using Gameplay.Characters.Player;
+using Environment.Traps.Stats;
 
 namespace Environment.Traps
 {
     public class Spikehead : TrapBase
     {
         #region Serialized Fields
-        [Header("SpikeHead Attributes")]
-        [SerializeField] private float speed;
-        [SerializeField] private float range;
+        [Header("Configuration")]
+        [SerializeField] private TrapStatsSO stats;
+
+        [Header("SpikeHead Specifics")]
         [SerializeField] private float checkDelay;
         [SerializeField] private LayerMask playerLayer;
 
@@ -19,6 +21,9 @@ namespace Environment.Traps
         #endregion
 
         #region Private Fields
+        private float speed;
+        private float range;
+        
         private Vector3[] directions = new Vector3[4];
         private Vector3 destination;
         private float checkTimer;
@@ -26,6 +31,11 @@ namespace Environment.Traps
         #endregion
 
         #region Unity Lifecycle Methods
+        private void Awake()
+        {
+            InitializeStats();
+        }
+
         private void OnEnable()
         {
             Stop();
@@ -62,6 +72,22 @@ namespace Environment.Traps
         #endregion
 
         #region Private Methods
+        private void InitializeStats()
+        {
+            if (stats != null)
+            {
+                speed = stats.speed;
+                range = stats.attackRange;
+                damage = stats.damage;
+            }
+            else
+            {
+                speed = 10f;
+                range = 10f;
+                damage = 1f;
+            }
+        }
+
         private void MoveSpikehead()
         {
             transform.Translate(destination * Time.deltaTime * speed);

@@ -2,20 +2,18 @@ using UnityEngine;
 using Core.Constants;
 using Gameplay.Characters.Player;
 using Gameplay.Health;
+using Gameplay.Characters.Stats;
 
 namespace Gameplay.Characters.Enemies
 {
     public abstract class EnemyBase : MonoBehaviour
     {
-        [Header("Base Stats")]
-        [SerializeField] protected float health = 100f;
-        [SerializeField] protected float damage = 10f;
-        [SerializeField] protected float speed = 3f;
-        
-        [Header("Effects")]
-        [SerializeField] protected GameObject deathParticles;
-        [SerializeField] protected GameObject hitParticles;
+        [Header("Stats Configuration")]
+        [SerializeField] protected CharacterStatsSO stats;
 
+        [Header("Debug / Overrides (Optional)")]
+        [SerializeField] protected float currentHealth;
+        
         protected Animator anim;
         protected Rigidbody2D rb;
         protected Collider2D col;
@@ -26,21 +24,35 @@ namespace Gameplay.Characters.Enemies
             anim = GetComponent<Animator>();
             rb = GetComponent<Rigidbody2D>();
             col = GetComponent<Collider2D>();
+            InitializeStats();
+        }
+
+        protected virtual void InitializeStats()
+        {
+            if (stats != null)
+            {
+                currentHealth = stats.maxHealth;
+            }
+            else
+            {
+                Debug.LogWarning($"Stats SO missing on {gameObject.name}. Using defaults.");
+                currentHealth = 100f;
+            }
         }
 
         public virtual void TakeDamage(float damageAmount)
         {
             if (isDead) return;
 
-            health -= damageAmount;
+            currentHealth -= damageAmount;
             
-            if (hitParticles != null)
-                Instantiate(hitParticles, transform.position, Quaternion.identity);
+            if (stats != null && stats.hitParticles != null)
+                Instantiate(stats.hitParticles, transform.position, Quaternion.identity);
                 
             if (anim != null)
                 anim.SetTrigger("hurt");
 
-            if (health <= 0)
+            if (currentHealth <= 0)
             {
                 Die();
             }
@@ -52,8 +64,8 @@ namespace Gameplay.Characters.Enemies
             if (col != null) col.enabled = false;
             if (rb != null) rb.simulated = false; 
             
-            if (deathParticles != null)
-                Instantiate(deathParticles, transform.position, Quaternion.identity);
+            if (stats != null && stats.deathParticles != null)
+                Instantiate(stats.deathParticles, transform.position, Quaternion.identity);
 
             if (anim != null)
                 anim.SetTrigger(GameConstants.Animation.Die);
@@ -66,15 +78,13 @@ namespace Gameplay.Characters.Enemies
             if (collision.CompareTag(GameConstants.Tags.Player))
             {
                 PlayerController player = collision.GetComponent<PlayerController>();
-                // Use !IsInvisible() logic or simple null check if no visibility logic exists yet on Controller
-                // Assuming I will rely on Health to handle invulnerability/invisibility checks mostly,
-                // OR check here. PlayerController has IsInvisible().
                 if (player != null && !player.IsInvisible())
                 {
-                     Health playerHealth = collision.GetComponent<Health>();
+                     Gameplay.Health.Health playerHealth = collision.GetComponent<Gameplay.Health.Health>();
                      if (playerHealth != null)
                      {
-                         playerHealth.TakeDamage(damage);
+                         float dmg = stats != null ? stats.damage : 10f;
+                         playerHealth.TakeDamage(dmg);
                      }
                 }
             }

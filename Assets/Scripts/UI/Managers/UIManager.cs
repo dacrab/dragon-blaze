@@ -7,6 +7,7 @@ using Core.Constants;
 using Core.Managers;
 using Gameplay.Characters.Player;
 using UI.Menus; // For LoadingManager
+using Core.Input;
 
 namespace UI.Managers
 {
@@ -27,6 +28,9 @@ namespace UI.Managers
         #endregion
 
         #region Serialized Fields
+        [Header("Dependencies")]
+        [SerializeField] private InputReader inputReader;
+
         [Header("Screens")]
         [SerializeField] private GameObject gameOverScreen;
         [SerializeField] private GameObject pauseScreen;
@@ -56,29 +60,38 @@ namespace UI.Managers
         {
             EventBus.OnScoreChanged += UpdateCoinDisplay;
             EventBus.OnPlayerDied += GameOver;
+            
+            if (inputReader != null)
+            {
+                inputReader.PauseEvent += OnPause;
+            }
         }
 
         private void OnDisable()
         {
             EventBus.OnScoreChanged -= UpdateCoinDisplay;
             EventBus.OnPlayerDied -= GameOver;
+            
+            if (inputReader != null)
+            {
+                inputReader.PauseEvent -= OnPause;
+            }
         }
 
         private void Start() => CheckSaveData();
+        #endregion
 
-        private void Update()
+        #region Input Handling
+        private void OnPause()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                PauseGame(!IsPauseScreenActive);
-            }
+            PauseGame(!IsPauseScreenActive);
         }
         #endregion
 
         #region Save Data Methods
         private void CheckSaveData()
         {
-            if (GameManager.instance == null)
+            if (GameManager.Instance == null)
             {
                 Debug.LogError("GameManager instance is not initialized");
                 return;
@@ -86,7 +99,7 @@ namespace UI.Managers
 
             if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
 
-            bool saveExists = GameManager.instance.SaveDataExists();
+            bool saveExists = GameManager.Instance.SaveDataExists();
 
             SetButtonVisibility(continueButton, saveExists, "Continue button");
             SetButtonVisibility(newGameButton, true, "New Game button");
@@ -106,39 +119,24 @@ namespace UI.Managers
 
         public void SaveGame()
         {
-            GameManager.instance?.SaveGame();
+            GameManager.Instance?.SaveGame();
         }
         #endregion
 
         #region Game Flow Methods
         public void NewGame()
         {
-            GameManager.instance.ResetCoins();
-            GameManager.instance.SaveGame(true);
+            GameManager.Instance.ResetCoins();
+            GameManager.Instance.SaveGame(true);
             
-            // Assume Level 1 is index 1, or use next level if current is MainMenu (0)
             int levelToLoad = 1;
             LoadingManager.LoadSpecificLevel(levelToLoad);
         }
 
         public void ContinueGame()
         {
-            int lastSavedLevelIndex = GameManager.instance.GetLastSavedLevelIndex();
+            int lastSavedLevelIndex = GameManager.Instance.GetLastSavedLevelIndex();
             LoadingManager.LoadSpecificLevel(lastSavedLevelIndex);
-        }
-
-        public void Play(string sceneIndex) 
-        {
-            // Legacy method taking string?
-            // Assuming sceneIndex is string int?
-            if (int.TryParse(sceneIndex, out int index))
-            {
-                LoadingManager.LoadSpecificLevel(index);
-            }
-            else
-            {
-                Debug.LogError("Play(string) expects an integer string.");
-            }
         }
 
         public void GameOver()
@@ -164,7 +162,7 @@ namespace UI.Managers
 
         public void Quit()
         {
-            GameManager.instance?.SaveGame();
+            GameManager.Instance?.SaveGame();
             ShowCursor();
             Application.Quit();
 #if UNITY_EDITOR
@@ -187,10 +185,6 @@ namespace UI.Managers
         #endregion
 
         #region UI Update Methods
-        public void SoundVolume() => SoundManager.instance.ChangeSoundVolume(0.2f); // Legacy/Test
-
-        public void MusicVolume() => SoundManager.instance.ChangeMusicVolume(0.2f); // Legacy/Test
-
         public void ShowLoadingScreen(bool show)
         {
             if (loadingScreen != null)
@@ -221,9 +215,9 @@ namespace UI.Managers
 
         public void RefreshUI()
         {
-            if (GameManager.instance != null)
+            if (GameManager.Instance != null)
             {
-                UpdateCoinDisplay(GameManager.instance.TotalCoins);
+                UpdateCoinDisplay(GameManager.Instance.TotalCoins);
             }
         }
 
