@@ -69,7 +69,10 @@ namespace Gameplay.Health
                 playerController = GetComponent<PlayerController>();
                 if (playerController == null)
                 {
-                    Debug.LogError("PlayerController component not found on Player!");
+                    Debug.LogError($"[Refactor Action Required] PlayerController component not found on {gameObject.name}! " +
+                                   "The legacy PlayerMovement script has been replaced. " +
+                                   "Please attach: PlayerController, PlayerLocomotion, PlayerVisuals, PlayerAudio, PlayerPowerups. " +
+                                   "Then assign the InputReader asset to PlayerController.");
                 }
                 // Raise initial health event for UI
                 EventBus.RaiseHealthChanged(currentHealth, startingHealth);
