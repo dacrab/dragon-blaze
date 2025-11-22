@@ -4,9 +4,19 @@ using Gameplay.Health;
 
 namespace Gameplay.Combat
 {
+    [RequireComponent(typeof(Collider2D))]
     public class EnemyDamage : MonoBehaviour
     {
         [SerializeField] protected float damage;
+
+        private void Reset()
+        {
+            var col = GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.isTrigger = true;
+            }
+        }
 
         protected void OnTriggerEnter2D(Collider2D collision)
         {

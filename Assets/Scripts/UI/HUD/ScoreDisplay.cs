@@ -11,6 +11,14 @@ namespace UI.HUD
 
         #region Unity Lifecycle Methods
 
+        private void Awake()
+        {
+            if (coinText == null)
+            {
+                coinText = GetComponent<TextMeshProUGUI>();
+            }
+        }
+
         private void OnEnable()
         {
             EventBus.OnScoreChanged += UpdateScoreDisplay;

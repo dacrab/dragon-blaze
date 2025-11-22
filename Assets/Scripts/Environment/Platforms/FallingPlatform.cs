@@ -4,6 +4,7 @@ using Core.Constants;
 
 namespace Environment.Platforms
 {
+    [RequireComponent(typeof(Rigidbody2D))]
     public class FallingPlatform : MonoBehaviour
     {
         #region Serialized Fields
@@ -17,6 +18,14 @@ namespace Environment.Platforms
         #endregion
 
         #region Unity Lifecycle Methods
+        private void Awake()
+        {
+            if (rb == null)
+            {
+                rb = GetComponent<Rigidbody2D>();
+            }
+        }
+
         private void Start()
         {
             InitializePlatform();

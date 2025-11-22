@@ -4,6 +4,7 @@ using Core.Managers;
 
 namespace UI.Menus
 {
+    [RequireComponent(typeof(Text))]
     public class VolumeText : MonoBehaviour
     {
         #region Serialized Fields

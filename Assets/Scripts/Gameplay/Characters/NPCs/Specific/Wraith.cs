@@ -11,6 +11,16 @@ public class Wraith : NPC, ITalkable
     [SerializeField] private AudioClip dialogueSound;
     #endregion
 
+    #region Unity Lifecycle Methods
+    private void Awake()
+    {
+        if (dialogueController == null)
+        {
+            dialogueController = FindFirstObjectByType<DialogueController>();
+        }
+    }
+    #endregion
+
     #region Public Methods
     public override void Interact()
     {

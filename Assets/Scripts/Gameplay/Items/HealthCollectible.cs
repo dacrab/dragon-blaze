@@ -20,6 +20,15 @@ public class HealthCollectible : MonoBehaviour
     }
     #endregion
 
+    private void Reset()
+    {
+        var col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = true;
+        }
+    }
+
     #region Private Methods
     private void HandlePickup(Collider2D playerCollider)
     {

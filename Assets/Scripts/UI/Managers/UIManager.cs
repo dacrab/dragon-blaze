@@ -24,6 +24,15 @@ namespace UI.Managers
                 return;
             }
             instance = this;
+
+            if (playerController == null)
+            {
+                var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+                if (player != null)
+                {
+                    playerController = player.GetComponent<PlayerController>();
+                }
+            }
         }
         #endregion
 

@@ -5,7 +5,7 @@ using Gameplay.Health;
 
 namespace Environment.Traps
 {
-    public abstract class TrapBase : MonoBehaviour
+	public abstract class TrapBase : MonoBehaviour
     {
         [SerializeField] protected float damage;
 

@@ -13,6 +13,19 @@ namespace UI.HUD
         #endregion
 
         #region Unity Lifecycle Methods
+        private void Awake()
+        {
+            if (totalhealthBar == null || currenthealthBar == null)
+            {
+                var images = GetComponentsInChildren<Image>();
+                if (images.Length >= 2)
+                {
+                    if (totalhealthBar == null) totalhealthBar = images[0];
+                    if (currenthealthBar == null) currenthealthBar = images[1];
+                }
+            }
+        }
+
         private void OnEnable()
         {
             EventBus.OnHealthChanged += UpdateHealthUI;
@@ -29,7 +42,7 @@ namespace UI.HUD
         {
             if (maxHealth > 0)
             {
-                currenthealthBar.fillAmount = currentHealth / 10f; 
+                currenthealthBar.fillAmount = currentHealth / maxHealth; 
             }
         }
         #endregion

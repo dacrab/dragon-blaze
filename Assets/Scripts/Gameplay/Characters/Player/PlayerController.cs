@@ -4,7 +4,9 @@ using Core.Events;
 
 namespace Gameplay.Characters.Player
 {
-    public class PlayerController : MonoBehaviour
+	[RequireComponent(typeof(PlayerLocomotion), typeof(PlayerVisuals), typeof(PlayerAudio))]
+	[RequireComponent(typeof(PlayerPowerups))]
+	public class PlayerController : MonoBehaviour
     {
         [Header("Dependencies")]
         [SerializeField] private InputReader inputReader;
@@ -25,7 +27,7 @@ namespace Gameplay.Characters.Player
             visuals = GetComponent<PlayerVisuals>();
             playerAudio = GetComponent<PlayerAudio>();
             powerups = GetComponent<PlayerPowerups>();
-            
+
             if (locomotion == null) Debug.LogError("PlayerLocomotion missing!");
             if (visuals == null) Debug.LogError("PlayerVisuals missing!");
         }

@@ -7,6 +7,7 @@ using Core.Optimization;
 
 namespace Gameplay.Characters.Player
 {
+    [RequireComponent(typeof(Animator), typeof(PlayerController))]
     public class PlayerAttack : MonoBehaviour
     {
         [SerializeField] private float attackCooldown;
@@ -49,6 +50,16 @@ namespace Gameplay.Characters.Player
         {
             anim = GetComponent<Animator>();
             playerController = GetComponent<PlayerController>();
+
+            if (anim == null)
+            {
+                Debug.LogError("Animator component missing on PlayerAttack GameObject.");
+            }
+
+            if (playerController == null)
+            {
+                Debug.LogError("PlayerController component missing on PlayerAttack GameObject.");
+            }
         }
 
         private void UpdateCooldownTimer()

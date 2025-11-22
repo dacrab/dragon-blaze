@@ -24,6 +24,14 @@ namespace Gameplay.Items
         #endregion
 
         #region Unity Lifecycle Methods
+        private void Awake()
+        {
+            if (indicatorSprite == null)
+            {
+                indicatorSprite = GetComponentInChildren<SpriteRenderer>();
+            }
+        }
+
         private void Start()
         {
             InitializeIndicatorSprite();

@@ -7,6 +7,7 @@ using Gameplay.Health;
 
 namespace Environment.Traps
 {
+    [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
     public class Firetrap : TrapBase
     {
         #region Serialized Fields

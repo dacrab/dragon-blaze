@@ -5,6 +5,7 @@ using UI.Managers;
 
 namespace Gameplay.Characters.Player
 {
+    [RequireComponent(typeof(Collider2D))]
     public class PlayerRespawn : MonoBehaviour
     {
         #region Serialized Fields

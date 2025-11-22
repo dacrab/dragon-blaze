@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace Environment.Parallax
 {
+    [RequireComponent(typeof(SpriteRenderer))]
     public class ParallaxBackground : MonoBehaviour
     {
         #region Serialized Fields

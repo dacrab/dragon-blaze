@@ -3,6 +3,7 @@ using System.Collections;
 using Core.Constants;
 using Gameplay.Characters.Player;
 
+[RequireComponent(typeof(SpriteRenderer), typeof(Collider2D))]
 public abstract class PowerUpBase : MonoBehaviour
 {
     #region Fields

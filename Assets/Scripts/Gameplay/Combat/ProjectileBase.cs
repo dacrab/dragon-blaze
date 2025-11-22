@@ -3,6 +3,7 @@ using Core.Constants;
 
 namespace Gameplay.Combat
 {
+    [RequireComponent(typeof(Collider2D))]
     public abstract class ProjectileBase : MonoBehaviour
     {
         [SerializeField] protected float speed;

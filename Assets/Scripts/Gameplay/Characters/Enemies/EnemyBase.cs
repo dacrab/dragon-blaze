@@ -6,7 +6,7 @@ using Gameplay.Characters.Stats;
 
 namespace Gameplay.Characters.Enemies
 {
-    public abstract class EnemyBase : MonoBehaviour
+	public abstract class EnemyBase : MonoBehaviour
     {
         [Header("Stats Configuration")]
         [SerializeField] protected CharacterStatsSO stats;

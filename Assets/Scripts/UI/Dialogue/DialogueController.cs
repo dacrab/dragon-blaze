@@ -25,6 +25,18 @@ namespace UI.Dialogue
         private const float MAX_TYPE_TIME = 0.1f;
         #endregion
 
+        #region Unity Lifecycle Methods
+        private void Awake()
+        {
+            if (NPCNameText == null || NPCDialogueText == null)
+            {
+                var texts = GetComponentsInChildren<TextMeshProUGUI>(true);
+                if (texts.Length > 0 && NPCNameText == null) NPCNameText = texts[0];
+                if (texts.Length > 1 && NPCDialogueText == null) NPCDialogueText = texts[1];
+            }
+        }
+        #endregion
+
         #region Public Methods
         public void DisplayNextParagraph(DialogueText dialogueText, AudioClip dialogueSound = null)
         {
