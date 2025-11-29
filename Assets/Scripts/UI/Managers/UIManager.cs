@@ -14,16 +14,16 @@ namespace UI.Managers
     public class UIManager : MonoBehaviour
     {
         #region Singleton
-        public static UIManager instance;
+        public static UIManager Instance { get; private set; }
 
         private void Awake()
         {
-            if (instance != null && instance != this)
+            if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            instance = this;
+            Instance = this;
 
             if (playerController == null)
             {
@@ -153,7 +153,7 @@ namespace UI.Managers
             if (IsGameOverScreenActive) return; 
             
             SetGameOverState(true);
-            SoundManager.instance.PlaySound(gameOverSound);
+            SoundManager.Instance?.PlaySound(gameOverSound);
         }
 
         public void Restart()

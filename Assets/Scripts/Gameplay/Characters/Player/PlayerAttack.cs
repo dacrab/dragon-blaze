@@ -86,7 +86,7 @@ namespace Gameplay.Characters.Player
         {
             if (firePoint == null) return;
 
-            SoundManager.instance.PlaySound(fireballSound);
+            SoundManager.Instance?.PlaySound(fireballSound);
             anim.SetTrigger("attack");
             cooldownTimer = 0;
 

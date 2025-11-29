@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using Core.Constants;
 using Core.Events;
+using Core.Interfaces;
 using Gameplay.Characters.Player;
 using Core.Managers;
 using Environment.Platforms;
 
 namespace Gameplay.Health
 {
-    public class Health : MonoBehaviour
+    public class Health : MonoBehaviour, IDamageable
     {
         #region Serialized Fields
         [Header("Health")]
@@ -36,6 +37,7 @@ namespace Gameplay.Health
 
         #region Public Properties
         public float currentHealth { get; private set; }
+        public bool IsDead => dead;
         #endregion
 
         #region Private Fields
@@ -195,10 +197,7 @@ namespace Gameplay.Health
 
         private void PlaySound(AudioClip clip)
         {
-            if (SoundManager.instance != null)
-            {
-                SoundManager.instance.PlaySound(clip);
-            }
+            SoundManager.Instance?.PlaySound(clip);
         }
 
         private void SpawnParticles(GameObject particleSystemPrefab)

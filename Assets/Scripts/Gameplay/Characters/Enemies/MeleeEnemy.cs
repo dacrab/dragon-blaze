@@ -1,7 +1,7 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Utilities;
 using Gameplay.Characters.Player;
-using Gameplay.Health;
 
 namespace Gameplay.Characters.Enemies
 {
@@ -10,29 +10,25 @@ namespace Gameplay.Characters.Enemies
         [Header("Attack Parameters")]
         [SerializeField] private float attackCooldown;
         [SerializeField] private float range;
-        // Damage inherited from Base
 
         [Header("AI Parameters")]
-        [SerializeField] private float chaseSpeed = 3.0f; // Differentiate from Patrol speed
+        [SerializeField] private float chaseSpeed = 3.0f;
 
         [Header("Player Detection")]
         [SerializeField] private LayerMask playerLayer;
 
         private float cooldownTimer = Mathf.Infinity;
-        private Transform playerTransform;
         private EnemyPatrol enemyPatrol;
-        private PlayerController playerController;
 
         protected override void Awake()
         {
             base.Awake();
-            InitializeComponents();
+            enemyPatrol = GetComponentInParent<EnemyPatrol>();
         }
 
         private void Update()
         {
-            if (isDead) return;
-            if (!ValidateComponents()) return;
+            if (isDead || !PlayerReference.IsValid) return;
 
             cooldownTimer += Time.deltaTime;
 
@@ -44,25 +40,6 @@ namespace Gameplay.Characters.Enemies
             {
                 if (enemyPatrol != null) enemyPatrol.enabled = true;
             }
-        }
-
-        private void InitializeComponents()
-        {
-            // In inherited classes, we might need to be careful not to override base unless intended.
-            // But here base only gets RB/Anim/Col.
-            
-            enemyPatrol = GetComponentInParent<EnemyPatrol>();
-            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player != null)
-            {
-                playerTransform = player.transform;
-                playerController = player.GetComponent<PlayerController>();
-            }
-        }
-
-        private bool ValidateComponents()
-        {
-            return playerController != null && playerTransform != null;
         }
 
         private void HandlePlayerDetected()
@@ -84,61 +61,45 @@ namespace Gameplay.Characters.Enemies
         {
             cooldownTimer = 0;
             anim.SetTrigger(GameConstants.Animation.MeleeAttack);
-            // Damage handled via Animation Event calling DamagePlayer? 
-            // Or instant? Original code called DamagePlayer() immediately.
             DamagePlayer();
         }
 
         private bool PlayerInSight()
         {
-            return playerController != null && !playerController.IsInvisible();
+            var controller = PlayerReference.Controller;
+            return controller != null && !controller.IsInvisible();
         }
 
         private bool PlayerWithinPatrolBounds()
         {
             if (enemyPatrol == null || enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null)
-                return true; // Default to true if no patrol bounds to restrict chasing (e.g. boss)
+                return true;
 
-            return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
-                   playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
+            var playerPos = PlayerReference.Transform.position;
+            return playerPos.x >= enemyPatrol.LeftEdge.position.x &&
+                   playerPos.x <= enemyPatrol.RightEdge.position.x;
         }
 
         private bool CanMoveForward()
         {
-            // Original code used BoxCollider overlap check.
-            // Reusing 'col' from base if it's a BoxCollider2D
-            BoxCollider2D box = col as BoxCollider2D;
+            var box = col as BoxCollider2D;
             if (box == null) return true;
 
             Vector2 direction = transform.right * transform.localScale.x;
             Vector2 checkPosition = (Vector2)transform.position + (direction * box.size.x);
-
-            // Using GameConstants.Layers.Default? Or assuming LayerMask is int.
-            // LayerMask.GetMask requires strings.
             Collider2D hit = Physics2D.OverlapBox(checkPosition, box.size, 0, LayerMask.GetMask("Default")); 
             return hit == null;
         }
 
         private void FollowPlayer()
         {
-            if (Vector3.Distance(transform.position, playerTransform.position) < range)
-            {
-                 // Stop if in range? Original didn't stop explicitly in FollowPlayer but MoveTowardsPlayer logic
-                 // The original logic just moved towards X.
-            }
-            
-            Vector3 direction = (playerTransform.position - transform.position).normalized;
+            var playerPos = PlayerReference.Transform.position;
+            Vector3 direction = (playerPos - transform.position).normalized;
             float proposedXPosition = transform.position.x + direction.x * chaseSpeed * Time.deltaTime;
 
-            // Check bounds again for movement target?
-            // Reuse patrol bounds check logic if needed.
-            if (PlayerWithinPatrolBounds()) // Actually we need to check if proposed position is within bounds
+            if (enemyPatrol == null || (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x))
             {
-                // We need strict bound check on self, not player
-                if (enemyPatrol == null || (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x))
-                {
-                    MoveTowardsPlayer(proposedXPosition, direction);
-                }
+                MoveTowardsPlayer(proposedXPosition, direction);
             }
         }
 
@@ -155,15 +116,10 @@ namespace Gameplay.Characters.Enemies
 
         private void DamagePlayer()
         {
-            // Check distance or collider overlap?
-            // Original code just assumed if Attack() is called, it hits if in range? 
-            // Actually original checked cooldown then Attack() then DamagePlayer().
-            // But usually attack has a hitbox.
-            // I'll implement a simple distance check to be fair.
-            
-            if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1.0f) // + buffer
+            var playerTransform = PlayerReference.Transform;
+            if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1.0f)
             {
-                var playerHealth = playerTransform.GetComponent<Gameplay.Health.Health>();
+                var playerHealth = PlayerReference.GetComponent<Gameplay.Health.Health>();
                 if (playerHealth != null)
                 {
                     float dmg = stats != null ? stats.damage : 10f;

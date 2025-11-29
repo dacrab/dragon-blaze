@@ -66,7 +66,7 @@ namespace UI.Menus
             currentPosition += _change;
 
             if (_change != 0)
-                SoundManager.instance.PlaySound(changeSound);
+                SoundManager.Instance?.PlaySound(changeSound);
 
             ClampPosition();
             AssignPosition();
@@ -95,15 +95,15 @@ namespace UI.Menus
 
         private void Interact()
         {
-            SoundManager.instance.PlaySound(interactSound);
+            SoundManager.Instance?.PlaySound(interactSound);
 
             switch (currentPosition)
             {
                 case 0:
-                    UIManager.instance.NewGame();
+                    UIManager.Instance?.NewGame();
                     break;
                 case 1:
-                    UIManager.instance.Quit();
+                    UIManager.Instance?.Quit();
                     break;
             }
         }

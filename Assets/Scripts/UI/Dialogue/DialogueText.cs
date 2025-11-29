@@ -1,15 +1,14 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Dialogue/New Dialogue Container")]
-public class DialogueText : ScriptableObject
+namespace UI.Dialogue
 {
-    #region Public Fields
-    public string speakerName;
-    public AudioClip dialogueSound;
-    #endregion
-
-    #region Serialized Fields
-    [TextArea(5, 10)]
-    public string[] paragraphs;
-    #endregion
+    [CreateAssetMenu(fileName = "DialogueText", menuName = "DragonBlaze/Dialogue/Dialogue Text")]
+    public class DialogueText : ScriptableObject
+    {
+        public string speakerName;
+        public AudioClip dialogueSound;
+        
+        [TextArea(5, 10)]
+        public string[] paragraphs;
+    }
 }

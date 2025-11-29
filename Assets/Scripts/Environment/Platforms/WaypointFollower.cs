@@ -4,42 +4,43 @@ namespace Environment.Platforms
 {
     public class WaypointFollower : MonoBehaviour
     {
-        #region Serialized Fields
-        [SerializeField] private GameObject[] waypoints;
+        [SerializeField] private Transform[] waypoints;
         [SerializeField] private float speed = 2f;
-        #endregion
+        [SerializeField] private bool loop = true;
+        [SerializeField] private bool pingPong;
 
-        #region Private Fields
-        private int currentWaypointIndex = 0;
-        #endregion
+        private int currentIndex;
+        private int direction = 1;
 
-        #region Unity Lifecycle Methods
         private void Update()
         {
-            UpdateWaypointIndex();
-            MoveTowardsWaypoint();
-        }
-        #endregion
+            if (waypoints == null || waypoints.Length == 0) return;
 
-        #region Private Methods
-        private void UpdateWaypointIndex()
-        {
-            if (Vector2.Distance(waypoints[currentWaypointIndex].transform.position, transform.position) < 0.1f)
+            var target = waypoints[currentIndex].position;
+            transform.position = Vector2.MoveTowards(transform.position, target, Time.deltaTime * speed);
+
+            if (Vector2.Distance(transform.position, target) < 0.1f)
             {
-                currentWaypointIndex++;
-                if (currentWaypointIndex >= waypoints.Length)
-                {
-                    currentWaypointIndex = 0;
-                }
+                AdvanceWaypoint();
             }
         }
 
-        private void MoveTowardsWaypoint()
+        private void AdvanceWaypoint()
         {
-            transform.position = Vector2.MoveTowards(transform.position, 
-                waypoints[currentWaypointIndex].transform.position, 
-                Time.deltaTime * speed);
+            if (pingPong)
+            {
+                currentIndex += direction;
+                if (currentIndex >= waypoints.Length - 1 || currentIndex <= 0)
+                    direction *= -1;
+            }
+            else if (loop)
+            {
+                currentIndex = (currentIndex + 1) % waypoints.Length;
+            }
+            else
+            {
+                currentIndex = Mathf.Min(currentIndex + 1, waypoints.Length - 1);
+            }
         }
-        #endregion
     }
 }

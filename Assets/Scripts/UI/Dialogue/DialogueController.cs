@@ -1,126 +1,103 @@
 using UnityEngine;
 using Core.Managers;
+using Core.Events;
 using TMPro;
 using System.Collections.Generic;
-using System.Collections;
-using Core.Events;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace UI.Dialogue
 {
     public class DialogueController : MonoBehaviour
     {
-        #region Serialized Fields
-        [SerializeField] private TextMeshProUGUI NPCNameText;
-        [SerializeField] private TextMeshProUGUI NPCDialogueText;
+        [SerializeField] private TextMeshProUGUI nameText;
+        [SerializeField] private TextMeshProUGUI dialogueText;
         [SerializeField] private float typeSpeed = 10f;
-        [SerializeField] private AudioClip dialogueSound;
-        #endregion
 
-        #region Private Fields
-        private Queue<string> paragraphs = new Queue<string>();
+        private readonly Queue<string> paragraphs = new();
         private bool conversationEnded;
-        private string p;
-        private Coroutine typeDialogueCoroutine;
+        private string currentParagraph;
         private bool isTyping;
-        private const float MAX_TYPE_TIME = 0.1f;
-        #endregion
+        private CancellationTokenSource typingCts;
 
-        #region Unity Lifecycle Methods
+        private const float MAX_TYPE_TIME = 0.1f;
+
         private void Awake()
         {
-            if (NPCNameText == null || NPCDialogueText == null)
+            if (nameText == null || dialogueText == null)
             {
                 var texts = GetComponentsInChildren<TextMeshProUGUI>(true);
-                if (texts.Length > 0 && NPCNameText == null) NPCNameText = texts[0];
-                if (texts.Length > 1 && NPCDialogueText == null) NPCDialogueText = texts[1];
+                if (texts.Length > 0 && nameText == null) nameText = texts[0];
+                if (texts.Length > 1 && dialogueText == null) dialogueText = texts[1];
             }
         }
-        #endregion
 
-        #region Public Methods
-        public void DisplayNextParagraph(DialogueText dialogueText, AudioClip dialogueSound = null)
+        private void OnDestroy() => typingCts?.Cancel();
+
+        public void DisplayNextParagraph(DialogueText dialogue, AudioClip sound = null)
         {
             if (paragraphs.Count == 0)
             {
                 if (!conversationEnded)
                 {
-                    StartConversation(dialogueText, dialogueSound);
+                    StartConversation(dialogue, sound);
                 }
-                else if (conversationEnded && !isTyping)
+                else if (!isTyping)
                 {
                     EndConversation();
                     return;
                 }
             }
 
-            if (!isTyping)
+            if (!isTyping && paragraphs.Count > 0)
             {
-                p = paragraphs.Dequeue();
-                typeDialogueCoroutine = StartCoroutine(TypeDialogueText(p));
+                currentParagraph = paragraphs.Dequeue();
+                typingCts?.Cancel();
+                typingCts = new CancellationTokenSource();
+                TypeTextAsync(currentParagraph, typingCts.Token).Forget();
             }
-            else
+            else if (isTyping)
             {
                 FinishParagraphEarly();
             }
 
             if (paragraphs.Count == 0)
-            {
                 conversationEnded = true;
-            }
         }
-        #endregion
 
-        #region Private Methods
-        private void StartConversation(DialogueText dialogueText, AudioClip dialogueSound = null)
+        private void StartConversation(DialogueText dialogue, AudioClip sound)
         {
-            // Signal Game Pause/Freeze for Dialogue
             EventBus.RaiseDialogueStateChanged(true);
-            
-            if (dialogueSound != null)
-            {
-                SoundManager.instance.PlaySound(dialogueSound);
-            }
+            SoundManager.Instance?.PlaySound(sound);
 
-            if (!gameObject.activeSelf)
-            {
-                gameObject.SetActive(true);
-            }
+            gameObject.SetActive(true);
+            nameText.text = dialogue.speakerName;
 
-            NPCNameText.text = dialogueText.speakerName;
-
-            foreach (string paragraph in dialogueText.paragraphs)
-            {
+            foreach (var paragraph in dialogue.paragraphs)
                 paragraphs.Enqueue(paragraph);
-            }
         }
 
         private void EndConversation()
         {
             EventBus.RaiseDialogueStateChanged(false);
-
             paragraphs.Clear();
             conversationEnded = false;
-
-            if (gameObject.activeSelf)
-            {
-                gameObject.SetActive(false);
-            }
+            gameObject.SetActive(false);
         }
 
-        private IEnumerator TypeDialogueText(string p)
+        private async UniTaskVoid TypeTextAsync(string text, CancellationToken token)
         {
             isTyping = true;
-            int maxVisibleChars = 0;
+            dialogueText.text = text;
+            dialogueText.maxVisibleCharacters = 0;
 
-            NPCDialogueText.text = p;
-            NPCDialogueText.maxVisibleCharacters = maxVisibleChars;        
-
-            foreach (char c in p.ToCharArray())
+            int delay = (int)(MAX_TYPE_TIME / typeSpeed * 1000);
+            
+            for (int i = 1; i <= text.Length; i++)
             {
-                maxVisibleChars++;
-                NPCDialogueText.maxVisibleCharacters = maxVisibleChars;
-
-                yield return new WaitForSeconds(MAX_TYPE_TIME / typeSpeed);
+                if (token.IsCancellationRequested) break;
+                dialogueText.maxVisibleCharacters = i;
+                await UniTask.Delay(delay, cancellationToken: token);
             }
 
             isTyping = false;
@@ -128,13 +105,10 @@ namespace UI.Dialogue
 
         private void FinishParagraphEarly()
         {
-            StopCoroutine(typeDialogueCoroutine);
-
-            NPCDialogueText.maxVisibleCharacters = p.Length;
-            NPCDialogueText.text = p;
-            
+            typingCts?.Cancel();
+            dialogueText.maxVisibleCharacters = currentParagraph.Length;
+            dialogueText.text = currentParagraph;
             isTyping = false;
         }
-        #endregion
     }
 }

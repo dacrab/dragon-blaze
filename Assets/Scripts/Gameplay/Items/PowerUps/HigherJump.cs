@@ -1,50 +1,33 @@
 using UnityEngine;
 using Gameplay.Characters.Player;
 
-public class HigherJump : PowerUpBase
+namespace Gameplay.Items.PowerUps
 {
-    [SerializeField] private float jumpMultiplier = 1.5f;
-    [SerializeField] private Sprite higherJumpImage;
-
-    private float originalJumpPower;
-
-    protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
+    public class HigherJump : PowerUpBase
     {
-        PlayerLocomotion locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
-        if (locomotion != null)
+        [SerializeField] private float jumpMultiplier = 1.5f;
+        [SerializeField] private Sprite higherJumpImage;
+
+        private float originalJumpPower;
+        private PlayerLocomotion locomotion;
+
+        protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
         {
-            StoreOriginalJumpPower(locomotion);
-            ApplyJumpMultiplier(locomotion);
+            locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
+            if (locomotion != null)
+            {
+                originalJumpPower = locomotion.GetJumpPower();
+                locomotion.SetJumpPower(originalJumpPower * jumpMultiplier);
+            }
+            ActivateIndicator("Higher Jump", higherJumpImage);
         }
-        ActivateUIIndicator();
-    }
 
-    protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-    {
-        PlayerLocomotion locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
-        if (locomotion != null)
+        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
         {
-            ResetJumpPower(locomotion);
+            if (locomotion != null)
+            {
+                locomotion.SetJumpPower(originalJumpPower);
+            }
         }
-    }
-
-    private void StoreOriginalJumpPower(PlayerLocomotion locomotion)
-    {
-        originalJumpPower = locomotion.GetJumpPower();
-    }
-
-    private void ApplyJumpMultiplier(PlayerLocomotion locomotion)
-    {
-        locomotion.SetJumpPower(originalJumpPower * jumpMultiplier);
-    }
-
-    private void ActivateUIIndicator()
-    {
-        ActivateIndicator("Higher Jump", higherJumpImage);
-    }
-
-    private void ResetJumpPower(PlayerLocomotion locomotion)
-    {
-        locomotion.SetJumpPower(originalJumpPower);
     }
 }

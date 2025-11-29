@@ -1,69 +1,63 @@
-using System.Collections;
 using UnityEngine;
 using Core.Constants;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace Environment.Platforms
 {
     [RequireComponent(typeof(Rigidbody2D))]
     public class FallingPlatform : MonoBehaviour
     {
-        #region Serialized Fields
         [SerializeField] private float fallDelay = 1f;
         [SerializeField] private float destroyDelay = 2f;
-        [SerializeField] private Rigidbody2D rb;
-        #endregion
 
-        #region Private Fields
+        private Rigidbody2D rb;
         private Vector3 initialPosition;
-        #endregion
+        private CancellationTokenSource cts;
+        private bool isFalling;
 
-        #region Unity Lifecycle Methods
         private void Awake()
         {
-            if (rb == null)
-            {
-                rb = GetComponent<Rigidbody2D>();
-            }
-        }
-
-        private void Start()
-        {
-            InitializePlatform();
-        }
-
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (collision.gameObject.CompareTag(GameConstants.Tags.Player))
-            {
-                StartCoroutine(Fall());
-            }
-        }
-        #endregion
-
-        #region Private Methods
-        private void InitializePlatform()
-        {
+            rb = GetComponent<Rigidbody2D>();
             initialPosition = transform.position;
             rb.bodyType = RigidbodyType2D.Static;
         }
 
-        private IEnumerator Fall()
-        {
-            yield return new WaitForSeconds(fallDelay);
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            yield return new WaitForSeconds(destroyDelay);
-            gameObject.SetActive(false);
-        }
-        #endregion
+        private void OnDestroy() => cts?.Cancel();
 
-        #region Public Methods
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (isFalling) return;
+            
+            if (collision.gameObject.CompareTag(GameConstants.Tags.Player))
+            {
+                cts?.Cancel();
+                cts = new CancellationTokenSource();
+                FallAsync(cts.Token).Forget();
+            }
+        }
+
+        private async UniTaskVoid FallAsync(CancellationToken token)
+        {
+            isFalling = true;
+            
+            await UniTask.Delay((int)(fallDelay * 1000), cancellationToken: token);
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            
+            await UniTask.Delay((int)(destroyDelay * 1000), cancellationToken: token);
+            gameObject.SetActive(false);
+            
+            isFalling = false;
+        }
+
         public void ResetPlatform()
         {
+            cts?.Cancel();
+            isFalling = false;
             gameObject.SetActive(true);
             transform.position = initialPosition;
             rb.bodyType = RigidbodyType2D.Static;
-            rb.linearVelocity = Vector2.zero; // Ensure it stops moving
+            rb.linearVelocity = Vector2.zero;
         }
-        #endregion
     }
 }

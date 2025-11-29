@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Core.Constants;
 
 namespace Core.Optimization
 {
@@ -17,6 +16,7 @@ namespace Core.Optimization
         }
 
         [SerializeField] private List<Pool> pools;
+        
         private Dictionary<string, Queue<GameObject>> poolDictionary;
 
         private void Awake()
@@ -35,40 +35,44 @@ namespace Core.Optimization
 
         private void InitializePools()
         {
-            poolDictionary = new Dictionary<string, Queue<GameObject>>();
+            poolDictionary = new Dictionary<string, Queue<GameObject>>(pools.Count);
 
-            foreach (Pool pool in pools)
+            foreach (var pool in pools)
             {
-                Queue<GameObject> objectPool = new Queue<GameObject>();
-
+                var queue = new Queue<GameObject>(pool.size);
                 for (int i = 0; i < pool.size; i++)
                 {
-                    GameObject obj = Instantiate(pool.prefab);
+                    var obj = Instantiate(pool.prefab);
                     obj.SetActive(false);
-                    objectPool.Enqueue(obj);
+                    queue.Enqueue(obj);
                 }
-
-                poolDictionary.Add(pool.tag, objectPool);
+                poolDictionary[pool.tag] = queue;
             }
         }
 
         public GameObject SpawnFromPool(string tag, Vector3 position, Quaternion rotation)
         {
-            if (!poolDictionary.ContainsKey(tag))
+            if (!poolDictionary.TryGetValue(tag, out var queue))
             {
-                Debug.LogWarning($"Pool with tag {tag} doesn't exist.");
+                Debug.LogWarning($"Pool '{tag}' not found.");
                 return null;
             }
 
-            GameObject objectToSpawn = poolDictionary[tag].Dequeue();
+            var obj = queue.Dequeue();
+            obj.transform.SetPositionAndRotation(position, rotation);
+            obj.SetActive(true);
+            queue.Enqueue(obj);
 
-            objectToSpawn.SetActive(true);
-            objectToSpawn.transform.position = position;
-            objectToSpawn.transform.rotation = rotation;
+            return obj;
+        }
 
-            poolDictionary[tag].Enqueue(objectToSpawn);
-
-            return objectToSpawn;
+        public void ReturnToPool(string tag, GameObject obj)
+        {
+            if (poolDictionary.TryGetValue(tag, out var queue))
+            {
+                obj.SetActive(false);
+                queue.Enqueue(obj);
+            }
         }
     }
 }

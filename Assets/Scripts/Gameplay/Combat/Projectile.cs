@@ -1,7 +1,6 @@
 using UnityEngine;
 using Core.Constants;
-using Gameplay.Health;
-using Gameplay.Characters.Enemies;
+using Core.Interfaces;
 
 namespace Gameplay.Combat
 {
@@ -13,14 +12,11 @@ namespace Gameplay.Combat
 
             if (collision.CompareTag(GameConstants.Tags.Enemy))
             {
-                 Health.Health enemyHealth = collision.GetComponent<Health.Health>();
-                 if (enemyHealth) 
-                    enemyHealth.TakeDamage(damage);
-                 else
-                 {
-                     EnemyBase enemy = collision.GetComponent<EnemyBase>();
-                     if (enemy) enemy.TakeDamage(damage);
-                 }
+                var damageable = collision.GetComponent<IDamageable>();
+                if (damageable != null && !damageable.IsDead)
+                {
+                    damageable.TakeDamage(damage);
+                }
             }
         }
     }

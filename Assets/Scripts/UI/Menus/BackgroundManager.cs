@@ -1,88 +1,81 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem;
+using Core.Input;
+using Core.Constants;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace UI.Menus
 {
     public class BackgroundManager : MonoBehaviour
     {
-        #region Serialized Fields
+        [SerializeField] private InputReader inputReader;
         [SerializeField] private Image[] backgrounds;
         [SerializeField] private float transitionTime = 2.0f;
-        #endregion
 
-        #region Private Fields
-        private int currentBackgroundIndex = 0;
-        #endregion
+        private int currentIndex;
+        private CancellationTokenSource cts;
 
-        #region Unity Lifecycle Methods
         private void Start()
         {
             InitializeBackgrounds();
-            StartCoroutine(BackgroundTransition());
+            cts = new CancellationTokenSource();
+            RunBackgroundTransitionAsync(cts.Token).Forget();
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            CheckForMenuInput();
+            if (inputReader != null)
+                inputReader.InteractEvent += OnInteract;
         }
-        #endregion
 
-        #region Private Methods
+        private void OnDisable()
+        {
+            if (inputReader != null)
+                inputReader.InteractEvent -= OnInteract;
+        }
+
+        private void OnDestroy() => cts?.Cancel();
+
+        private void OnInteract() => SceneManager.LoadScene(GameConstants.Scenes.MainMenu);
+
         private void InitializeBackgrounds()
         {
-            foreach (var bg in backgrounds)
-            {
-                bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0);
-            }
-            backgrounds[0].color = new Color(backgrounds[0].color.r, backgrounds[0].color.g, backgrounds[0].color.b, 1);
+            for (int i = 0; i < backgrounds.Length; i++)
+                SetAlpha(backgrounds[i], i == 0 ? 1f : 0f);
         }
 
-        private void CheckForMenuInput()
+        private async UniTaskVoid RunBackgroundTransitionAsync(CancellationToken token)
         {
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            while (!token.IsCancellationRequested)
             {
-                LoadMenuLevel();
-            }
-        }
+                var currentBg = backgrounds[currentIndex];
+                var nextBg = backgrounds[(currentIndex + 1) % backgrounds.Length];
 
-        private void LoadMenuLevel()
-        {
-            SceneManager.LoadScene(0);
-        }
-        #endregion
-
-        #region Coroutines
-        private IEnumerator BackgroundTransition()
-        {
-            while (true)
-            {
-                Image currentBg = backgrounds[currentBackgroundIndex];
-                Image nextBg = backgrounds[(currentBackgroundIndex + 1) % backgrounds.Length];
-
-                yield return StartCoroutine(FadeBackgrounds(currentBg, nextBg));
-
-                currentBackgroundIndex = (currentBackgroundIndex + 1) % backgrounds.Length;
+                await FadeAsync(currentBg, nextBg, token);
+                currentIndex = (currentIndex + 1) % backgrounds.Length;
             }
         }
 
-        private IEnumerator FadeBackgrounds(Image currentBg, Image nextBg)
+        private async UniTask FadeAsync(Image from, Image to, CancellationToken token)
         {
-            float elapsed = 0.0f;
+            float elapsed = 0f;
             while (elapsed < transitionTime)
             {
+                if (token.IsCancellationRequested) return;
+                
                 elapsed += Time.deltaTime;
-                float alpha = Mathf.Lerp(0, 1, elapsed / transitionTime);
-                currentBg.color = new Color(currentBg.color.r, currentBg.color.g, currentBg.color.b, 1 - alpha);
-                nextBg.color = new Color(nextBg.color.r, nextBg.color.g, nextBg.color.b, alpha);
-                yield return null;
+                float t = elapsed / transitionTime;
+                SetAlpha(from, 1f - t);
+                SetAlpha(to, t);
+                await UniTask.Yield(token);
             }
-
-            currentBg.color = new Color(currentBg.color.r, currentBg.color.g, currentBg.color.b, 0);
-            nextBg.color = new Color(nextBg.color.r, nextBg.color.g, nextBg.color.b, 1);
+            SetAlpha(from, 0f);
+            SetAlpha(to, 1f);
         }
-        #endregion
+
+        private static void SetAlpha(Image img, float alpha) =>
+            img.color = new Color(img.color.r, img.color.g, img.color.b, alpha);
     }
 }

@@ -39,9 +39,9 @@ namespace Gameplay.Items
 
         private void PlayPickupSound()
         {
-            if (SoundManager.instance != null && pickupSound != null)
+            if (pickupSound != null)
             {
-                SoundManager.instance.PlaySound(pickupSound);
+                SoundManager.Instance?.PlaySound(pickupSound);
             }
         }
 

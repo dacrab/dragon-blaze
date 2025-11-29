@@ -1,12 +1,12 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Interfaces;
 using Gameplay.Characters.Player;
-using Gameplay.Health;
 using Gameplay.Characters.Stats;
 
 namespace Gameplay.Characters.Enemies
 {
-	public abstract class EnemyBase : MonoBehaviour
+	public abstract class EnemyBase : MonoBehaviour, IDamageable
     {
         [Header("Stats Configuration")]
         [SerializeField] protected CharacterStatsSO stats;
@@ -18,6 +18,8 @@ namespace Gameplay.Characters.Enemies
         protected Rigidbody2D rb;
         protected Collider2D col;
         protected bool isDead;
+
+        public bool IsDead => isDead;
 
         protected virtual void Awake()
         {

@@ -1,81 +1,41 @@
 using UnityEngine;
+using Core.Constants;
 using Core.Managers;
-using Gameplay.Health;
 
-public class HealthCollectible : MonoBehaviour
+namespace Gameplay.Items
 {
-    #region Serialized Fields
-    [SerializeField] private float healthValue;
-    [SerializeField] private AudioClip pickupSound;
-    [SerializeField] private GameObject pickupParticles;
-    #endregion
-
-    #region Unity Lifecycle Methods
-    private void OnTriggerEnter2D(Collider2D collision)
+    [RequireComponent(typeof(Collider2D))]
+    public class HealthCollectible : Collectable
     {
-        if (collision.CompareTag("Player"))
+        [SerializeField] private float healthValue = 25f;
+        [SerializeField] private AudioClip pickupSound;
+        [SerializeField] private ParticleSystem pickupEffect;
+
+        private void OnTriggerEnter2D(Collider2D collision)
         {
-            HandlePickup(collision);
-        }
-    }
-    #endregion
-
-    private void Reset()
-    {
-        var col = GetComponent<Collider2D>();
-        if (col != null)
-        {
-            col.isTrigger = true;
-        }
-    }
-
-    #region Private Methods
-    private void HandlePickup(Collider2D playerCollider)
-    {
-        PlayPickupSound();
-        AddHealthToPlayer(playerCollider);
-        PlayParticleEffect();
-        DeactivateCollectible();
-    }
-
-    private void PlayPickupSound()
-    {
-        if (SoundManager.instance != null && pickupSound != null)
-        {
-            SoundManager.instance.PlaySound(pickupSound);
-        }
-    }
-
-    private void AddHealthToPlayer(Collider2D playerCollider)
-    {
-        Health playerHealth = playerCollider.GetComponent<Health>();
-        if (playerHealth != null)
-        {
-            playerHealth.AddHealth(healthValue);
-        }
-    }
-
-    private void PlayParticleEffect()
-    {
-        if (pickupParticles != null)
-        {
-            pickupParticles.transform.position = transform.position;
-            pickupParticles.SetActive(true);
-            ParticleSystem particles = pickupParticles.GetComponent<ParticleSystem>();
-            if (particles != null)
+            if (collision.CompareTag(GameConstants.Tags.Player))
             {
-                particles.Play();
-            }
-            else
-            {
-                Debug.LogWarning("The pickupParticles GameObject does not have a ParticleSystem component.");
+                var playerHealth = collision.GetComponent<Gameplay.Health.Health>();
+                if (playerHealth != null)
+                {
+                    playerHealth.AddHealth(healthValue);
+                }
+                Collect();
             }
         }
-    }
 
-    private void DeactivateCollectible()
-    {
-        gameObject.SetActive(false);
+        public override void Collect()
+        {
+            SoundManager.Instance?.PlaySound(pickupSound);
+            
+            if (pickupEffect != null)
+            {
+                var effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
+                effect.Play();
+                Destroy(effect.gameObject, effect.main.duration);
+            }
+            
+            gameObject.SetActive(false);
+        }
     }
-    #endregion
 }

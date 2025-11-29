@@ -1,44 +1,38 @@
 using UnityEngine;
-using Core.Constants;
+using Core.Input;
+using Core.Utilities;
 using Gameplay.Interaction;
-using UnityEngine.InputSystem;
 
 namespace Gameplay.Characters.NPCs
 {
     public abstract class NPC : MonoBehaviour, IInteractable
     {
-        #region Serialized Fields
-        [SerializeField] private const float INTERACT_DISTANCE = 5f;
-        [SerializeField] private SpriteRenderer _interactSprite;
-        #endregion
+        [SerializeField] private InputReader inputReader;
+        [SerializeField] private float interactDistance = 5f;
+        [SerializeField] private SpriteRenderer interactSprite;
 
-        #region Private Fields
-        private Transform _playerTransform;
-        #endregion
-
-        #region Unity Lifecycle Methods
-        private void Start()
+        private void OnEnable()
         {
-            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player != null)
-                _playerTransform = player.transform;
+            if (inputReader != null)
+                inputReader.InteractEvent += OnInteract;
+        }
+
+        private void OnDisable()
+        {
+            if (inputReader != null)
+                inputReader.InteractEvent -= OnInteract;
         }
         
         private void Update()
         {
-            HandleInteraction();
             UpdateInteractSprite();
         }
-        #endregion
 
-        #region Public Methods
         public abstract void Interact();
-        #endregion
 
-        #region Private Methods
-        private void HandleInteraction()
+        private void OnInteract()
         {
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame && IsWithinInteractDistance())
+            if (IsWithinInteractDistance())
             {
                 Interact();
             }
@@ -46,20 +40,19 @@ namespace Gameplay.Characters.NPCs
 
         private void UpdateInteractSprite()
         {
-            if (_interactSprite == null) return;
+            if (interactSprite == null) return;
             
             bool shouldBeActive = IsWithinInteractDistance();
-            if (_interactSprite.gameObject.activeSelf != shouldBeActive)
+            if (interactSprite.gameObject.activeSelf != shouldBeActive)
             {
-                _interactSprite.gameObject.SetActive(shouldBeActive);
+                interactSprite.gameObject.SetActive(shouldBeActive);
             }
         }
 
         private bool IsWithinInteractDistance()
         {
-            if (_playerTransform == null) return false;
-            return Vector2.Distance(_playerTransform.position, transform.position) < INTERACT_DISTANCE;
+            if (!PlayerReference.IsValid) return false;
+            return Vector2.Distance(PlayerReference.Transform.position, transform.position) < interactDistance;
         }
-        #endregion
     }
 }

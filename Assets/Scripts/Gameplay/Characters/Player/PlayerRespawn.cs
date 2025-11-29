@@ -1,6 +1,6 @@
 using UnityEngine;
 using Core.Managers;
-using Gameplay.Health;
+using Core.Constants;
 using UI.Managers;
 
 namespace Gameplay.Characters.Player
@@ -8,79 +8,41 @@ namespace Gameplay.Characters.Player
     [RequireComponent(typeof(Collider2D))]
     public class PlayerRespawn : MonoBehaviour
     {
-        #region Serialized Fields
-        [SerializeField] private AudioClip checkpoint;
-        #endregion
+        [SerializeField] private AudioClip checkpointSound;
 
-        #region Private Fields
         private Transform currentCheckpoint;
-        private Health.Health playerHealth; // Namespace Gameplay.Health, Class Health
+        private Gameplay.Health.Health playerHealth;
         private UIManager uiManager;
-        #endregion
 
-        #region Unity Lifecycle Methods
         private void Awake()
         {
-            InitializeComponents();
+            playerHealth = GetComponent<Gameplay.Health.Health>();
+            uiManager = FindFirstObjectByType<UIManager>();
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            HandleCheckpointCollision(collision);
+            if (collision.CompareTag(GameConstants.Tags.Checkpoint))
+            {
+                currentCheckpoint = collision.transform;
+                SoundManager.Instance?.PlaySound(checkpointSound);
+                collision.enabled = false;
+                collision.GetComponent<Animator>()?.SetTrigger("activate");
+            }
         }
-        #endregion
 
-        #region Public Methods
         public void RespawnCheck()
         {
             if (currentCheckpoint == null)
             {
-                uiManager.GameOver();
+                uiManager?.GameOver();
                 return;
             }
 
-            RespawnPlayer();
-        }
-
-        public Transform GetCurrentCheckpoint()
-        {
-            return currentCheckpoint;
-        }
-        #endregion
-
-        #region Private Methods
-        private void InitializeComponents()
-        {
-            playerHealth = GetComponent<Health.Health>();
-            uiManager = FindFirstObjectByType<UIManager>();
-        }
-
-        private void HandleCheckpointCollision(Collider2D collision)
-        {
-            if (collision.gameObject.CompareTag("Checkpoint"))
-            {
-                SetCheckpoint(collision);
-                ActivateCheckpoint(collision);
-            }
-        }
-
-        private void SetCheckpoint(Collider2D checkpoint)
-        {
-            currentCheckpoint = checkpoint.transform;
-            SoundManager.instance.PlaySound(this.checkpoint);
-        }
-
-        private void ActivateCheckpoint(Collider2D checkpoint)
-        {
-            checkpoint.enabled = false;
-            checkpoint.GetComponent<Animator>().SetTrigger("activate");
-        }
-
-        private void RespawnPlayer()
-        {
-            playerHealth.Respawn();
+            playerHealth?.Respawn();
             transform.position = currentCheckpoint.position;
         }
-        #endregion
+
+        public Transform GetCurrentCheckpoint() => currentCheckpoint;
     }
 }

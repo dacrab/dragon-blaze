@@ -4,31 +4,32 @@ namespace Environment.Rooms
 {
     public class Room : MonoBehaviour
     {
-        #region Serialized Fields
         [SerializeField] private GameObject[] enemies;
-        #endregion
 
-        #region Private Fields
         private Vector3[] initialPositions;
-        #endregion
 
-        #region Unity Lifecycle Methods
         private void Awake()
         {
-            SaveInitialEnemyPositions();
-            DeactivateRoomIfNotFirst();
+            CacheInitialPositions();
+            if (transform.GetSiblingIndex() != 0)
+                SetActive(false);
         }
-        #endregion
 
-        #region Public Methods
-        public void ActivateRoom(bool status)
+        public void SetActive(bool active)
         {
-            ToggleEnemies(status);
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                if (enemies[i] == null) continue;
+                
+                enemies[i].SetActive(active);
+                if (active)
+                    enemies[i].transform.position = initialPositions[i];
+            }
         }
-        #endregion
 
-        #region Private Methods
-        private void SaveInitialEnemyPositions()
+        public void ActivateRoom(bool status) => SetActive(status);
+
+        private void CacheInitialPositions()
         {
             initialPositions = new Vector3[enemies.Length];
             for (int i = 0; i < enemies.Length; i++)
@@ -37,30 +38,5 @@ namespace Environment.Rooms
                     initialPositions[i] = enemies[i].transform.position;
             }
         }
-
-        private void DeactivateRoomIfNotFirst()
-        {
-            if (transform.GetSiblingIndex() != 0)
-                ActivateRoom(false);
-        }
-
-        private void ToggleEnemies(bool status)
-        {
-            for (int i = 0; i < enemies.Length; i++)
-            {
-                if (enemies[i] != null)
-                {
-                    enemies[i].SetActive(status);
-                    if (status)
-                        ResetEnemyPosition(i);
-                }
-            }
-        }
-
-        private void ResetEnemyPosition(int index)
-        {
-            enemies[index].transform.position = initialPositions[index];
-        }
-        #endregion
     }
 }

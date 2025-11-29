@@ -9,28 +9,19 @@ namespace Environment.Platforms
         private void Reset()
         {
             var col = GetComponent<Collider2D>();
-            if (col != null)
-            {
-                col.isTrigger = true;
-            }
+            if (col != null) col.isTrigger = true;
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            SetPlayerParent(collision, transform);
+            if (collision.CompareTag(GameConstants.Tags.Player))
+                collision.transform.SetParent(transform);
         }
 
         private void OnTriggerExit2D(Collider2D collision)
         {
-            SetPlayerParent(collision, null);
-        }
-
-        private void SetPlayerParent(Collider2D collision, Transform parent)
-        {
             if (collision.CompareTag(GameConstants.Tags.Player))
-            {
-                collision.transform.SetParent(parent);
-            }
+                collision.transform.SetParent(null);
         }
     }
 }

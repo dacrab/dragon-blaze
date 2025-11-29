@@ -4,59 +4,51 @@ using Core.Managers;
 
 namespace UI.Menus
 {
+    public enum VolumeType { Music, Sound }
+
     [RequireComponent(typeof(Text))]
     public class VolumeText : MonoBehaviour
     {
-        #region Serialized Fields
-        [SerializeField] private string volumeName; // "musicVolume" or "soundVolume"
-        [SerializeField] private string textIntro; // "Sound: " or "Music: "
-        #endregion
+        [SerializeField] private VolumeType volumeType;
+        [SerializeField] private string displayFormat = "{0}: {1:F0}";
 
-        #region Private Fields
         private Text txt;
-        #endregion
+        private string prefsKey;
 
-        #region Unity Lifecycle Methods
         private void Awake()
         {
             txt = GetComponent<Text>();
+            prefsKey = volumeType == VolumeType.Music ? "musicVolume" : "soundVolume";
         }
 
         private void OnEnable()
         {
-            // Initial Update
-            float currentVol = PlayerPrefs.GetFloat(volumeName, 0.5f);
-            UpdateVolumeText(currentVol);
+            UpdateVolumeText(PlayerPrefs.GetFloat(prefsKey, 0.5f));
 
-            // Subscribe
-            if (SoundManager.instance != null)
+            if (SoundManager.Instance != null)
             {
-                if (volumeName == "musicVolume")
-                    SoundManager.instance.OnMusicVolumeChanged += UpdateVolumeText;
-                else if (volumeName == "soundVolume")
-                    SoundManager.instance.OnSoundVolumeChanged += UpdateVolumeText;
+                if (volumeType == VolumeType.Music)
+                    SoundManager.Instance.OnMusicVolumeChanged += UpdateVolumeText;
+                else
+                    SoundManager.Instance.OnSoundVolumeChanged += UpdateVolumeText;
             }
         }
 
         private void OnDisable()
         {
-            // Unsubscribe
-            if (SoundManager.instance != null)
+            if (SoundManager.Instance != null)
             {
-                if (volumeName == "musicVolume")
-                    SoundManager.instance.OnMusicVolumeChanged -= UpdateVolumeText;
-                else if (volumeName == "soundVolume")
-                    SoundManager.instance.OnSoundVolumeChanged -= UpdateVolumeText;
+                if (volumeType == VolumeType.Music)
+                    SoundManager.Instance.OnMusicVolumeChanged -= UpdateVolumeText;
+                else
+                    SoundManager.Instance.OnSoundVolumeChanged -= UpdateVolumeText;
             }
         }
-        #endregion
 
-        #region Private Methods
         private void UpdateVolumeText(float volumeValue)
         {
             if (txt != null)
-                txt.text = $"{textIntro}{(volumeValue * 100):F0}";
+                txt.text = string.Format(displayFormat, volumeType, volumeValue * 100);
         }
-        #endregion
     }
 }
