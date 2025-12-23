@@ -33,6 +33,7 @@ namespace UI.Managers
         [SerializeField] private AudioClip gameOverSound;
 
         [Header("Player Reference")]
+        [AutoWire(AutoWireAttribute.WireType.Player)]
         [SerializeField] private PlayerController playerController;
         #endregion
 
@@ -42,6 +43,12 @@ namespace UI.Managers
         #endregion
 
         #region Initialization
+        protected override void Awake()
+        {
+            base.Awake();
+            AutoWireHelper.WireAllFields(this);
+        }
+
         protected override void OnInitialize()
         {
             base.OnInitialize();

@@ -12,8 +12,12 @@ namespace Gameplay.Items
     public class MagicStone : MonoBehaviour
     {
         #region Serialized Fields
+        [AutoWire(AutoWireAttribute.WireType.Scene)]
         [SerializeField] private UIManager uiManager;
+        
+        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private SpriteRenderer indicatorSprite;
+        
         [SerializeField] private GameObject interactParticleSystemPrefab;
         #endregion
 
@@ -24,6 +28,11 @@ namespace Gameplay.Items
         #endregion
 
         #region Unity Lifecycle Methods
+        private void Awake()
+        {
+            AutoWireHelper.WireAllFields(this);
+        }
+
         private void Start() { if (indicatorSprite != null) indicatorSprite.enabled = false; }
 
         private void Update()
