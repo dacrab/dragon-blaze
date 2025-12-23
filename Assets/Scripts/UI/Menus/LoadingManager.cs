@@ -1,84 +1,110 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UI.Managers;
-using Cysharp.Threading.Tasks;
 
 namespace UI.Menus
 {
     public class LoadingManager : MonoBehaviour
     {
-        private static LoadingManager _instance;
+        #region Singleton
+        private static LoadingManager instance;
+
         public static LoadingManager Instance
         {
             get
             {
-                if (_instance == null)
+                if (instance == null)
                 {
-                    _instance = FindFirstObjectByType<LoadingManager>();
-                    if (_instance == null)
+                    instance = FindFirstObjectByType<LoadingManager>();
+                    if (instance == null)
                     {
-                        var go = new GameObject(nameof(LoadingManager));
-                        _instance = go.AddComponent<LoadingManager>();
+                        GameObject obj = new GameObject();
+                        obj.name = typeof(LoadingManager).Name;
+                        instance = obj.AddComponent<LoadingManager>();
                     }
                 }
-                return _instance;
+                return instance;
             }
         }
 
-        [SerializeField] private UIManager uiManager;
-
         private void Awake()
         {
-            if (_instance == null)
+            if (instance == null)
             {
-                _instance = this;
+                instance = this;
                 DontDestroyOnLoad(gameObject);
             }
-            else if (_instance != this)
+            else if (instance != this)
             {
                 Destroy(gameObject);
             }
         }
+        #endregion
 
-        public static void LoadNextLevel() =>
-            Instance.LoadLevelAsync(SceneManager.GetActiveScene().buildIndex + 1).Forget();
+        #region Serialized Fields
+        [Header("Scene Loading Settings")]
+        [SerializeField] private UIManager uiManager;
+        #endregion
 
-        public static void LoadSpecificLevel(int levelIndex) =>
-            Instance.LoadLevelAsync(levelIndex).Forget();
+        #region Public Methods
+        public static void LoadNextLevel()
+        {
+            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+            Instance.StartCoroutine(Instance.LoadLevel(nextSceneIndex));
+        }
 
-        private async UniTaskVoid LoadLevelAsync(int levelIndex)
+        public static void LoadSpecificLevel(int levelIndex)
+        {
+            Instance.StartCoroutine(Instance.LoadLevel(levelIndex));
+        }
+        #endregion
+
+        #region Private Methods
+        private IEnumerator LoadLevel(int levelIndex)
         {
             EnsureUIManager();
-            uiManager?.ShowLoadingScreen(true);
 
-            var operation = SceneManager.LoadSceneAsync(levelIndex);
+            if (uiManager) uiManager.ShowLoadingScreen(true);
+
+            AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
             if (operation == null)
             {
                 Debug.LogError($"Scene index {levelIndex} could not be loaded.");
-                uiManager?.ShowLoadingScreen(false);
-                return;
+                if (uiManager) uiManager.ShowLoadingScreen(false);
+                yield break;
             }
-
+            
             operation.allowSceneActivation = false;
 
-            while (operation.progress < 0.9f)
+            while (!operation.isDone)
             {
-                uiManager?.UpdateLoadingImage(Mathf.Clamp01(operation.progress / 0.9f));
-                await UniTask.Yield();
+                float progress = Mathf.Clamp01(operation.progress / 0.9f);
+                if (uiManager) uiManager.UpdateLoadingImage(progress);
+
+                if (operation.progress >= 0.9f)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    operation.allowSceneActivation = true;
+                }
+
+                yield return null;
             }
 
-            uiManager?.UpdateLoadingImage(1f);
-            await UniTask.Delay(500);
-            operation.allowSceneActivation = true;
-
-            await UniTask.WaitUntil(() => operation.isDone);
-            uiManager?.ShowLoadingScreen(false);
+            if (uiManager) uiManager.ShowLoadingScreen(false);
         }
 
         private void EnsureUIManager()
         {
             if (uiManager == null)
+            {
                 uiManager = FindFirstObjectByType<UIManager>();
+                if (uiManager == null)
+                {
+                    Debug.LogWarning("UIManager not found. Loading screen will not be shown.");
+                }
+            }
         }
+        #endregion
     }
 }

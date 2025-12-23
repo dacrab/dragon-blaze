@@ -6,7 +6,9 @@ namespace Core.Managers
 {
     public class SoundManager : MonoBehaviour
     {
-        public static SoundManager Instance { get; private set; }
+        #region Singleton
+        public static SoundManager instance { get; private set; }
+        #endregion
 
         #region Events
         public event Action<float> OnSoundVolumeChanged;
@@ -35,11 +37,11 @@ namespace Core.Managers
         #region Initialization Methods
         private void InitializeSingleton()
         {
-            if (Instance == null)
+            if (instance == null)
             {
-                Instance = this;
+                instance = this;
             }
-            else if (Instance != this)
+            else if (instance != this)
             {
                 Destroy(gameObject);
             }

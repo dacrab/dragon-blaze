@@ -3,14 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using Core.Constants;
 using Core.Events;
-using Core.Interfaces;
 using Gameplay.Characters.Player;
 using Core.Managers;
 using Environment.Platforms;
 
 namespace Gameplay.Health
 {
-    public class Health : MonoBehaviour, IDamageable
+    public class Health : MonoBehaviour
     {
         #region Serialized Fields
         [Header("Health")]
@@ -37,7 +36,6 @@ namespace Gameplay.Health
 
         #region Public Properties
         public float currentHealth { get; private set; }
-        public bool IsDead => dead;
         #endregion
 
         #region Private Fields
@@ -71,10 +69,7 @@ namespace Gameplay.Health
                 playerController = GetComponent<PlayerController>();
                 if (playerController == null)
                 {
-                    Debug.LogError($"[Refactor Action Required] PlayerController component not found on {gameObject.name}! " +
-                                   "The legacy PlayerMovement script has been replaced. " +
-                                   "Please attach: PlayerController, PlayerLocomotion, PlayerVisuals, PlayerAudio, PlayerPowerups. " +
-                                   "Then assign the InputReader asset to PlayerController.");
+                    Debug.LogError("PlayerController component not found on Player!");
                 }
                 // Raise initial health event for UI
                 EventBus.RaiseHealthChanged(currentHealth, startingHealth);
@@ -197,7 +192,10 @@ namespace Gameplay.Health
 
         private void PlaySound(AudioClip clip)
         {
-            SoundManager.Instance?.PlaySound(clip);
+            if (SoundManager.instance != null)
+            {
+                SoundManager.instance.PlaySound(clip);
+            }
         }
 
         private void SpawnParticles(GameObject particleSystemPrefab)

@@ -11,7 +11,7 @@ namespace Cainos.LucidEditor.Experimental
     {
         private List<TreeMenuItem> baseElements = new List<TreeMenuItem>();
         private SimpleTreeView simpleTreeView;
-        private TreeViewState state;
+        private TreeViewState<int> state;
 
         private int currentId = 0;
         private List<TreeMenuItem> _selectedItems = new List<TreeMenuItem>();
@@ -101,7 +101,7 @@ namespace Cainos.LucidEditor.Experimental
 
         public void Setup()
         {
-            state = new TreeViewState();
+            state = new TreeViewState<int>();
             simpleTreeView = new SimpleTreeView(state);
             simpleTreeView.searchString = _searchString;
             simpleTreeView.Setup(baseElements.ToArray());

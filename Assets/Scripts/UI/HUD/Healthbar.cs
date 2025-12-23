@@ -6,29 +6,32 @@ namespace UI.HUD
 {
     public class Healthbar : MonoBehaviour
     {
-        [SerializeField] private Image totalHealthBar;
-        [SerializeField] private Image currentHealthBar;
+        #region Serialized Fields
+        // Removed direct PlayerHealth reference
+        [SerializeField] private Image totalhealthBar;
+        [SerializeField] private Image currenthealthBar;
+        #endregion
 
-        private void Awake()
+        #region Unity Lifecycle Methods
+        private void OnEnable()
         {
-            if (totalHealthBar == null || currentHealthBar == null)
+            EventBus.OnHealthChanged += UpdateHealthUI;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnHealthChanged -= UpdateHealthUI;
+        }
+        #endregion
+
+        #region Public Methods
+        public void UpdateHealthUI(float currentHealth, float maxHealth)
+        {
+            if (maxHealth > 0)
             {
-                var images = GetComponentsInChildren<Image>();
-                if (images.Length >= 2)
-                {
-                    totalHealthBar ??= images[0];
-                    currentHealthBar ??= images[1];
-                }
+                currenthealthBar.fillAmount = currentHealth / 10f; 
             }
         }
-
-        private void OnEnable() => EventBus.OnHealthChanged += UpdateHealthUI;
-        private void OnDisable() => EventBus.OnHealthChanged -= UpdateHealthUI;
-
-        private void UpdateHealthUI(float current, float max)
-        {
-            if (max > 0 && currentHealthBar != null)
-                currentHealthBar.fillAmount = current / max;
-        }
+        #endregion
     }
 }

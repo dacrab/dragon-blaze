@@ -26,7 +26,7 @@ namespace Gameplay.Items
 
         public override void Collect()
         {
-            SoundManager.Instance?.PlaySound(pickupSound);
+            SoundManager.instance?.PlaySound(pickupSound);
             
             if (pickupEffect != null)
             {

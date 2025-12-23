@@ -1,4 +1,5 @@
 using UnityEngine;
+using Core.Managers;
 using Core.Events;
 using TMPro;
 
@@ -7,21 +8,31 @@ namespace UI.HUD
     public class ScoreDisplay : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI coinText;
-        [SerializeField] private string format = ": {0}";
 
-        private void Awake()
+        #region Unity Lifecycle Methods
+
+        private void OnEnable()
         {
-            if (coinText == null)
-                coinText = GetComponent<TextMeshProUGUI>();
+            EventBus.OnScoreChanged += UpdateScoreDisplay;
         }
 
-        private void OnEnable() => EventBus.OnScoreChanged += UpdateScoreDisplay;
-        private void OnDisable() => EventBus.OnScoreChanged -= UpdateScoreDisplay;
+        private void OnDisable()
+        {
+            EventBus.OnScoreChanged -= UpdateScoreDisplay;
+        }
+
+        #endregion
+
+        #region Score Display Methods
 
         private void UpdateScoreDisplay(int score)
         {
             if (coinText != null)
-                coinText.text = string.Format(format, score);
+            {
+                coinText.text = $": {score}";
+            }
         }
+
+        #endregion
     }
 }

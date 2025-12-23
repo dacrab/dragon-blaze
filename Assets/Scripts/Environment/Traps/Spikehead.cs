@@ -1,84 +1,82 @@
 using UnityEngine;
 using Core.Managers;
 using Core.Constants;
-using Core.Utilities;
-using Environment.Traps.Stats;
+using Gameplay.Characters.Player;
 
 namespace Environment.Traps
 {
     public class Spikehead : TrapBase
     {
-        [Header("Configuration")]
-        [SerializeField] private TrapStatsSO stats;
-
-        [Header("SpikeHead Specifics")]
+        #region Serialized Fields
+        [Header("SpikeHead Attributes")]
+        [SerializeField] private float speed;
+        [SerializeField] private float range;
         [SerializeField] private float checkDelay;
         [SerializeField] private LayerMask playerLayer;
 
         [Header("SFX")]
         [SerializeField] private AudioClip impactSound;
+        #endregion
 
-        private float speed;
-        private float range;
+        #region Private Fields
         private Vector3[] directions = new Vector3[4];
         private Vector3 destination;
         private float checkTimer;
         private bool attacking;
+        #endregion
 
-        private void Awake()
+        #region Unity Lifecycle Methods
+        private void OnEnable()
         {
-            if (stats != null)
-            {
-                speed = stats.speed;
-                range = stats.attackRange;
-                damage = stats.damage;
-            }
-            else
-            {
-                speed = 10f;
-                range = 10f;
-                damage = 1f;
-            }
+            Stop();
         }
-
-        private void OnEnable() => Stop();
 
         private void Update()
         {
             if (attacking)
             {
-                transform.Translate(destination * Time.deltaTime * speed);
+                MoveSpikehead();
             }
             else
             {
-                checkTimer += Time.deltaTime;
-                if (checkTimer > checkDelay)
-                    CheckForPlayer();
+                UpdateCheckTimer();
             }
         }
 
         protected override void OnTriggerEnter2D(Collider2D collision)
         {
-            SoundManager.Instance?.PlaySound(impactSound);
+            SoundManager.instance.PlaySound(impactSound);
             
             if (collision.CompareTag(GameConstants.Tags.Player))
             {
-                var controller = PlayerReference.Controller;
-                if (controller != null && !controller.IsInvisible())
+                // Check visibility
+                PlayerController playerController = collision.GetComponent<PlayerController>();
+                if (playerController != null && !playerController.IsInvisible())
                 {
                     base.OnTriggerEnter2D(collision);
                 }
             }
             
-            Stop();
+            Stop(); // Stop on impact with anything
+        }
+        #endregion
+
+        #region Private Methods
+        private void MoveSpikehead()
+        {
+            transform.Translate(destination * Time.deltaTime * speed);
+        }
+
+        private void UpdateCheckTimer()
+        {
+            checkTimer += Time.deltaTime;
+            if (checkTimer > checkDelay)
+                CheckForPlayer();
         }
 
         private void CheckForPlayer()
         {
-            directions[0] = transform.right * range;
-            directions[1] = -transform.right * range;
-            directions[2] = transform.up * range;
-            directions[3] = -transform.up * range;
+            CalculateDirections();
 
             for (int i = 0; i < directions.Length; i++)
             {
@@ -87,16 +85,28 @@ namespace Environment.Traps
 
                 if (hit.collider != null && !attacking)
                 {
-                    var controller = hit.collider.GetComponent<Gameplay.Characters.Player.PlayerController>();
-                    if (controller != null && !controller.IsInvisible())
-                    {
-                        attacking = true;
-                        destination = directions[i];
-                        checkTimer = 0;
-                        break;
-                    }
+                    TryAttackPlayer(hit, i);
                 }
             }
+        }
+
+        private void TryAttackPlayer(RaycastHit2D hit, int directionIndex)
+        {
+            PlayerController playerController = hit.collider.GetComponent<PlayerController>();
+            if (playerController != null && !playerController.IsInvisible())
+            {
+                attacking = true;
+                destination = directions[directionIndex];
+                checkTimer = 0;
+            }
+        }
+
+        private void CalculateDirections()
+        {
+            directions[0] = transform.right * range;   // Right direction
+            directions[1] = -transform.right * range;  // Left direction
+            directions[2] = transform.up * range;      // Up direction
+            directions[3] = -transform.up * range;     // Down direction
         }
 
         private void Stop()
@@ -104,5 +114,6 @@ namespace Environment.Traps
             destination = transform.position;
             attacking = false;
         }
+        #endregion
     }
 }

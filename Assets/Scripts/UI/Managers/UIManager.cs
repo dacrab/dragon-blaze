@@ -7,39 +7,27 @@ using Core.Constants;
 using Core.Managers;
 using Gameplay.Characters.Player;
 using UI.Menus; // For LoadingManager
-using Core.Input;
+using UnityEngine.InputSystem;
 
 namespace UI.Managers
 {
     public class UIManager : MonoBehaviour
     {
         #region Singleton
-        public static UIManager Instance { get; private set; }
+        public static UIManager instance;
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
-
-            if (playerController == null)
-            {
-                var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-                if (player != null)
-                {
-                    playerController = player.GetComponent<PlayerController>();
-                }
-            }
+            instance = this;
         }
         #endregion
 
         #region Serialized Fields
-        [Header("Dependencies")]
-        [SerializeField] private InputReader inputReader;
-
         [Header("Screens")]
         [SerializeField] private GameObject gameOverScreen;
         [SerializeField] private GameObject pauseScreen;
@@ -69,38 +57,29 @@ namespace UI.Managers
         {
             EventBus.OnScoreChanged += UpdateCoinDisplay;
             EventBus.OnPlayerDied += GameOver;
-            
-            if (inputReader != null)
-            {
-                inputReader.PauseEvent += OnPause;
-            }
         }
 
         private void OnDisable()
         {
             EventBus.OnScoreChanged -= UpdateCoinDisplay;
             EventBus.OnPlayerDied -= GameOver;
-            
-            if (inputReader != null)
-            {
-                inputReader.PauseEvent -= OnPause;
-            }
         }
 
         private void Start() => CheckSaveData();
-        #endregion
 
-        #region Input Handling
-        private void OnPause()
+        private void Update()
         {
-            PauseGame(!IsPauseScreenActive);
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                PauseGame(!IsPauseScreenActive);
+            }
         }
         #endregion
 
         #region Save Data Methods
         private void CheckSaveData()
         {
-            if (GameManager.Instance == null)
+            if (GameManager.instance == null)
             {
                 Debug.LogError("GameManager instance is not initialized");
                 return;
@@ -108,7 +87,7 @@ namespace UI.Managers
 
             if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
 
-            bool saveExists = GameManager.Instance.SaveDataExists();
+            bool saveExists = GameManager.instance.SaveDataExists();
 
             SetButtonVisibility(continueButton, saveExists, "Continue button");
             SetButtonVisibility(newGameButton, true, "New Game button");
@@ -128,15 +107,15 @@ namespace UI.Managers
 
         public void SaveGame()
         {
-            GameManager.Instance?.SaveGame();
+            GameManager.instance?.SaveGame();
         }
         #endregion
 
         #region Game Flow Methods
         public void NewGame()
         {
-            GameManager.Instance.ResetCoins();
-            GameManager.Instance.SaveGame(true);
+            GameManager.instance.ResetCoins();
+            GameManager.instance.SaveGame(true);
             
             int levelToLoad = 1;
             LoadingManager.LoadSpecificLevel(levelToLoad);
@@ -144,7 +123,7 @@ namespace UI.Managers
 
         public void ContinueGame()
         {
-            int lastSavedLevelIndex = GameManager.Instance.GetLastSavedLevelIndex();
+            int lastSavedLevelIndex = GameManager.instance.GetLastSavedLevelIndex();
             LoadingManager.LoadSpecificLevel(lastSavedLevelIndex);
         }
 
@@ -153,7 +132,7 @@ namespace UI.Managers
             if (IsGameOverScreenActive) return; 
             
             SetGameOverState(true);
-            SoundManager.Instance?.PlaySound(gameOverSound);
+            SoundManager.instance.PlaySound(gameOverSound);
         }
 
         public void Restart()
@@ -171,7 +150,7 @@ namespace UI.Managers
 
         public void Quit()
         {
-            GameManager.Instance?.SaveGame();
+            GameManager.instance?.SaveGame();
             ShowCursor();
             Application.Quit();
 #if UNITY_EDITOR
@@ -224,9 +203,9 @@ namespace UI.Managers
 
         public void RefreshUI()
         {
-            if (GameManager.Instance != null)
+            if (GameManager.instance != null)
             {
-                UpdateCoinDisplay(GameManager.Instance.TotalCoins);
+                UpdateCoinDisplay(GameManager.instance.TotalCoins);
             }
         }
 

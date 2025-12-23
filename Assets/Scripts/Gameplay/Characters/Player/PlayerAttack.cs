@@ -3,21 +3,19 @@ using Core.Constants;
 using Core.Managers;
 using Gameplay.Combat;
 using Core.Input;
-using Core.Optimization;
 
 namespace Gameplay.Characters.Player
 {
-    [RequireComponent(typeof(Animator), typeof(PlayerController))]
     public class PlayerAttack : MonoBehaviour
     {
         [SerializeField] private float attackCooldown;
         [SerializeField] private Transform firePoint;
-        [SerializeField] private string projectileTag = "Fireball"; // Replaced direct prefab ref with tag for pool
+        [SerializeField] private GameObject[] fireballs;
         [SerializeField] private AudioClip fireballSound;
         [SerializeField] private InputReader inputReader;
 
         private Animator anim;
-        private PlayerController playerController;
+        private PlayerController playerController; // Use new Controller
         private float cooldownTimer = Mathf.Infinity;
 
         private void Awake()
@@ -50,16 +48,6 @@ namespace Gameplay.Characters.Player
         {
             anim = GetComponent<Animator>();
             playerController = GetComponent<PlayerController>();
-
-            if (anim == null)
-            {
-                Debug.LogError("Animator component missing on PlayerAttack GameObject.");
-            }
-
-            if (playerController == null)
-            {
-                Debug.LogError("PlayerController component missing on PlayerAttack GameObject.");
-            }
         }
 
         private void UpdateCooldownTimer()
@@ -82,11 +70,16 @@ namespace Gameplay.Characters.Player
                    && Time.timeScale > 0;
         }
 
+        private bool ValidateAttackComponents()
+        {
+            return fireballs != null && fireballs.Length > 0 && firePoint != null;
+        }
+
         private void PerformAttack()
         {
-            if (firePoint == null) return;
+            if (!ValidateAttackComponents()) return;
 
-            SoundManager.Instance?.PlaySound(fireballSound);
+            SoundManager.instance.PlaySound(fireballSound);
             anim.SetTrigger("attack");
             cooldownTimer = 0;
 
@@ -95,18 +88,22 @@ namespace Gameplay.Characters.Player
 
         private void LaunchFireball()
         {
-            if (ObjectPoolManager.Instance != null)
+            GameObject fireball = GetFireball();
+            if (fireball != null)
             {
-                GameObject fireball = ObjectPoolManager.Instance.SpawnFromPool(projectileTag, firePoint.position, Quaternion.identity);
-                if (fireball != null)
-                {
-                    fireball.GetComponent<ProjectileBase>().SetDirection(Mathf.Sign(transform.localScale.x));
-                }
+                fireball.transform.position = firePoint.position;
+                fireball.GetComponent<ProjectileBase>().SetDirection(Mathf.Sign(transform.localScale.x));
             }
-            else
+        }
+
+        private GameObject GetFireball()
+        {
+            for (int i = 0; i < fireballs.Length; i++)
             {
-                Debug.LogWarning("ObjectPoolManager missing! Cannot spawn fireball.");
+                if (!fireballs[i].activeInHierarchy)
+                    return fireballs[i];
             }
+            return null;
         }
     }
 }

@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.Managers;
-using Core.Input;
+using UI.Managers;
 using UI.Menus;
+using UnityEngine.InputSystem;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Constants;
@@ -10,39 +11,50 @@ namespace Gameplay.Items
 {
     public class MagicStone : MonoBehaviour
     {
-        [SerializeField] private InputReader inputReader;
+        #region Serialized Fields
+        [SerializeField] private UIManager uiManager;
         [SerializeField] private SpriteRenderer indicatorSprite;
         [SerializeField] private GameObject interactParticleSystemPrefab;
+        #endregion
 
-        private bool playerInTrigger;
+        #region Private Fields
+        private bool playerInTrigger = false;
         private Vector3 playerPosition;
-        private GameObject activeParticleSystemInstance;
+        private GameObject activeParticleSystemInstance = null;
+        #endregion
 
-        private void Awake()
-        {
-            if (indicatorSprite == null)
-                indicatorSprite = GetComponentInChildren<SpriteRenderer>();
-        }
-
-        private void OnEnable()
-        {
-            if (inputReader != null)
-                inputReader.InteractEvent += OnInteract;
-        }
-
-        private void OnDisable()
-        {
-            if (inputReader != null)
-                inputReader.InteractEvent -= OnInteract;
-        }
-
+        #region Unity Lifecycle Methods
         private void Start()
+        {
+            InitializeIndicatorSprite();
+        }
+
+        private void Update()
+        {
+            CheckForPlayerInteraction();
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            HandlePlayerEnter(other);
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            HandlePlayerExit(other);
+        }
+        #endregion
+
+        #region Initialization
+        private void InitializeIndicatorSprite()
         {
             if (indicatorSprite != null)
                 indicatorSprite.enabled = false;
         }
+        #endregion
 
-        private void OnTriggerEnter2D(Collider2D other)
+        #region Player Interaction
+        private void HandlePlayerEnter(Collider2D other)
         {
             if (other.gameObject.CompareTag(GameConstants.Tags.Player))
             {
@@ -53,7 +65,7 @@ namespace Gameplay.Items
             }
         }
 
-        private void OnTriggerExit2D(Collider2D other)
+        private void HandlePlayerExit(Collider2D other)
         {
             if (other.gameObject.CompareTag(GameConstants.Tags.Player))
             {
@@ -65,43 +77,68 @@ namespace Gameplay.Items
             }
         }
 
-        private void OnInteract()
+        private void CheckForPlayerInteraction()
         {
-            if (playerInTrigger)
+            if (playerInTrigger && Keyboard.current.eKey.wasPressedThisFrame)
             {
                 StartCoroutine(PlayParticlesThenLoadLevel(playerPosition));
             }
         }
+        #endregion
 
+        #region Particle System
         private void PlayInteractParticleSystem(Vector3 position)
         {
-            if (interactParticleSystemPrefab == null) return;
+            if (interactParticleSystemPrefab != null)
+            {
+                if (activeParticleSystemInstance == null || !activeParticleSystemInstance.activeInHierarchy)
+                {
+                    if (activeParticleSystemInstance != null)
+                        Destroy(activeParticleSystemInstance);
 
-            if (activeParticleSystemInstance != null)
-                Destroy(activeParticleSystemInstance);
-
-            activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position + Vector3.back, Quaternion.identity);
+                    activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position + new Vector3(0, 0, -1), Quaternion.identity);
+                }
+            }
+            else
+            {
+                Debug.LogError("Interact Particle System Prefab is not assigned.");
+            }
         }
+        #endregion
 
+        #region Level Loading
         private IEnumerator PlayParticlesThenLoadLevel(Vector3 position)
         {
             PlayInteractParticleSystem(position);
-            
-            var ps = interactParticleSystemPrefab.GetComponent<ParticleSystem>();
-            if (ps != null)
-                yield return new WaitForSeconds(ps.main.duration);
+            yield return new WaitForSeconds(interactParticleSystemPrefab.GetComponent<ParticleSystem>().main.duration);
 
             if (SceneManager.GetActiveScene().buildIndex == SceneManager.sceneCountInBuildSettings - 1)
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-                yield return new WaitForSeconds(2f);
+                yield return StartCoroutine(LoadSceneAndWait(SceneManager.GetActiveScene().buildIndex));
                 LoadingManager.LoadSpecificLevel(0);
             }
             else
             {
-                GameManager.Instance?.SaveGame();
+                SaveGame();
                 LoadingManager.LoadNextLevel();
             }
         }
+
+        private IEnumerator LoadSceneAndWait(int sceneIndex)
+        {
+            SceneManager.LoadScene(sceneIndex);
+            yield return new WaitForSeconds(10);
+        }
+        #endregion
+
+        #region Game State Management
+        private void SaveGame()
+        {
+            if (GameManager.instance != null)
+            {
+                GameManager.instance.SaveGame();
+            }
+        }
+        #endregion
     }
 }

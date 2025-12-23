@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Managers;
-using Core.Input;
+using UnityEngine.InputSystem;
+using Core.Constants;
 using UI.Managers;
 
 namespace UI.Menus
@@ -8,7 +9,6 @@ namespace UI.Menus
     public class MenuManager : MonoBehaviour
     {
         #region Serialized Fields
-        [SerializeField] private InputReader inputReader;
         [SerializeField] private RectTransform arrow;
         [SerializeField] private RectTransform[] buttons;
         [SerializeField] private AudioClip changeSound;
@@ -26,37 +26,9 @@ namespace UI.Menus
             ShowCursor();
         }
 
-        private void OnEnable()
+        private void Update()
         {
-            if (inputReader != null)
-            {
-                inputReader.NavigateEvent += OnNavigate;
-                inputReader.SubmitEvent += OnSubmit;
-            }
-        }
-
-        private void OnDisable()
-        {
-            if (inputReader != null)
-            {
-                inputReader.NavigateEvent -= OnNavigate;
-                inputReader.SubmitEvent -= OnSubmit;
-            }
-        }
-        #endregion
-
-        #region Event Handlers
-        private void OnNavigate(Vector2 direction)
-        {
-            if (direction.y > 0)
-                ChangePosition(-1);
-            else if (direction.y < 0)
-                ChangePosition(1);
-        }
-
-        private void OnSubmit()
-        {
-            Interact();
+            HandleInput();
         }
         #endregion
 
@@ -66,10 +38,16 @@ namespace UI.Menus
             currentPosition += _change;
 
             if (_change != 0)
-                SoundManager.Instance?.PlaySound(changeSound);
+                SoundManager.instance.PlaySound(changeSound);
 
             ClampPosition();
             AssignPosition();
+        }
+
+        public void ContinueGame()
+        {
+            int levelIndex = GameManager.instance.GetLastSavedLevelIndex();
+            LoadingManager.LoadSpecificLevel(levelIndex);
         }
         #endregion
 
@@ -78,6 +56,19 @@ namespace UI.Menus
         {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
+        }
+
+        private void HandleInput()
+        {
+            if (Keyboard.current == null) return;
+
+            if (Keyboard.current.upArrowKey.wasPressedThisFrame)
+                ChangePosition(-1);
+            else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
+                ChangePosition(1);
+
+            if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame)
+                Interact();
         }
 
         private void ClampPosition()
@@ -95,17 +86,30 @@ namespace UI.Menus
 
         private void Interact()
         {
-            SoundManager.Instance?.PlaySound(interactSound);
+            SoundManager.instance.PlaySound(interactSound);
 
             switch (currentPosition)
             {
                 case 0:
-                    UIManager.Instance?.NewGame();
+                    StartGame();
                     break;
                 case 1:
-                    UIManager.Instance?.Quit();
+                    QuitGame();
                     break;
             }
+        }
+
+        private void StartGame()
+        {
+            GameManager.instance.ResetCoins();
+            GameManager.instance.SaveGame(true);
+            
+            LoadingManager.LoadSpecificLevel(1);
+        }
+
+        private void QuitGame()
+        {
+            Application.Quit();
         }
         #endregion
     }

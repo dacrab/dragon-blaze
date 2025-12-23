@@ -26,7 +26,7 @@ namespace Gameplay.Items
 
         public override void Collect()
         {
-            if (GameManager.Instance == null)
+            if (GameManager.instance == null)
             {
                 return;
             }
@@ -39,9 +39,9 @@ namespace Gameplay.Items
 
         private void PlayPickupSound()
         {
-            if (pickupSound != null)
+            if (SoundManager.instance != null && pickupSound != null)
             {
-                SoundManager.Instance?.PlaySound(pickupSound);
+                SoundManager.instance.PlaySound(pickupSound);
             }
         }
 
@@ -57,7 +57,7 @@ namespace Gameplay.Items
 
         private void AddCoinsToGameManager()
         {
-            GameManager.Instance.AddCoins(value);
+            GameManager.instance.AddCoins(value);
         }
 
         private void DestroyCoin()

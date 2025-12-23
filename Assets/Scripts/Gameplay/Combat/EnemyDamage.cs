@@ -1,33 +1,24 @@
 using UnityEngine;
-using Core.Constants;
-using Core.Interfaces;
-using Core.Utilities;
+using Gameplay.Characters.Player;
+using Gameplay.Health;
 
 namespace Gameplay.Combat
 {
-    [RequireComponent(typeof(Collider2D))]
     public class EnemyDamage : MonoBehaviour
     {
-        [SerializeField] private float damage = 10f;
+        [SerializeField] protected float damage;
 
-        private void Reset()
+        protected void OnTriggerEnter2D(Collider2D collision)
         {
-            var col = GetComponent<Collider2D>();
-            if (col != null) col.isTrigger = true;
-        }
+            if (!collision.CompareTag("Player")) return;
 
-        private void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            PlayerController playerController = collision.GetComponent<PlayerController>();
+            if (playerController == null || playerController.IsInvisible()) return;
 
-            var controller = PlayerReference.Controller;
-            if (controller == null || controller.IsInvisible()) return;
+            Health.Health playerHealth = collision.GetComponent<Health.Health>();
+            if (playerHealth == null) return;
 
-            var damageable = collision.GetComponent<IDamageable>();
-            if (damageable != null && !damageable.IsDead)
-            {
-                damageable.TakeDamage(damage);
-            }
+            playerHealth.TakeDamage(damage);
         }
     }
 }

@@ -4,13 +4,14 @@ using Core.Events;
 
 namespace Gameplay.Characters.Player
 {
-	[RequireComponent(typeof(PlayerLocomotion), typeof(PlayerVisuals), typeof(PlayerAudio))]
-	[RequireComponent(typeof(PlayerPowerups))]
-	public class PlayerController : MonoBehaviour
+    public class PlayerController : MonoBehaviour
     {
         [Header("Dependencies")]
         [SerializeField] private InputReader inputReader;
-        // [Header("Jump Settings")] Removed serialized fields as they are now in config via Locomotion
+        
+        [Header("Jump Settings")]
+        [SerializeField] private int extraJumps = 2;
+        [SerializeField] private float coyoteTime = 0.2f;
 
         private PlayerLocomotion locomotion;
         private PlayerVisuals visuals;
@@ -27,7 +28,7 @@ namespace Gameplay.Characters.Player
             visuals = GetComponent<PlayerVisuals>();
             playerAudio = GetComponent<PlayerAudio>();
             powerups = GetComponent<PlayerPowerups>();
-
+            
             if (locomotion == null) Debug.LogError("PlayerLocomotion missing!");
             if (visuals == null) Debug.LogError("PlayerVisuals missing!");
         }
@@ -69,8 +70,8 @@ namespace Gameplay.Characters.Player
             // Update Timers
             if (locomotion.IsGrounded)
             {
-                coyoteCounter = locomotion.CoyoteTime;
-                jumpCounter = locomotion.ExtraJumps;
+                coyoteCounter = coyoteTime;
+                jumpCounter = extraJumps;
             }
             else
             {
@@ -126,7 +127,7 @@ namespace Gameplay.Characters.Player
                 }
                 else if (locomotion.IsWallSliding)
                 {
-                    jumpCounter = locomotion.ExtraJumps; 
+                    jumpCounter = extraJumps; 
                 }
                 
                 if (isCoyoteAllowed) coyoteCounter = 0;

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Cainos.LucidEditor.Experimental
 {
-    internal class SimpleTreeView : TreeView
+    internal class SimpleTreeView : TreeView<int>
     {
         private TreeMenuItem[] baseElements;
 
@@ -13,7 +13,7 @@ namespace Cainos.LucidEditor.Experimental
         public Func<int, float> itemHeightCallback;
         public event Action<IList<int>> onSelectionChanged;
 
-        public SimpleTreeView(TreeViewState treeViewState) : base(treeViewState) { }
+        public SimpleTreeView(TreeViewState<int> treeViewState) : base(treeViewState) { }
 
         public void Setup(TreeMenuItem[] baseElements)
         {
@@ -21,9 +21,9 @@ namespace Cainos.LucidEditor.Experimental
             Reload();
         }
 
-        protected override TreeViewItem BuildRoot()
+        protected override TreeViewItem<int> BuildRoot()
         {
-            return new TreeViewItem { id = -1, depth = -1, displayName = "Root" };
+            return new TreeViewItem<int> { id = -1, depth = -1, displayName = "Root" };
         }
 
         protected override void RowGUI(RowGUIArgs args)
@@ -42,7 +42,7 @@ namespace Cainos.LucidEditor.Experimental
             }
         }
 
-        protected override float GetCustomRowHeight(int row, TreeViewItem item)
+        protected override float GetCustomRowHeight(int row, TreeViewItem<int> item)
         {
             if (itemHeightCallback != null)
             {
@@ -51,9 +51,9 @@ namespace Cainos.LucidEditor.Experimental
             return base.GetCustomRowHeight(row, item);
         }
 
-        protected override IList<TreeViewItem> BuildRows(TreeViewItem root)
+        protected override IList<TreeViewItem<int>> BuildRows(TreeViewItem<int> root)
         {
-            var rows = GetRows() ?? new List<TreeViewItem>();
+            var rows = GetRows() ?? new List<TreeViewItem<int>>();
             rows.Clear();
 
             foreach (var baseElement in baseElements)
@@ -84,7 +84,7 @@ namespace Cainos.LucidEditor.Experimental
             onSelectionChanged?.Invoke(selectedIds);
         }
 
-        private void AddChildrenRecursive(TreeMenuItem model, TreeViewItem item, IList<TreeViewItem> rows)
+        private void AddChildrenRecursive(TreeMenuItem model, TreeViewItem<int> item, IList<TreeViewItem<int>> rows)
         {
             foreach (var childElement in model.childElements)
             {
@@ -105,9 +105,9 @@ namespace Cainos.LucidEditor.Experimental
             }
         }
 
-        private TreeViewItem CreateTreeViewItem(TreeMenuItem model)
+        private TreeViewItem<int> CreateTreeViewItem(TreeMenuItem model)
         {
-            return new TreeViewItem { id = model.id, displayName = model.name };
+            return new TreeViewItem<int> { id = model.id, displayName = model.name };
         }
     }
 }

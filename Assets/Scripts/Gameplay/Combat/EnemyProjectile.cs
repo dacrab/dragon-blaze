@@ -1,12 +1,17 @@
 using UnityEngine;
 using Core.Constants;
-using Core.Interfaces;
-using Core.Utilities;
+using Gameplay.Characters.Player;
+using Gameplay.Health;
 
 namespace Gameplay.Combat
 {
     public class EnemyProjectile : ProjectileBase
     {
+        protected override void Awake()
+        {
+            base.Awake();
+        }
+
         protected override void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) 
@@ -15,18 +20,20 @@ namespace Gameplay.Combat
                 return;
             }
 
-            var controller = PlayerReference.Controller;
-            if (controller != null && !controller.IsInvisible())
+            PlayerController player = collision.GetComponent<PlayerController>();
+            
+            if (player != null && !player.IsInvisible())
             {
-                var damageable = collision.GetComponent<IDamageable>();
-                if (damageable != null && !damageable.IsDead)
-                {
-                    damageable.TakeDamage(damage);
-                }
-                base.OnTriggerEnter2D(collision);
+                 Health.Health playerHealth = collision.GetComponent<Health.Health>();
+                 if (playerHealth) playerHealth.TakeDamage(damage);
+                 
+                 base.OnTriggerEnter2D(collision);
             }
         }
 
-        public void ActivateProjectile() => SetDirection(1);
+        public void ActivateProjectile()
+        {
+            SetDirection(1); 
+        }
     }
 }

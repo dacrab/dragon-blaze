@@ -6,70 +6,87 @@ using UI.Managers;
 
 namespace Core.Managers
 {
-    public sealed class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour
+{
+    #region Singleton
+    public static GameManager instance;
+
+    private void Awake()
     {
-        public static GameManager Instance { get; private set; }
+        InitializeSingleton();
+        LoadGame();
+    }
 
-        private int totalCoins;
-        public int TotalCoins => totalCoins;
-
-        private void Awake()
+    private void InitializeSingleton()
+    {
+        if (instance == null)
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
+            instance = this;
             DontDestroyOnLoad(gameObject);
-
-            LoadGame();
         }
-
-        public void AddCoins(int value)
+        else if (instance != this)
         {
-            totalCoins += value;
-            EventBus.RaiseScoreChanged(totalCoins);
-            SaveGame();
-        }
-
-        public void ResetCoins()
-        {
-            totalCoins = 0;
-            EventBus.RaiseScoreChanged(totalCoins);
-            SaveGame();
-        }
-
-        public void SaveGame(bool isNewGame = false)
-        {
-            var data = new SaveData
-            {
-                totalCoins = totalCoins,
-                currentLevel = isNewGame ? 1 : SceneManager.GetActiveScene().buildIndex
-            };
-
-            SaveSystem.SaveGame(data);
-            EventBus.RaiseGameSaved();
-        }
-
-        public bool SaveDataExists() => SaveSystem.SaveExists();
-
-        public SaveData LoadGame()
-        {
-            var data = SaveSystem.LoadGame();
-            if (data != null)
-            {
-                totalCoins = data.totalCoins;
-            }
-
-            return data;
-        }
-
-        public int GetLastSavedLevelIndex()
-        {
-            var saveData = SaveSystem.LoadGame();
-            return saveData != null ? saveData.currentLevel : 1;
+            Destroy(gameObject);
         }
     }
+    #endregion
+
+    #region Properties
+    private int totalCoins = 0;
+    public int TotalCoins => totalCoins;
+    #endregion
+
+    #region Coin Management
+    public void AddCoins(int value)
+    {
+        totalCoins += value;
+        // Notify via EventBus
+        EventBus.RaiseScoreChanged(totalCoins);
+        
+        SaveGame();
+    }
+
+    public void ResetCoins()
+    {
+        totalCoins = 0;
+        EventBus.RaiseScoreChanged(totalCoins);
+        
+        SaveGame();
+    }
+    #endregion
+
+    #region Save/Load System
+    public void SaveGame(bool isNewGame = false)
+    {
+        SaveData data = new SaveData
+        {
+            totalCoins = totalCoins,
+            currentLevel = isNewGame ? 1 : SceneManager.GetActiveScene().buildIndex
+        };
+        SaveSystem.SaveGame(data);
+        EventBus.RaiseGameSaved();
+    }
+
+    public bool SaveDataExists()
+    {
+        return SaveSystem.SaveExists();
+    }
+
+    public SaveData LoadGame()
+    {
+        SaveData data = SaveSystem.LoadGame();
+        if (data != null)
+        {
+            totalCoins = data.totalCoins;
+        }
+        return data;
+    }
+
+    public int GetLastSavedLevelIndex()
+    {
+        SaveData saveData = SaveSystem.LoadGame();
+        return saveData != null ? saveData.currentLevel : 1;
+    }
+    #endregion
+}
 }

@@ -11,12 +11,12 @@ namespace Gameplay.Characters.Player
         
         public void PlayJumpSound()
         {
-            SoundManager.Instance?.PlaySound(jumpSound);
+            SoundManager.instance?.PlaySound(jumpSound);
         }
 
         public void PlayDashSound()
         {
-            SoundManager.Instance?.PlaySound(dashSound);
+            SoundManager.instance?.PlaySound(dashSound);
         }
     }
 }
