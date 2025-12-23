@@ -17,41 +17,18 @@ namespace Core.Persistence
 
         public static void SaveGame(SaveData data)
         {
-            try
-            {
-                string json = JsonUtility.ToJson(data);
-                File.WriteAllText(SavePath, json);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to save game: {e.Message}");
-            }
+            try { File.WriteAllText(SavePath, JsonUtility.ToJson(data)); }
+            catch (System.Exception e) { Debug.LogError($"Failed to save game: {e.Message}"); }
         }
 
         public static SaveData LoadGame()
         {
             if (!File.Exists(SavePath)) return null;
-
-            try
-            {
-                string json = File.ReadAllText(SavePath);
-                return JsonUtility.FromJson<SaveData>(json);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to load game: {e.Message}");
-                return null;
-            }
+            try { return JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath)); }
+            catch (System.Exception e) { Debug.LogError($"Failed to load game: {e.Message}"); return null; }
         }
 
-        public static bool SaveExists()
-        {
-            return File.Exists(SavePath);
-        }
-        
-        public static void DeleteSave()
-        {
-            if (File.Exists(SavePath)) File.Delete(SavePath);
-        }
+        public static bool SaveExists() => File.Exists(SavePath);
+        public static void DeleteSave() { if (File.Exists(SavePath)) File.Delete(SavePath); }
     }
 }

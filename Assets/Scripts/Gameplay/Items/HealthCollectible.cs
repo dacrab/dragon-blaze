@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Utilities;
 
 namespace Gameplay.Items
 {
@@ -13,28 +14,20 @@ namespace Gameplay.Items
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag(GameConstants.Tags.Player))
-            {
-                var playerHealth = collision.GetComponent<Gameplay.Health.Health>();
-                if (playerHealth != null)
-                {
-                    playerHealth.AddHealth(healthValue);
-                }
-                Collect();
-            }
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            if (collision.TryGetHealth(out var health)) health.AddHealth(healthValue);
+            Collect();
         }
 
         public override void Collect()
         {
-            SoundManager.instance?.PlaySound(pickupSound);
-            
+            SoundManager.Instance?.PlaySound(pickupSound);
             if (pickupEffect != null)
             {
                 var effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
                 effect.Play();
                 Destroy(effect.gameObject, effect.main.duration);
             }
-            
             gameObject.SetActive(false);
         }
     }

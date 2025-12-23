@@ -23,30 +23,17 @@ namespace UI.Menus
 
         private void OnEnable()
         {
-            // Initial Update
-            float currentVol = PlayerPrefs.GetFloat(volumeName, 0.5f);
-            UpdateVolumeText(currentVol);
-
-            // Subscribe
-            if (SoundManager.instance != null)
-            {
-                if (volumeName == "musicVolume")
-                    SoundManager.instance.OnMusicVolumeChanged += UpdateVolumeText;
-                else if (volumeName == "soundVolume")
-                    SoundManager.instance.OnSoundVolumeChanged += UpdateVolumeText;
-            }
+            UpdateVolumeText(PlayerPrefs.GetFloat(volumeName, 0.5f));
+            if (SoundManager.Instance == null) return;
+            if (volumeName == "musicVolume") SoundManager.Instance.OnMusicVolumeChanged += UpdateVolumeText;
+            else if (volumeName == "soundVolume") SoundManager.Instance.OnSoundVolumeChanged += UpdateVolumeText;
         }
 
         private void OnDisable()
         {
-            // Unsubscribe
-            if (SoundManager.instance != null)
-            {
-                if (volumeName == "musicVolume")
-                    SoundManager.instance.OnMusicVolumeChanged -= UpdateVolumeText;
-                else if (volumeName == "soundVolume")
-                    SoundManager.instance.OnSoundVolumeChanged -= UpdateVolumeText;
-            }
+            if (SoundManager.Instance == null) return;
+            if (volumeName == "musicVolume") SoundManager.Instance.OnMusicVolumeChanged -= UpdateVolumeText;
+            else if (volumeName == "soundVolume") SoundManager.Instance.OnSoundVolumeChanged -= UpdateVolumeText;
         }
         #endregion
 

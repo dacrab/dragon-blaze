@@ -22,12 +22,6 @@ namespace Gameplay.Items.PowerUps
             ActivateIndicator("Higher Jump", higherJumpImage);
         }
 
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            if (locomotion != null)
-            {
-                locomotion.SetJumpPower(originalJumpPower);
-            }
-        }
+        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups) => locomotion?.SetJumpPower(originalJumpPower);
     }
 }

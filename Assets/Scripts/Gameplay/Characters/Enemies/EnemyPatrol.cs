@@ -44,45 +44,22 @@ namespace Gameplay.Characters.Enemies
 
         private void Update()
         {
-            if (movingLeft)
+            float direction = movingLeft ? -1f : 1f;
+            float targetX = movingLeft ? leftEdge.position.x : rightEdge.position.x;
+            
+            if ((movingLeft && enemy.position.x >= targetX) || (!movingLeft && enemy.position.x <= targetX))
             {
-                if (enemy.position.x >= leftEdge.position.x)
-                    MoveInDirection(-1);
-                else
-                    DirectionChange();
+                idleTimer = 0;
+                anim.SetBool("moving", true);
+                enemy.localScale = new Vector3(Mathf.Abs(initScale.x) * direction, initScale.y, initScale.z);
+                enemy.position = new Vector3(enemy.position.x + Time.deltaTime * direction * speed, enemy.position.y, enemy.position.z);
             }
             else
             {
-                if (enemy.position.x <= rightEdge.position.x)
-                    MoveInDirection(1);
-                else
-                    DirectionChange();
+                anim.SetBool("moving", false);
+                idleTimer += Time.deltaTime;
+                if (idleTimer > idleDuration) { movingLeft = !movingLeft; idleTimer = 0; }
             }
-        }
-        #endregion
-
-        #region Movement Methods
-        private void DirectionChange()
-        {
-            anim.SetBool("moving", false);
-            idleTimer += Time.deltaTime;
-
-            if (idleTimer > idleDuration)
-            {
-                movingLeft = !movingLeft;
-                idleTimer = 0;
-            }
-        }
-
-        private void MoveInDirection(int _direction)
-        {
-            idleTimer = 0;
-            anim.SetBool("moving", true);
-
-            enemy.localScale = new Vector3(Mathf.Abs(initScale.x) * _direction, initScale.y, initScale.z);
-
-            enemy.position = new Vector3(enemy.position.x + Time.deltaTime * _direction * speed,
-                enemy.position.y, enemy.position.z);
         }
         #endregion
     }

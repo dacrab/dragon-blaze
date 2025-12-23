@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Utilities;
 using Gameplay.Health;
 using Gameplay.Characters.Enemies;
 
@@ -10,18 +11,12 @@ namespace Gameplay.Combat
         protected override void OnTriggerEnter2D(Collider2D collision)
         {
             base.OnTriggerEnter2D(collision);
-
-            if (collision.CompareTag(GameConstants.Tags.Enemy))
-            {
-                 Health.Health enemyHealth = collision.GetComponent<Health.Health>();
-                 if (enemyHealth) 
-                    enemyHealth.TakeDamage(damage);
-                 else
-                 {
-                     EnemyBase enemy = collision.GetComponent<EnemyBase>();
-                     if (enemy) enemy.TakeDamage(damage);
-                 }
-            }
+            if (!collision.CompareTag(GameConstants.Tags.Enemy)) return;
+            
+            if (collision.TryGetHealth(out var health))
+                health.TakeDamage(damage);
+            else if (collision.TryGetComponent<EnemyBase>(out var enemy))
+                enemy.TakeDamage(damage);
         }
     }
 }

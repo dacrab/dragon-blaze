@@ -48,58 +48,25 @@ namespace Gameplay.Characters.Player
 
         private void UpdateAnimations()
         {
-            // Uses locomotion state to drive animator
-            // "grounded"
             anim.SetBool(GameConstants.Animation.Grounded, locomotion.IsGrounded);
-            
-            // "run"
-            bool isRunning = locomotion.IsMoving;
-            anim.SetBool(GameConstants.Animation.Run, isRunning);
+            anim.SetBool(GameConstants.Animation.Run, locomotion.IsMoving);
         }
 
         private void UpdateParticles()
         {
-            // Wall Slide
-            if (locomotion.IsWallSliding)
-            {
-                if (wallSlideParticles != null && !wallSlideParticles.isPlaying)
-                    wallSlideParticles.Play();
-            }
-            else
-            {
-                if (wallSlideParticles != null && wallSlideParticles.isPlaying)
-                    wallSlideParticles.Stop();
-            }
+            if (wallSlideParticles == null) return;
+            if (locomotion.IsWallSliding && !wallSlideParticles.isPlaying) wallSlideParticles.Play();
+            else if (!locomotion.IsWallSliding && wallSlideParticles.isPlaying) wallSlideParticles.Stop();
         }
 
-        public void PlayJumpEffect()
-        {
-            if (jumpParticlesPrefab != null)
-                Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
-        }
-
-        public void PlayDashEffect()
-        {
-            if (dashParticlesPrefab != null)
-                Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
-        }
-
+        public void PlayJumpEffect() => Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        public void PlayDashEffect() => Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
         public void PlayDeathEffect()
         {
-            if (deathParticlesPrefab != null)
-                Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
-            
+            if (deathParticlesPrefab != null) Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
             anim.SetTrigger(GameConstants.Animation.Die);
         }
-
-        public void PlayRespawnEffect()
-        {
-            anim.SetTrigger(GameConstants.Animation.Respawn);
-        }
-        
-        public void SetInvisibility(bool isInvisible)
-        {
-            spriteRenderer.color = isInvisible ? invisibleColor : Color.white;
-        }
+        public void PlayRespawnEffect() => anim.SetTrigger(GameConstants.Animation.Respawn);
+        public void SetInvisibility(bool isInvisible) => spriteRenderer.color = isInvisible ? invisibleColor : Color.white;
     }
 }

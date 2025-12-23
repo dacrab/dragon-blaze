@@ -25,16 +25,8 @@ namespace Core.Input
         // Manual Input System Polling (since we don't have the generated class)
         // Ideally, this would use InputActionAsset, but for code-only solution:
         
-        private void OnEnable()
-        {
-            // If we had the generated class, we would initialize it here.
-            // Without it, we rely on polling in Update via a MonoBehaviour runner or similar.
-            // However, ScriptableObjects don't Update.
-            // For this refactor, we will create a simple runtime poller.
-        }
+        private void OnEnable() { }
 
-        // For compatibility with existing code expecting event invocation
-        // We will rely on a Monobehaviour "InputProvider" in the scene to drive this
         public void RaiseMoveEvent(float value) => MoveEvent?.Invoke(value);
         public void RaiseJumpEvent() => JumpEvent?.Invoke();
         public void RaiseJumpCanceledEvent() => JumpCanceledEvent?.Invoke();
@@ -42,13 +34,12 @@ namespace Core.Input
         public void RaiseAttackEvent() => AttackEvent?.Invoke();
         public void RaiseInteractEvent() => InteractEvent?.Invoke();
         public void RaisePauseEvent() => PauseEvent?.Invoke();
-        
         public void RaiseNavigateEvent(Vector2 value) => NavigateEvent?.Invoke(value);
         public void RaiseSubmitEvent() => SubmitEvent?.Invoke();
         public void RaiseCancelEvent() => CancelEvent?.Invoke();
 
-        public void EnableGameplayInput() { } // Placeholder
-        public void EnableUIInput() { } // Placeholder
-        public void DisableAllInput() { } // Placeholder
+        public void EnableGameplayInput() { }
+        public void EnableUIInput() { }
+        public void DisableAllInput() { }
     }
 }

@@ -14,60 +14,24 @@ namespace Gameplay.Items
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.gameObject.CompareTag(GameConstants.Tags.Player))
-            {
-                Collect();
-            }
-            else if (other.gameObject.CompareTag(GameConstants.Tags.Checkpoint))
-            {
-                storedValue = value;
-            }
+            if (other.CompareTag(GameConstants.Tags.Player)) Collect();
+            else if (other.CompareTag(GameConstants.Tags.Checkpoint)) storedValue = value;
         }
 
         public override void Collect()
         {
-            if (GameManager.instance == null)
-            {
-                return;
-            }
-
-            PlayPickupSound();
-            PlayPickupEffect();
-            AddCoinsToGameManager();
-            DestroyCoin();
-        }
-
-        private void PlayPickupSound()
-        {
-            if (SoundManager.instance != null && pickupSound != null)
-            {
-                SoundManager.instance.PlaySound(pickupSound);
-            }
-        }
-
-        private void PlayPickupEffect()
-        {
+            if (Core.Managers.GameManager.Instance == null) return;
+            SoundManager.Instance?.PlaySound(pickupSound);
             if (pickupEffect != null)
             {
-                ParticleSystem effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
+                var effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
                 effect.Play();
                 Destroy(effect.gameObject, effect.main.duration);
             }
-        }
-
-        private void AddCoinsToGameManager()
-        {
-            GameManager.instance.AddCoins(value);
-        }
-
-        private void DestroyCoin()
-        {
+            Core.Managers.GameManager.Instance.AddCoins(value);
             Destroy(gameObject);
         }
 
-        public void ResetValue()
-        {
-            value = storedValue;
-        }
+        public void ResetValue() => value = storedValue;
     }
 }

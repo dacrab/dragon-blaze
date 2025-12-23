@@ -27,9 +27,9 @@ namespace UI.HUD
         #region Public Methods
         public void UpdateHealthUI(float currentHealth, float maxHealth)
         {
-            if (maxHealth > 0)
+            if (maxHealth > 0 && currenthealthBar != null)
             {
-                currenthealthBar.fillAmount = currentHealth / 10f; 
+                currenthealthBar.fillAmount = currentHealth / maxHealth;
             }
         }
         #endregion

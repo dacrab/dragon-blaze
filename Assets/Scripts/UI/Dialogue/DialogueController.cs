@@ -30,15 +30,8 @@ namespace UI.Dialogue
         {
             if (paragraphs.Count == 0)
             {
-                if (!conversationEnded)
-                {
-                    StartConversation(dialogueText, dialogueSound);
-                }
-                else if (conversationEnded && !isTyping)
-                {
-                    EndConversation();
-                    return;
-                }
+                if (!conversationEnded) StartConversation(dialogueText, dialogueSound);
+                else if (!isTyping) { EndConversation(); return; }
             }
 
             if (!isTyping)
@@ -46,53 +39,28 @@ namespace UI.Dialogue
                 p = paragraphs.Dequeue();
                 typeDialogueCoroutine = StartCoroutine(TypeDialogueText(p));
             }
-            else
-            {
-                FinishParagraphEarly();
-            }
+            else FinishParagraphEarly();
 
-            if (paragraphs.Count == 0)
-            {
-                conversationEnded = true;
-            }
+            if (paragraphs.Count == 0) conversationEnded = true;
         }
         #endregion
 
         #region Private Methods
         private void StartConversation(DialogueText dialogueText, AudioClip dialogueSound = null)
         {
-            // Signal Game Pause/Freeze for Dialogue
             EventBus.RaiseDialogueStateChanged(true);
-            
-            if (dialogueSound != null)
-            {
-                SoundManager.instance.PlaySound(dialogueSound);
-            }
-
-            if (!gameObject.activeSelf)
-            {
-                gameObject.SetActive(true);
-            }
-
+            if (dialogueSound != null) SoundManager.Instance?.PlaySound(dialogueSound);
+            if (!gameObject.activeSelf) gameObject.SetActive(true);
             NPCNameText.text = dialogueText.speakerName;
-
-            foreach (string paragraph in dialogueText.paragraphs)
-            {
-                paragraphs.Enqueue(paragraph);
-            }
+            foreach (string paragraph in dialogueText.paragraphs) paragraphs.Enqueue(paragraph);
         }
 
         private void EndConversation()
         {
             EventBus.RaiseDialogueStateChanged(false);
-
             paragraphs.Clear();
             conversationEnded = false;
-
-            if (gameObject.activeSelf)
-            {
-                gameObject.SetActive(false);
-            }
+            if (gameObject.activeSelf) gameObject.SetActive(false);
         }
 
         private IEnumerator TypeDialogueText(string p)

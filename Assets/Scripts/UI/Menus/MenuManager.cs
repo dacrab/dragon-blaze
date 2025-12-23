@@ -33,25 +33,16 @@ namespace UI.Menus
         #endregion
 
         #region Public Methods
-        public void ChangePosition(int _change)
+        public void ChangePosition(int change)
         {
-            currentPosition += _change;
-
-            if (_change != 0)
-                SoundManager.instance.PlaySound(changeSound);
-
-            ClampPosition();
-            AssignPosition();
+            currentPosition += change;
+            if (change != 0) SoundManager.Instance?.PlaySound(changeSound);
+            currentPosition = currentPosition < 0 ? buttons.Length - 1 : currentPosition >= buttons.Length ? 0 : currentPosition;
+            arrow.position = new Vector3(arrow.position.x, buttons[currentPosition].position.y);
         }
 
-        public void ContinueGame()
-        {
-            int levelIndex = GameManager.instance.GetLastSavedLevelIndex();
-            LoadingManager.LoadSpecificLevel(levelIndex);
-        }
-        #endregion
+        public void ContinueGame() => LoadingManager.LoadSpecificLevel(Core.Managers.GameManager.Instance.GetLastSavedLevelIndex());
 
-        #region Private Methods
         private void ShowCursor()
         {
             Cursor.visible = true;
@@ -61,55 +52,22 @@ namespace UI.Menus
         private void HandleInput()
         {
             if (Keyboard.current == null) return;
-
-            if (Keyboard.current.upArrowKey.wasPressedThisFrame)
-                ChangePosition(-1);
-            else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
-                ChangePosition(1);
-
-            if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame)
-                Interact();
-        }
-
-        private void ClampPosition()
-        {
-            if (currentPosition < 0)
-                currentPosition = buttons.Length - 1;
-            else if (currentPosition > buttons.Length - 1)
-                currentPosition = 0;
-        }
-
-        private void AssignPosition()
-        {
-            arrow.position = new Vector3(arrow.position.x, buttons[currentPosition].position.y);
+            var kb = Keyboard.current;
+            if (kb.upArrowKey.wasPressedThisFrame) ChangePosition(-1);
+            else if (kb.downArrowKey.wasPressedThisFrame) ChangePosition(1);
+            if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) Interact();
         }
 
         private void Interact()
         {
-            SoundManager.instance.PlaySound(interactSound);
-
-            switch (currentPosition)
+            SoundManager.Instance?.PlaySound(interactSound);
+            if (currentPosition == 0)
             {
-                case 0:
-                    StartGame();
-                    break;
-                case 1:
-                    QuitGame();
-                    break;
+                Core.Managers.GameManager.Instance.ResetCoins();
+                Core.Managers.GameManager.Instance.SaveGame(true);
+                LoadingManager.LoadSpecificLevel(1);
             }
-        }
-
-        private void StartGame()
-        {
-            GameManager.instance.ResetCoins();
-            GameManager.instance.SaveGame(true);
-            
-            LoadingManager.LoadSpecificLevel(1);
-        }
-
-        private void QuitGame()
-        {
-            Application.Quit();
+            else if (currentPosition == 1) Application.Quit();
         }
         #endregion
     }

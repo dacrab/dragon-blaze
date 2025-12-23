@@ -25,13 +25,7 @@ namespace UI.HUD
 
         #region Score Display Methods
 
-        private void UpdateScoreDisplay(int score)
-        {
-            if (coinText != null)
-            {
-                coinText.text = $": {score}";
-            }
-        }
+        private void UpdateScoreDisplay(int score) => coinText?.SetText($": {score}");
 
         #endregion
     }

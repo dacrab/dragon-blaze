@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Utilities;
 using Gameplay.Characters.Player;
 using Gameplay.Health;
 
@@ -11,22 +12,9 @@ namespace Environment.Traps
 
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag(GameConstants.Tags.Player))
-            {
-                 PlayerController pc = collision.GetComponent<PlayerController>();
-                 if (pc != null && pc.IsInvisible()) return;
-                 
-                 DealDamage(collision.gameObject);
-            }
-        }
-
-        protected virtual void DealDamage(GameObject target)
-        {
-            Health playerHealth = target.GetComponent<Health>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(damage);
-            }
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            if (collision.TryGetPlayerController(out var pc) && pc.IsInvisible()) return;
+            if (collision.TryGetHealth(out var health)) health.TakeDamage(damage);
         }
     }
 }

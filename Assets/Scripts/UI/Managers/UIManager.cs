@@ -5,27 +5,16 @@ using TMPro;
 using Core.Events;
 using Core.Constants;
 using Core.Managers;
+using Core.State;
+using Core.Services;
 using Gameplay.Characters.Player;
-using UI.Menus; // For LoadingManager
+using UI.Menus;
 using UnityEngine.InputSystem;
 
 namespace UI.Managers
 {
-    public class UIManager : MonoBehaviour
+    public class UIManager : SingletonManager<UIManager>
     {
-        #region Singleton
-        public static UIManager instance;
-
-        private void Awake()
-        {
-            if (instance != null && instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            instance = this;
-        }
-        #endregion
 
         #region Serialized Fields
         [Header("Screens")]
@@ -52,34 +41,54 @@ namespace UI.Managers
         public bool IsGameOverScreenActive => gameOverScreen.activeInHierarchy;
         #endregion
 
-        #region Unity Lifecycle Methods
+        #region Initialization
+        protected override void OnInitialize()
+        {
+            base.OnInitialize();
+            ServiceLocator.Register<UIManager>(this);
+            CheckSaveData();
+        }
+
+        protected override void OnShutdown()
+        {
+            UnsubscribeFromEvents();
+            ServiceLocator.Unregister<UIManager>();
+            base.OnShutdown();
+        }
+
         private void OnEnable()
+        {
+            SubscribeToEvents();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromEvents();
+        }
+
+        private void SubscribeToEvents()
         {
             EventBus.OnScoreChanged += UpdateCoinDisplay;
             EventBus.OnPlayerDied += GameOver;
         }
 
-        private void OnDisable()
+        private void UnsubscribeFromEvents()
         {
             EventBus.OnScoreChanged -= UpdateCoinDisplay;
             EventBus.OnPlayerDied -= GameOver;
         }
 
-        private void Start() => CheckSaveData();
-
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            {
+            if (Keyboard.current?.escapeKey.wasPressedThisFrame == true)
                 PauseGame(!IsPauseScreenActive);
-            }
         }
         #endregion
 
         #region Save Data Methods
         private void CheckSaveData()
         {
-            if (GameManager.instance == null)
+            if (GameManager.Instance == null)
             {
                 Debug.LogError("GameManager instance is not initialized");
                 return;
@@ -87,52 +96,36 @@ namespace UI.Managers
 
             if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
 
-            bool saveExists = GameManager.instance.SaveDataExists();
-
+            bool saveExists = GameManager.Instance.SaveDataExists();
             SetButtonVisibility(continueButton, saveExists, "Continue button");
             SetButtonVisibility(newGameButton, true, "New Game button");
         }
 
         private void SetButtonVisibility(Button button, bool isVisible, string buttonName)
         {
-            if (button != null)
-            {
-                button.gameObject.SetActive(isVisible);
-            }
-            else
-            {
-                Debug.LogWarning($"{buttonName} is not assigned in the Inspector.");
-            }
+            if (button != null) button.gameObject.SetActive(isVisible);
+            else Debug.LogWarning($"{buttonName} is not assigned in the Inspector.");
         }
 
-        public void SaveGame()
-        {
-            GameManager.instance?.SaveGame();
-        }
+        public void SaveGame() => GameManager.Instance?.SaveGame();
         #endregion
 
         #region Game Flow Methods
         public void NewGame()
         {
-            GameManager.instance.ResetCoins();
-            GameManager.instance.SaveGame(true);
-            
-            int levelToLoad = 1;
-            LoadingManager.LoadSpecificLevel(levelToLoad);
+            GameManager.Instance.ResetCoins();
+            GameManager.Instance.SaveGame(true);
+            LoadingManager.LoadSpecificLevel(1);
         }
 
-        public void ContinueGame()
-        {
-            int lastSavedLevelIndex = GameManager.instance.GetLastSavedLevelIndex();
-            LoadingManager.LoadSpecificLevel(lastSavedLevelIndex);
-        }
+        public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance.GetLastSavedLevelIndex());
 
         public void GameOver()
         {
             if (IsGameOverScreenActive) return; 
             
             SetGameOverState(true);
-            SoundManager.instance.PlaySound(gameOverSound);
+            SoundManager.Instance?.PlaySound(gameOverSound);
         }
 
         public void Restart()
@@ -150,7 +143,7 @@ namespace UI.Managers
 
         public void Quit()
         {
-            GameManager.instance?.SaveGame();
+            GameManager.Instance?.SaveGame();
             ShowCursor();
             Application.Quit();
 #if UNITY_EDITOR
@@ -163,7 +156,9 @@ namespace UI.Managers
             if (IsGameOverScreenActive) return;
 
             pauseScreen.SetActive(status);
-            Time.timeScale = status ? 0.01f : 1;
+            
+            GameStateManager.Instance?.ChangeState(status ? GameState.Paused : GameState.Gameplay);
+            
             Cursor.visible = status;
             Cursor.lockState = status ? CursorLockMode.None : CursorLockMode.Locked;
             TogglePlayerMovement(!status);
@@ -173,48 +168,20 @@ namespace UI.Managers
         #endregion
 
         #region UI Update Methods
-        public void ShowLoadingScreen(bool show)
-        {
-            if (loadingScreen != null)
-            {
-                loadingScreen.SetActive(show);
-            }
-            else
-            {
-                CreateTemporaryLoadingScreen(show);
-            }
-        }
+        public void ShowLoadingScreen(bool show) => loadingScreen?.SetActive(show);
+        public void UpdateLoadingImage(float progress) => loadingImage.fillAmount = progress;
+        public void UpdateCoinDisplay(int coins) => coinText?.SetText($": {coins}");
 
-        public void UpdateLoadingImage(float progress)
-        {
-            if (loadingImage != null)
-            {
-                loadingImage.fillAmount = progress;
-            }
-        }
-
-        public void UpdateCoinDisplay(int coins)
-        {
-            if (coinText != null)
-            {
-                coinText.text = $": {coins}";
-            }
-        }
-
-        public void RefreshUI()
-        {
-            if (GameManager.instance != null)
-            {
-                UpdateCoinDisplay(GameManager.instance.TotalCoins);
-            }
-        }
+        public void RefreshUI() => UpdateCoinDisplay(GameManager.Instance?.TotalCoins ?? 0);
 
         private void SetGameOverState(bool isGameOver)
         {
             gameOverScreen.SetActive(isGameOver);
             Cursor.visible = isGameOver;
             Cursor.lockState = isGameOver ? CursorLockMode.None : CursorLockMode.Locked;
-            Time.timeScale = isGameOver ? 0 : 1;
+            
+            GameStateManager.Instance?.ChangeState(isGameOver ? GameState.GameOver : GameState.Gameplay);
+            
             TogglePlayerMovement(!isGameOver);
         }
         #endregion
@@ -233,41 +200,5 @@ namespace UI.Managers
         }
         #endregion
 
-        #region Helper Methods
-        private void CreateTemporaryLoadingScreen(bool show)
-        {
-            if (show)
-            {
-                GameObject tempLoadingScreen = new GameObject("Temporary Loading Screen");
-                Canvas canvas = tempLoadingScreen.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = 999;
-
-                Image backgroundImage = tempLoadingScreen.AddComponent<Image>();
-                backgroundImage.color = new Color(0, 0, 0, 0.5f);
-
-                GameObject loadingTextObj = new GameObject("Loading Text");
-                loadingTextObj.transform.SetParent(tempLoadingScreen.transform, false);
-                Text loadingText = loadingTextObj.AddComponent<Text>();
-                loadingText.text = "Loading...";
-                loadingText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-                loadingText.fontSize = 24;
-                loadingText.color = Color.white;
-                loadingText.alignment = TextAnchor.MiddleCenter;
-
-                RectTransform rectTransform = loadingText.GetComponent<RectTransform>();
-                rectTransform.anchorMin = Vector2.zero;
-                rectTransform.anchorMax = Vector2.one;
-                rectTransform.sizeDelta = Vector2.zero;
-
-                loadingScreen = tempLoadingScreen;
-            }
-            else if (loadingScreen != null)
-            {
-                Destroy(loadingScreen);
-                loadingScreen = null;
-            }
-        }
-        #endregion
     }
 }

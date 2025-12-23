@@ -16,50 +16,26 @@ namespace Gameplay.Characters.NPCs
         private Transform _playerTransform;
         #endregion
 
-        #region Unity Lifecycle Methods
-        private void Start()
-        {
-            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player != null)
-                _playerTransform = player.transform;
-        }
+        private void Start() => _playerTransform = Core.Utilities.PlayerReference.Transform;
         
         private void Update()
         {
-            HandleInteraction();
+            if (Keyboard.current?.eKey.wasPressedThisFrame == true && IsWithinInteractDistance())
+                Interact();
             UpdateInteractSprite();
         }
-        #endregion
 
-        #region Public Methods
         public abstract void Interact();
-        #endregion
-
-        #region Private Methods
-        private void HandleInteraction()
-        {
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame && IsWithinInteractDistance())
-            {
-                Interact();
-            }
-        }
 
         private void UpdateInteractSprite()
         {
             if (_interactSprite == null) return;
-            
             bool shouldBeActive = IsWithinInteractDistance();
             if (_interactSprite.gameObject.activeSelf != shouldBeActive)
-            {
                 _interactSprite.gameObject.SetActive(shouldBeActive);
-            }
         }
 
-        private bool IsWithinInteractDistance()
-        {
-            if (_playerTransform == null) return false;
-            return Vector2.Distance(_playerTransform.position, transform.position) < INTERACT_DISTANCE;
-        }
-        #endregion
+        private bool IsWithinInteractDistance() => _playerTransform != null 
+            && Vector2.Distance(_playerTransform.position, transform.position) < INTERACT_DISTANCE;
     }
 }

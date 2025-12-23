@@ -30,17 +30,10 @@ namespace Environment.Platforms
             if (pingPong)
             {
                 currentIndex += direction;
-                if (currentIndex >= waypoints.Length - 1 || currentIndex <= 0)
-                    direction *= -1;
+                if (currentIndex >= waypoints.Length - 1 || currentIndex <= 0) direction *= -1;
             }
-            else if (loop)
-            {
-                currentIndex = (currentIndex + 1) % waypoints.Length;
-            }
-            else
-            {
-                currentIndex = Mathf.Min(currentIndex + 1, waypoints.Length - 1);
-            }
+            else if (loop) currentIndex = (currentIndex + 1) % waypoints.Length;
+            else currentIndex = Mathf.Min(currentIndex + 1, waypoints.Length - 1);
         }
     }
 }

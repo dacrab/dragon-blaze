@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Utilities;
 
 namespace Gameplay.Combat
 {
@@ -44,32 +45,26 @@ namespace Gameplay.Combat
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
             if (hit) return;
-            
             hit = true;
-            if (col) col.enabled = false;
-
-            if (anim != null)
-                anim.SetTrigger("explode"); 
-            else
-                Deactivate(); 
+            col?.SetEnabled(false);
+            if (anim != null) anim.SetTrigger("explode");
+            else Deactivate();
         }
 
-        public virtual void SetDirection(float _direction)
+        public virtual void SetDirection(float dir)
         {
-            ResetProjectile(_direction);
-            
-            // Flip visual
-            float localScaleX = Mathf.Abs(transform.localScale.x) * Mathf.Sign(_direction);
+            ResetProjectile(dir);
+            float localScaleX = Mathf.Abs(transform.localScale.x) * Mathf.Sign(dir);
             transform.localScale = new Vector3(localScaleX, transform.localScale.y, transform.localScale.z);
         }
 
-        protected virtual void ResetProjectile(float _direction)
+        protected virtual void ResetProjectile(float dir)
         {
             lifetime = 0;
-            direction = _direction;
+            direction = dir;
             gameObject.SetActive(true);
             hit = false;
-            if (col) col.enabled = true;
+            col?.SetEnabled(true);
         }
 
         protected virtual void Deactivate()

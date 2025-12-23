@@ -10,30 +10,13 @@ namespace Core.Utilities
         private static PlayerController cachedController;
         private static bool isCached;
 
-        public static Transform Transform
-        {
-            get
-            {
-                EnsureCached();
-                return cachedTransform;
-            }
-        }
-
-        public static PlayerController Controller
-        {
-            get
-            {
-                EnsureCached();
-                return cachedController;
-            }
-        }
-
+        public static Transform Transform { get { EnsureCached(); return cachedTransform; } }
+        public static PlayerController Controller { get { EnsureCached(); return cachedController; } }
         public static bool IsValid => Transform != null;
 
         private static void EnsureCached()
         {
             if (isCached && cachedTransform != null) return;
-
             var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
             if (player != null)
             {
@@ -50,9 +33,6 @@ namespace Core.Utilities
             isCached = false;
         }
 
-        public static T GetComponent<T>() where T : Component
-        {
-            return Transform != null ? Transform.GetComponent<T>() : null;
-        }
+        public static T GetComponent<T>() where T : Component => Transform?.GetComponent<T>();
     }
 }

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
+using Core.Utilities;
 
 namespace UI.Menus
 {
@@ -33,24 +34,13 @@ namespace UI.Menus
         #region Private Methods
         private void InitializeBackgrounds()
         {
-            foreach (var bg in backgrounds)
-            {
-                bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0);
-            }
-            backgrounds[0].color = new Color(backgrounds[0].color.r, backgrounds[0].color.g, backgrounds[0].color.b, 1);
+            foreach (var bg in backgrounds) bg.color = bg.color.WithAlpha(0);
+            backgrounds[0].color = backgrounds[0].color.WithAlpha(1);
         }
 
         private void CheckForMenuInput()
         {
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
-            {
-                LoadMenuLevel();
-            }
-        }
-
-        private void LoadMenuLevel()
-        {
-            SceneManager.LoadScene(0);
+            if (Keyboard.current?.eKey.wasPressedThisFrame == true) SceneManager.LoadScene(0);
         }
         #endregion
 
@@ -70,18 +60,17 @@ namespace UI.Menus
 
         private IEnumerator FadeBackgrounds(Image currentBg, Image nextBg)
         {
-            float elapsed = 0.0f;
+            float elapsed = 0f;
             while (elapsed < transitionTime)
             {
                 elapsed += Time.deltaTime;
                 float alpha = Mathf.Lerp(0, 1, elapsed / transitionTime);
-                currentBg.color = new Color(currentBg.color.r, currentBg.color.g, currentBg.color.b, 1 - alpha);
-                nextBg.color = new Color(nextBg.color.r, nextBg.color.g, nextBg.color.b, alpha);
+                currentBg.color = currentBg.color.WithAlpha(1 - alpha);
+                nextBg.color = nextBg.color.WithAlpha(alpha);
                 yield return null;
             }
-
-            currentBg.color = new Color(currentBg.color.r, currentBg.color.g, currentBg.color.b, 0);
-            nextBg.color = new Color(nextBg.color.r, nextBg.color.g, nextBg.color.b, 1);
+            currentBg.color = currentBg.color.WithAlpha(0);
+            nextBg.color = nextBg.color.WithAlpha(1);
         }
         #endregion
     }

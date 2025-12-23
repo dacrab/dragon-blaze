@@ -1,6 +1,6 @@
 using UnityEngine;
-using Gameplay.Characters.Player;
-using Gameplay.Health;
+using Core.Constants;
+using Core.Utilities;
 
 namespace Gameplay.Combat
 {
@@ -10,15 +10,11 @@ namespace Gameplay.Combat
 
         protected void OnTriggerEnter2D(Collider2D collision)
         {
-            if (!collision.CompareTag("Player")) return;
-
-            PlayerController playerController = collision.GetComponent<PlayerController>();
-            if (playerController == null || playerController.IsInvisible()) return;
-
-            Health.Health playerHealth = collision.GetComponent<Health.Health>();
-            if (playerHealth == null) return;
-
-            playerHealth.TakeDamage(damage);
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            if (!collision.TryGetPlayerController(out var controller) || controller.IsInvisible()) return;
+            if (!collision.TryGetHealth(out var health)) return;
+            
+            health.TakeDamage(damage);
         }
     }
 }

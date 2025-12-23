@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Core.Utilities;
 
 public class PowerUpIndicatorManager : MonoBehaviour
 {
@@ -19,87 +20,36 @@ public class PowerUpIndicatorManager : MonoBehaviour
 
     public void ActivateIndicator(string powerUpName, Sprite powerUpImage, float duration)
     {
-        if (!ValidateReferences()) return;
+        if (indicatorPrefab == null || indicatorsPanel == null) return;
 
-        GameObject existingIndicator = FindIndicatorByName(powerUpName);
-        if (existingIndicator != null)
+        var existing = activeIndicators.Find(ind => 
+            ind.GetComponentInChildren<TMP_Text>()?.text.Contains(powerUpName) == true);
+        
+        if (existing != null)
         {
-            ResetExistingIndicator(existingIndicator, duration);
+            existing.SetActive(true);
+            var img = existing.GetComponentInChildren<Image>();
+            StopCoroutine(UpdateIndicator(existing, duration, img));
+            StartCoroutine(UpdateIndicator(existing, duration, img));
             return;
         }
 
-        CreateNewIndicator(powerUpName, powerUpImage, duration);
-    }
+        var newIndicator = Instantiate(indicatorPrefab, indicatorsPanel);
+        if (newIndicator == null) return;
 
-    private bool ValidateReferences()
-    {
-        if (indicatorPrefab == null)
+        var imageComponent = newIndicator.transform.Find("Image")?.GetComponent<Image>();
+        if (imageComponent != null)
         {
-            Debug.LogError("indicatorPrefab is not set.");
-            return false;
-        }
-        if (indicatorsPanel == null)
-        {
-            Debug.LogError("indicatorsPanel is not set.");
-            return false;
-        }
-        return true;
-    }
-
-    private void ResetExistingIndicator(GameObject indicator, float duration)
-    {
-        indicator.SetActive(true);
-        Image imageComponent = indicator.GetComponentInChildren<Image>();
-        StopCoroutine(UpdateIndicator(indicator, duration, imageComponent));
-        StartCoroutine(UpdateIndicator(indicator, duration, imageComponent));
-    }
-
-    private void CreateNewIndicator(string powerUpName, Sprite powerUpImage, float duration)
-    {
-        GameObject newIndicator = Instantiate(indicatorPrefab, indicatorsPanel);
-        if (newIndicator == null)
-        {
-            Debug.LogError("Failed to instantiate newIndicator.");
-            return;
+            imageComponent.sprite = powerUpImage;
+            imageComponent.color = imageComponent.color.WithAlpha(INITIAL_OPACITY);
         }
 
-        SetupIndicatorComponents(newIndicator, powerUpName, powerUpImage, duration);
+        var textComponent = newIndicator.GetComponentInChildren<TMP_Text>();
+        textComponent?.SetText($"<b><size=120%>{powerUpName}</size></b>");
+
+        StartCoroutine(UpdateIndicator(newIndicator, duration, imageComponent));
         activeIndicators.Add(newIndicator);
         UpdateIndicatorPositions();
-    }
-
-    private void SetupIndicatorComponents(GameObject indicator, string powerUpName, Sprite powerUpImage, float duration)
-    {
-        Image imageComponent = indicator.transform.Find("Image").GetComponent<Image>();
-        if (imageComponent == null)
-        {
-            Debug.LogError("Image component not found in indicator.");
-            return;
-        }
-
-        imageComponent.sprite = powerUpImage;
-        imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, INITIAL_OPACITY);
-
-        TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
-        if (textComponent != null)
-        {
-            textComponent.text = $"<b><size=120%>{powerUpName}</size></b>";
-        }
-        else
-        {
-            Debug.LogError("Text component not found in indicator.");
-        }
-
-        StartCoroutine(UpdateIndicator(indicator, duration, imageComponent));
-    }
-
-    private GameObject FindIndicatorByName(string powerUpName)
-    {
-        return activeIndicators.Find(indicator => 
-        {
-            TMP_Text textComponent = indicator.GetComponentInChildren<TMP_Text>();
-            return textComponent != null && textComponent.text.Contains(powerUpName);
-        });
     }
 
     private IEnumerator UpdateIndicator(GameObject indicator, float duration, Image imageComponent)
@@ -107,15 +57,10 @@ public class PowerUpIndicatorManager : MonoBehaviour
         float remainingTime = duration;
         while (remainingTime > 0)
         {
-            if (imageComponent != null)
-            {
-                float alpha = remainingTime / duration;
-                imageComponent.color = new Color(imageComponent.color.r, imageComponent.color.g, imageComponent.color.b, alpha);
-            }
+            if (imageComponent != null) imageComponent.color = imageComponent.color.WithAlpha(remainingTime / duration);
             remainingTime -= Time.deltaTime;
             yield return null;
         }
-
         activeIndicators.Remove(indicator);
         Destroy(indicator);
         UpdateIndicatorPositions();

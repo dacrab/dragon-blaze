@@ -1,112 +1,67 @@
 using UnityEngine;
 using Core.Managers;
 using Core.Constants;
-using Gameplay.Characters.Player;
+using Core.Utilities;
 
 namespace Environment.Traps
 {
     public class Spikehead : TrapBase
     {
-        #region Serialized Fields
         [Header("SpikeHead Attributes")]
         [SerializeField] private float speed;
         [SerializeField] private float range;
         [SerializeField] private float checkDelay;
         [SerializeField] private LayerMask playerLayer;
-
-        [Header("SFX")]
         [SerializeField] private AudioClip impactSound;
-        #endregion
 
-        #region Private Fields
         private Vector3[] directions = new Vector3[4];
         private Vector3 destination;
         private float checkTimer;
         private bool attacking;
-        #endregion
 
-        #region Unity Lifecycle Methods
-        private void OnEnable()
-        {
-            Stop();
-        }
+        private void OnEnable() => Stop();
 
         private void Update()
         {
-            if (attacking)
-            {
-                MoveSpikehead();
-            }
+            if (attacking) transform.Translate(destination * Time.deltaTime * speed);
             else
             {
-                UpdateCheckTimer();
+                checkTimer += Time.deltaTime;
+                if (checkTimer > checkDelay) CheckForPlayer();
             }
         }
 
         protected override void OnTriggerEnter2D(Collider2D collision)
         {
-            SoundManager.instance.PlaySound(impactSound);
-            
-            if (collision.CompareTag(GameConstants.Tags.Player))
-            {
-                // Check visibility
-                PlayerController playerController = collision.GetComponent<PlayerController>();
-                if (playerController != null && !playerController.IsInvisible())
-                {
-                    base.OnTriggerEnter2D(collision);
-                }
-            }
-            
-            Stop(); // Stop on impact with anything
-        }
-        #endregion
-
-        #region Private Methods
-        private void MoveSpikehead()
-        {
-            transform.Translate(destination * Time.deltaTime * speed);
-        }
-
-        private void UpdateCheckTimer()
-        {
-            checkTimer += Time.deltaTime;
-            if (checkTimer > checkDelay)
-                CheckForPlayer();
+            SoundManager.Instance?.PlaySound(impactSound);
+            if (collision.CompareTag(GameConstants.Tags.Player) 
+                && collision.TryGetPlayerController(out var pc) && !pc.IsInvisible())
+                base.OnTriggerEnter2D(collision);
+            Stop();
         }
 
         private void CheckForPlayer()
         {
             CalculateDirections();
-
             for (int i = 0; i < directions.Length; i++)
             {
                 Debug.DrawRay(transform.position, directions[i], Color.red);
-                RaycastHit2D hit = Physics2D.Raycast(transform.position, directions[i], range, playerLayer);
-
-                if (hit.collider != null && !attacking)
+                var hit = Physics2D.Raycast(transform.position, directions[i], range, playerLayer);
+                if (hit.collider != null && !attacking && hit.collider.TryGetPlayerController(out var pc) && !pc.IsInvisible())
                 {
-                    TryAttackPlayer(hit, i);
+                    attacking = true;
+                    destination = directions[i];
+                    checkTimer = 0;
                 }
-            }
-        }
-
-        private void TryAttackPlayer(RaycastHit2D hit, int directionIndex)
-        {
-            PlayerController playerController = hit.collider.GetComponent<PlayerController>();
-            if (playerController != null && !playerController.IsInvisible())
-            {
-                attacking = true;
-                destination = directions[directionIndex];
-                checkTimer = 0;
             }
         }
 
         private void CalculateDirections()
         {
-            directions[0] = transform.right * range;   // Right direction
-            directions[1] = -transform.right * range;  // Left direction
-            directions[2] = transform.up * range;      // Up direction
-            directions[3] = -transform.up * range;     // Down direction
+            directions[0] = transform.right * range;
+            directions[1] = -transform.right * range;
+            directions[2] = transform.up * range;
+            directions[3] = -transform.up * range;
         }
 
         private void Stop()
@@ -114,6 +69,5 @@ namespace Environment.Traps
             destination = transform.position;
             attacking = false;
         }
-        #endregion
     }
 }

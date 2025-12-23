@@ -16,12 +16,6 @@ namespace Gameplay.Items.PowerUps
             ActivateIndicator("Invisibility", invisibilityImage);
         }
 
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            if (cachedPowerups != null)
-            {
-                cachedPowerups.SetInvisible(false);
-            }
-        }
+        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups) => cachedPowerups?.SetInvisible(false);
     }
 }

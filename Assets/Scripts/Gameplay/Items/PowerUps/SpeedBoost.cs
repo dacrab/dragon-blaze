@@ -22,12 +22,6 @@ namespace Gameplay.Items.PowerUps
             ActivateIndicator("Speed Boost", speedBoostImage);
         }
 
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            if (locomotion != null)
-            {
-                locomotion.SetSpeed(originalSpeed);
-            }
-        }
+        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups) => locomotion?.SetSpeed(originalSpeed);
     }
 }

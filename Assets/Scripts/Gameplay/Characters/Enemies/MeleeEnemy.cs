@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Utilities;
 using Gameplay.Characters.Player;
 
 namespace Gameplay.Characters.Enemies
@@ -47,15 +48,11 @@ namespace Gameplay.Characters.Enemies
 
         private void InitializeComponents()
         {
-            // In inherited classes, we might need to be careful not to override base unless intended.
-            // But here base only gets RB/Anim/Col.
-            
             enemyPatrol = GetComponentInParent<EnemyPatrol>();
-            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player != null)
+            if (Core.Utilities.PlayerReference.IsValid)
             {
-                playerTransform = player.transform;
-                playerController = player.GetComponent<PlayerController>();
+                playerTransform = Core.Utilities.PlayerReference.Transform;
+                playerController = Core.Utilities.PlayerReference.Controller;
             }
         }
 
@@ -162,8 +159,7 @@ namespace Gameplay.Characters.Enemies
             
             if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1.0f) // + buffer
             {
-                 Gameplay.Health.Health playerHealth = playerTransform.GetComponent<Gameplay.Health.Health>();
-                 if (playerHealth) playerHealth.TakeDamage(damage);
+                 if (playerTransform.TryGetHealth(out var health)) health.TakeDamage(damage);
             }
         }
     }

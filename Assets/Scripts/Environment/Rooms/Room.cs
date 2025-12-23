@@ -32,34 +32,22 @@ namespace Environment.Rooms
         {
             initialPositions = new Vector3[enemies.Length];
             for (int i = 0; i < enemies.Length; i++)
-            {
-                if (enemies[i] != null)
-                    initialPositions[i] = enemies[i].transform.position;
-            }
+                if (enemies[i] != null) initialPositions[i] = enemies[i].transform.position;
         }
 
         private void DeactivateRoomIfNotFirst()
         {
-            if (transform.GetSiblingIndex() != 0)
-                ActivateRoom(false);
+            if (transform.GetSiblingIndex() != 0) ActivateRoom(false);
         }
 
         private void ToggleEnemies(bool status)
         {
             for (int i = 0; i < enemies.Length; i++)
             {
-                if (enemies[i] != null)
-                {
-                    enemies[i].SetActive(status);
-                    if (status)
-                        ResetEnemyPosition(i);
-                }
+                if (enemies[i] == null) continue;
+                enemies[i].SetActive(status);
+                if (status) enemies[i].transform.position = initialPositions[i];
             }
-        }
-
-        private void ResetEnemyPosition(int index)
-        {
-            enemies[index].transform.position = initialPositions[index];
         }
         #endregion
     }

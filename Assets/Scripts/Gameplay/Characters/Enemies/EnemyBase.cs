@@ -1,6 +1,6 @@
 using UnityEngine;
 using Core.Constants;
-using Gameplay.Characters.Player;
+using Core.Utilities;
 
 namespace Gameplay.Characters.Enemies
 {
@@ -62,21 +62,9 @@ namespace Gameplay.Characters.Enemies
 
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag(GameConstants.Tags.Player))
-            {
-                PlayerController player = collision.GetComponent<PlayerController>();
-                // Use !IsInvisible() logic or simple null check if no visibility logic exists yet on Controller
-                // Assuming I will rely on Health to handle invulnerability/invisibility checks mostly,
-                // OR check here. PlayerController has IsInvisible().
-                if (player != null && !player.IsInvisible())
-                {
-                     Gameplay.Health.Health playerHealth = collision.GetComponent<Gameplay.Health.Health>();
-                     if (playerHealth != null)
-                     {
-                         playerHealth.TakeDamage(damage);
-                     }
-                }
-            }
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            if (!collision.TryGetPlayerController(out var player) || player.IsInvisible()) return;
+            if (collision.TryGetHealth(out var health)) health.TakeDamage(damage);
         }
     }
 }

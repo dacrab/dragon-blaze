@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Utilities;
 using Gameplay.Combat;
 using Core.Input;
 
@@ -23,36 +24,14 @@ namespace Gameplay.Characters.Player
             InitializeComponents();
         }
 
-        private void OnEnable()
-        {
-            if (inputReader != null)
-            {
-                inputReader.AttackEvent += OnAttack;
-            }
-        }
-
-        private void OnDisable()
-        {
-            if (inputReader != null)
-            {
-                inputReader.AttackEvent -= OnAttack;
-            }
-        }
-
-        private void Update()
-        {
-            UpdateCooldownTimer();
-        }
+        private void OnEnable() { if (inputReader != null) inputReader.AttackEvent += OnAttack; }
+        private void OnDisable() { if (inputReader != null) inputReader.AttackEvent -= OnAttack; }
+        private void Update() => cooldownTimer += Time.deltaTime;
 
         private void InitializeComponents()
         {
             anim = GetComponent<Animator>();
-            playerController = GetComponent<PlayerController>();
-        }
-
-        private void UpdateCooldownTimer()
-        {
-            cooldownTimer += Time.deltaTime;
+            playerController = this.GetPlayerController();
         }
 
         private void OnAttack()
@@ -63,47 +42,24 @@ namespace Gameplay.Characters.Player
             }
         }
 
-        private bool CanAttack()
-        {
-            return cooldownTimer > attackCooldown 
-                   && playerController != null && playerController.CanAttack() 
-                   && Time.timeScale > 0;
-        }
-
-        private bool ValidateAttackComponents()
-        {
-            return fireballs != null && fireballs.Length > 0 && firePoint != null;
-        }
+        private bool CanAttack() => cooldownTimer > attackCooldown 
+            && playerController != null && playerController.CanAttack()
+            && (Core.State.GameStateManager.Instance?.IsPlaying ?? Time.timeScale > 0);
 
         private void PerformAttack()
         {
-            if (!ValidateAttackComponents()) return;
+            if (fireballs == null || fireballs.Length == 0 || firePoint == null) return;
 
-            SoundManager.instance.PlaySound(fireballSound);
+            SoundManager.Instance?.PlaySound(fireballSound);
             anim.SetTrigger("attack");
             cooldownTimer = 0;
 
-            LaunchFireball();
-        }
-
-        private void LaunchFireball()
-        {
-            GameObject fireball = GetFireball();
+            var fireball = System.Array.Find(fireballs, f => !f.activeInHierarchy);
             if (fireball != null)
             {
                 fireball.transform.position = firePoint.position;
-                fireball.GetComponent<ProjectileBase>().SetDirection(Mathf.Sign(transform.localScale.x));
+                fireball.GetComponent<ProjectileBase>()?.SetDirection(Mathf.Sign(transform.localScale.x));
             }
-        }
-
-        private GameObject GetFireball()
-        {
-            for (int i = 0; i < fireballs.Length; i++)
-            {
-                if (!fireballs[i].activeInHierarchy)
-                    return fireballs[i];
-            }
-            return null;
         }
     }
 }

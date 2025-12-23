@@ -41,29 +41,18 @@ namespace Environment.Parallax
 
         private void LateUpdate()
         {
-            if (followMouse)
+            if (followMouse) UpdateMouseParallax();
+            else if (cameraTransform != null)
             {
-                UpdateMouseParallax();
-            }
-            else
-            {
-                if (cameraTransform == null) return;
                 ApplyParallaxEffect();
                 HandleInfiniteScrolling();
             }
         }
-        #endregion
 
-        #region Private Methods
         private void InitializeComponents()
         {
             cameraTransform = Camera.main?.transform;
-            if (cameraTransform == null)
-            {
-                // Optional: Debug.LogWarning for menu scenes where this might not matter
-                return;
-            }
-
+            if (cameraTransform == null) return;
             lastCameraPosition = cameraTransform.position;
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
@@ -71,15 +60,14 @@ namespace Environment.Parallax
         private void SetupTextureSize()
         {
             if (spriteRenderer == null) return;
-            
-            Texture2D texture = spriteRenderer.sprite.texture;
+            var texture = spriteRenderer.sprite.texture;
             textureUnitSizeX = texture.width / spriteRenderer.sprite.pixelsPerUnit;
             textureUnitSizeY = texture.height / spriteRenderer.sprite.pixelsPerUnit;
         }
 
         private void ApplyParallaxEffect()
         {
-            Vector3 deltaMovement = cameraTransform.position - lastCameraPosition;
+            var deltaMovement = cameraTransform.position - lastCameraPosition;
             transform.position += new Vector3(deltaMovement.x * parallaxEffectMultiplier.x, deltaMovement.y * parallaxEffectMultiplier.y);
             lastCameraPosition = cameraTransform.position;
         }
@@ -87,47 +75,31 @@ namespace Environment.Parallax
         private void HandleInfiniteScrolling()
         {
             if (spriteRenderer == null) return;
-
-            if (infiniteHorizontal)
-            {
-                AdjustHorizontalPosition();
-            }
-
-            if (infiniteVertical)
-            {
-                AdjustVerticalPosition();
-            }
+            if (infiniteHorizontal) AdjustHorizontalPosition();
+            if (infiniteVertical) AdjustVerticalPosition();
         }
 
         private void AdjustHorizontalPosition()
         {
-            float offsetPositionX = (cameraTransform.position.x - transform.position.x) % textureUnitSizeX;
-            if (Mathf.Abs(offsetPositionX) >= textureUnitSizeX / 2)
-            {
-                transform.position = new Vector3(cameraTransform.position.x - offsetPositionX, transform.position.y);
-            }
+            float offsetX = (cameraTransform.position.x - transform.position.x) % textureUnitSizeX;
+            if (Mathf.Abs(offsetX) >= textureUnitSizeX / 2)
+                transform.position = new Vector3(cameraTransform.position.x - offsetX, transform.position.y);
         }
 
         private void AdjustVerticalPosition()
         {
-            float offsetPositionY = (cameraTransform.position.y - transform.position.y) % textureUnitSizeY;
-            if (Mathf.Abs(offsetPositionY) >= textureUnitSizeY / 2)
-            {
-                transform.position = new Vector3(transform.position.x, cameraTransform.position.y - offsetPositionY);
-            }
+            float offsetY = (cameraTransform.position.y - transform.position.y) % textureUnitSizeY;
+            if (Mathf.Abs(offsetY) >= textureUnitSizeY / 2)
+                transform.position = new Vector3(transform.position.x, cameraTransform.position.y - offsetY);
         }
         
         private void UpdateMouseParallax()
         {
-            if (Camera.main == null) return;
-            
-            if (Mouse.current != null)
-            {
-                Vector2 mousePos = Mouse.current.position.ReadValue();
-                Vector2 offset = Camera.main.ScreenToViewportPoint(mousePos);
-                Vector2 targetPosition = startPosition + (offset * parallaxEffectMultiplier.x);
-                transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, mouseSmoothTime);
-            }
+            if (Camera.main == null || Mouse.current == null) return;
+            var mousePos = Mouse.current.position.ReadValue();
+            var offset = Camera.main.ScreenToViewportPoint(mousePos);
+            var targetPosition = (Vector3)startPosition + new Vector3(offset.x * parallaxEffectMultiplier.x, offset.y * parallaxEffectMultiplier.y, 0f);
+            transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, mouseSmoothTime);
         }
         #endregion
     }

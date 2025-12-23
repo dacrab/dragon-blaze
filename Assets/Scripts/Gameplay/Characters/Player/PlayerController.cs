@@ -35,114 +35,62 @@ namespace Gameplay.Characters.Player
 
         private void OnEnable()
         {
-            if (inputReader != null)
-            {
-                inputReader.MoveEvent += OnMove;
-                inputReader.JumpEvent += OnJump;
-                inputReader.JumpCanceledEvent += OnJumpCanceled;
-                inputReader.DashEvent += OnDash;
-            }
-            else
-            {
-                Debug.LogWarning("InputReader is not assigned in PlayerController");
-            }
-
+            if (inputReader == null) { Debug.LogWarning("InputReader is not assigned in PlayerController"); return; }
+            inputReader.MoveEvent += OnMove;
+            inputReader.JumpEvent += OnJump;
+            inputReader.JumpCanceledEvent += OnJumpCanceled;
+            inputReader.DashEvent += OnDash;
             EventBus.OnDialogueStateChanged += SetInteracting;
         }
 
         private void OnDisable()
         {
-            if (inputReader != null)
-            {
-                inputReader.MoveEvent -= OnMove;
-                inputReader.JumpEvent -= OnJump;
-                inputReader.JumpCanceledEvent -= OnJumpCanceled;
-                inputReader.DashEvent -= OnDash;
-            }
-
+            if (inputReader == null) return;
+            inputReader.MoveEvent -= OnMove;
+            inputReader.JumpEvent -= OnJump;
+            inputReader.JumpCanceledEvent -= OnJumpCanceled;
+            inputReader.DashEvent -= OnDash;
             EventBus.OnDialogueStateChanged -= SetInteracting;
         }
 
         private void Update()
         {
             if (isInteracting) return;
-
-            // Update Timers
-            if (locomotion.IsGrounded)
-            {
-                coyoteCounter = coyoteTime;
-                jumpCounter = extraJumps;
-            }
-            else
-            {
-                coyoteCounter -= Time.deltaTime;
-            }
-            
+            if (locomotion.IsGrounded) { coyoteCounter = coyoteTime; jumpCounter = extraJumps; }
+            else coyoteCounter -= Time.deltaTime;
             locomotion.Move();
         }
 
-        public bool IsInvisible()
-        {
-            return powerups != null && powerups.IsInvisible;
-        }
-
-        public bool CanAttack()
-        {
-            return !locomotion.IsMoving && locomotion.IsGrounded;
-        }
-        
-        public void SetInvisibility(bool invisible)
-        {
-             if (powerups) 
-             { 
-                 visuals.SetInvisibility(invisible);
-             }
-        }
+        public bool IsInvisible() => powerups?.IsInvisible == true;
+        public bool CanAttack() => !locomotion.IsMoving && locomotion.IsGrounded;
+        public void SetInvisibility(bool invisible) => visuals?.SetInvisibility(invisible);
 
         private void OnMove(float xInput)
         {
-            if (isInteracting)
-            {
-                locomotion.SetInput(0);
-                return;
-            }
+            if (isInteracting) { locomotion.SetInput(0); return; }
             locomotion.SetInput(xInput);
         }
 
         private void OnJump()
         {
             if (isInteracting) return;
-
             bool isCoyoteAllowed = coyoteCounter > 0;
+            if (!(locomotion.IsGrounded || isCoyoteAllowed || jumpCounter > 0 || locomotion.IsWallSliding)) return;
             
-            if (locomotion.IsGrounded || isCoyoteAllowed || jumpCounter > 0 || locomotion.IsWallSliding)
-            {
-                locomotion.Jump(isCoyoteAllowed, jumpCounter);
-                visuals.PlayJumpEffect();
-                playerAudio?.PlayJumpSound();
+            locomotion.Jump(isCoyoteAllowed, jumpCounter);
+            visuals.PlayJumpEffect();
+            playerAudio?.PlayJumpSound();
 
-                if (!locomotion.IsGrounded && !isCoyoteAllowed && !locomotion.IsWallSliding)
-                {
-                    jumpCounter--;
-                }
-                else if (locomotion.IsWallSliding)
-                {
-                    jumpCounter = extraJumps; 
-                }
-                
-                if (isCoyoteAllowed) coyoteCounter = 0;
-            }
+            if (!locomotion.IsGrounded && !isCoyoteAllowed && !locomotion.IsWallSliding) jumpCounter--;
+            else if (locomotion.IsWallSliding) jumpCounter = extraJumps;
+            if (isCoyoteAllowed) coyoteCounter = 0;
         }
 
-        private void OnJumpCanceled()
-        {
-            locomotion.CancelJump();
-        }
+        private void OnJumpCanceled() => locomotion.CancelJump();
 
         private void OnDash()
         {
             if (isInteracting) return;
-            
             locomotion.Dash();
             visuals.PlayDashEffect();
             playerAudio?.PlayDashSound();
@@ -151,11 +99,7 @@ namespace Gameplay.Characters.Player
         public void SetInteracting(bool interacting)
         {
             isInteracting = interacting;
-            if (interacting)
-            {
-                locomotion.SetInput(0);
-                locomotion.Move(); // Apply stop
-            }
+            if (interacting) { locomotion.SetInput(0); locomotion.Move(); }
         }
     }
 }

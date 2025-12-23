@@ -10,35 +10,23 @@ namespace Core.Input
         private void Update()
         {
             if (inputReader == null) return;
+            var kb = Keyboard.current;
+            var mouse = Mouse.current;
 
-            // Gameplay Polling
-            if (Keyboard.current != null)
+            if (kb != null)
             {
-                // Move
                 float moveX = 0;
-                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX = -1;
-                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX = 1;
+                if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) moveX = -1;
+                if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) moveX = 1;
                 inputReader.RaiseMoveEvent(moveX);
 
-                // Jump
-                if (Keyboard.current.spaceKey.wasPressedThisFrame) inputReader.RaiseJumpEvent();
-                if (Keyboard.current.spaceKey.wasReleasedThisFrame) inputReader.RaiseJumpCanceledEvent();
-
-                // Dash
-                if (Keyboard.current.leftShiftKey.wasPressedThisFrame) inputReader.RaiseDashEvent();
-
-                // Interact
-                if (Keyboard.current.eKey.wasPressedThisFrame) inputReader.RaiseInteractEvent();
-                
-                // Pause
-                if (Keyboard.current.escapeKey.wasPressedThisFrame) inputReader.RaisePauseEvent();
+                if (kb.spaceKey.wasPressedThisFrame) inputReader.RaiseJumpEvent();
+                if (kb.spaceKey.wasReleasedThisFrame) inputReader.RaiseJumpCanceledEvent();
+                if (kb.leftShiftKey.wasPressedThisFrame) inputReader.RaiseDashEvent();
+                if (kb.eKey.wasPressedThisFrame) inputReader.RaiseInteractEvent();
+                if (kb.escapeKey.wasPressedThisFrame) inputReader.RaisePauseEvent();
             }
-            
-            if (Mouse.current != null)
-            {
-                // Attack
-                if (Mouse.current.leftButton.wasPressedThisFrame) inputReader.RaiseAttackEvent();
-            }
+            if (mouse?.leftButton.wasPressedThisFrame == true) inputReader.RaiseAttackEvent();
         }
     }
 }

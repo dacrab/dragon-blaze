@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Core.Constants;
 using Core.Events;
+using Core.Utilities;
 using Gameplay.Characters.Player;
 using Core.Managers;
 using Environment.Platforms;
@@ -81,38 +82,19 @@ namespace Gameplay.Health
         #endregion
 
         #region Public Methods
-        public void TakeDamage(float _damage)
+        public void TakeDamage(float damage)
         {
-            // Use playerController.IsInvisible()
-            if (invulnerable || (isPlayer && playerController != null && playerController.IsInvisible())) return;
-
-            currentHealth = Mathf.Clamp(currentHealth - _damage, 0, startingHealth);
-
-            if (isPlayer)
-            {
-                EventBus.RaiseHealthChanged(currentHealth, startingHealth);
-            }
-
-            if (currentHealth > 0)
-            {
-                HandleDamage();
-            }
-            else
-            {
-                if (!dead)
-                {
-                    Die();
-                }
-            }
+            if (invulnerable || (isPlayer && playerController?.IsInvisible() == true)) return;
+            currentHealth = Mathf.Clamp(currentHealth - damage, 0, startingHealth);
+            if (isPlayer) EventBus.RaiseHealthChanged(currentHealth, startingHealth);
+            if (currentHealth > 0) HandleDamage();
+            else if (!dead) Die();
         }
 
-        public void AddHealth(float _value)
+        public void AddHealth(float value)
         {
-            currentHealth = Mathf.Clamp(currentHealth + _value, 0, startingHealth);
-            if (isPlayer)
-            {
-                EventBus.RaiseHealthChanged(currentHealth, startingHealth);
-            }
+            currentHealth = Mathf.Clamp(currentHealth + value, 0, startingHealth);
+            if (isPlayer) EventBus.RaiseHealthChanged(currentHealth, startingHealth);
         }
 
         public void Respawn()
@@ -137,72 +119,34 @@ namespace Gameplay.Health
 
         private void HandleDamage()
         {
-            if (anim != null)
-            {
-                anim.SetTrigger("hurt");
-            }
+            anim?.SetTrigger("hurt");
             StartCoroutine(Invulnerability());
-            PlaySound(hurtSound);
-            SpawnParticles(hitParticleSystemPrefab);
+            if (hurtSound != null) SoundManager.Instance?.PlaySound(hurtSound);
+            if (hitParticleSystemPrefab != null) SpawnParticles(hitParticleSystemPrefab);
         }
 
         private void Die()
         {
             DisableComponents();
-            TriggerDeathAnimation();
+            anim?.SetBool(GameConstants.Animation.Grounded, true);
+            anim?.SetTrigger(GameConstants.Animation.Die);
             dead = true;
-            PlaySound(deathSound);
-            SpawnParticles(deathParticleSystemPrefab);
-            
-            if (isPlayer)
-            {
-                // Raise event directly instead of calling PlayerMovement.Die()
-                EventBus.RaisePlayerDied();
-                
-                // We can still play visuals if we want, via PlayerVisuals if accessible, 
-                // but Health handles death particles already.
-                // UIManager listens to EventBus.OnPlayerDied.
-            }
+            if (deathSound != null) SoundManager.Instance?.PlaySound(deathSound);
+            if (deathParticleSystemPrefab != null) SpawnParticles(deathParticleSystemPrefab);
+            if (isPlayer) EventBus.RaisePlayerDied();
         }
 
         private void DisableComponents()
         {
-            foreach (Behaviour component in components)
-            {
-                if (component != null)
-                {
-                    component.enabled = false;
-                }
-            }
-            
-            if (playerController != null)
-            {
-                playerController.enabled = false;
-            }
+            foreach (var component in components) component?.SetEnabled(false);
+            if (playerController != null) playerController.SetEnabled(false);
         }
-
-        private void TriggerDeathAnimation()
+        
+        private void SpawnParticles(GameObject particlePrefab)
         {
-            if (anim != null)
+            if (particlePrefab != null)
             {
-                anim.SetBool(GameConstants.Animation.Grounded, true);
-                anim.SetTrigger(GameConstants.Animation.Die);
-            }
-        }
-
-        private void PlaySound(AudioClip clip)
-        {
-            if (SoundManager.instance != null)
-            {
-                SoundManager.instance.PlaySound(clip);
-            }
-        }
-
-        private void SpawnParticles(GameObject particleSystemPrefab)
-        {
-            if (particleSystemPrefab != null)
-            {
-                Instantiate(particleSystemPrefab, transform.position, Quaternion.identity);
+                Instantiate(particlePrefab, transform.position, Quaternion.identity);
             }
         }
 

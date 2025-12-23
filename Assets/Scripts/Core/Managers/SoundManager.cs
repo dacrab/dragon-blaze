@@ -1,14 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using Core.Constants;
+using Core.Services;
+using Core.Utilities;
 
 namespace Core.Managers
 {
-    public class SoundManager : MonoBehaviour
+    public class SoundManager : SingletonManager<SoundManager>
     {
-        #region Singleton
-        public static SoundManager instance { get; private set; }
-        #endregion
 
         #region Events
         public event Action<float> OnSoundVolumeChanged;
@@ -25,35 +25,28 @@ namespace Core.Managers
         public Slider soundSlider;
         #endregion
 
-        #region Unity Lifecycle Methods
-        private void Awake()
+        #region Initialization
+        protected override void OnInitialize()
         {
-            InitializeSingleton();
+            base.OnInitialize();
             InitializeAudioSources();
             InitializeSliders();
+            ServiceLocator.Register<SoundManager>(this);
         }
-        #endregion
 
-        #region Initialization Methods
-        private void InitializeSingleton()
+        protected override void OnShutdown()
         {
-            if (instance == null)
-            {
-                instance = this;
-            }
-            else if (instance != this)
-            {
-                Destroy(gameObject);
-            }
+            ServiceLocator.Unregister<SoundManager>();
+            base.OnShutdown();
         }
 
         private void InitializeAudioSources()
         {
-            if (soundSource == null) soundSource = gameObject.AddComponent<AudioSource>();
-            if (musicSource == null) musicSource = gameObject.AddComponent<AudioSource>();
+            if (soundSource == null) soundSource = gameObject.GetOrAddComponent<AudioSource>();
+            if (musicSource == null) musicSource = gameObject.GetOrAddComponent<AudioSource>();
 
-            float savedMusicVolume = PlayerPrefs.GetFloat("musicVolume", 0.5f);
-            float savedSoundVolume = PlayerPrefs.GetFloat("soundVolume", 0.5f);
+            float savedMusicVolume = PlayerPrefs.GetFloat(GameConstants.Save.MusicVolume, 0.5f);
+            float savedSoundVolume = PlayerPrefs.GetFloat(GameConstants.Save.SoundVolume, 0.5f);
             musicSource.volume = savedMusicVolume;
             soundSource.volume = savedSoundVolume;
         }
@@ -62,14 +55,14 @@ namespace Core.Managers
         {
             if (musicSlider != null)
             {
-                float vol = PlayerPrefs.GetFloat("musicVolume", 0.5f);
+                float vol = PlayerPrefs.GetFloat(GameConstants.Save.MusicVolume, 0.5f);
                 musicSlider.value = vol;
                 musicSlider.onValueChanged.AddListener(ChangeMusicVolume);
             }
 
             if (soundSlider != null)
             {
-                float vol = PlayerPrefs.GetFloat("soundVolume", 0.5f);
+                float vol = PlayerPrefs.GetFloat(GameConstants.Save.SoundVolume, 0.5f);
                 soundSlider.value = vol;
                 soundSlider.onValueChanged.AddListener(ChangeSoundVolume);
             }
@@ -77,46 +70,66 @@ namespace Core.Managers
         #endregion
 
         #region Sound Playback Methods
-        public void PlaySound(AudioClip _sound)
+        public void PlaySound(AudioClip sound)
         {
-            if (_sound != null)
-                soundSource.PlayOneShot(_sound);
+            if (sound != null && soundSource != null)
+                soundSource.PlayOneShot(sound);
         }
 
-        public void PlaySoundWithVolume(AudioClip _sound, float volume)
+        public void PlaySoundWithVolume(AudioClip sound, float volume)
         {
-            if (_sound != null)
-                soundSource.PlayOneShot(_sound, volume);
+            if (sound != null && soundSource != null)
+                soundSource.PlayOneShot(sound, Mathf.Clamp01(volume));
+        }
+
+        public void PlayMusic(AudioClip music, bool loop = true)
+        {
+            if (music != null && musicSource != null)
+            {
+                musicSource.clip = music;
+                musicSource.loop = loop;
+                musicSource.Play();
+            }
+        }
+
+        public void StopMusic()
+        {
+            if (musicSource != null)
+            {
+                musicSource.Stop();
+            }
         }
         #endregion
 
         #region Volume Control Methods
-        public void ChangeSoundVolume(float _volume)
+        public void ChangeSoundVolume(float volume)
         {
-            soundSource.volume = _volume;
-            PlayerPrefs.SetFloat("soundVolume", _volume);
+            volume = Mathf.Clamp01(volume);
+            soundSource.volume = volume;
+            PlayerPrefs.SetFloat(GameConstants.Save.SoundVolume, volume);
             PlayerPrefs.Save();
 
             if (soundSlider != null)
             {
-                soundSlider.value = _volume;
+                soundSlider.value = volume;
             }
             
-            OnSoundVolumeChanged?.Invoke(_volume);
+            OnSoundVolumeChanged?.Invoke(volume);
         }
 
-        public void ChangeMusicVolume(float _volume)
+        public void ChangeMusicVolume(float volume)
         {
-            musicSource.volume = _volume;
-            PlayerPrefs.SetFloat("musicVolume", _volume);
+            volume = Mathf.Clamp01(volume);
+            musicSource.volume = volume;
+            PlayerPrefs.SetFloat(GameConstants.Save.MusicVolume, volume);
             PlayerPrefs.Save();
 
             if (musicSlider != null)
             {
-                musicSlider.value = _volume;
+                musicSlider.value = volume;
             }
 
-            OnMusicVolumeChanged?.Invoke(_volume);
+            OnMusicVolumeChanged?.Invoke(volume);
         }
         #endregion
     }

@@ -68,57 +68,28 @@ namespace Gameplay.Characters.Player
         {
             CheckGrounded();
             CheckWallSlide();
-            
-            if (wallJumpCounter > 0)
-            {
-                wallJumpCounter -= Time.deltaTime;
-            }
+            if (wallJumpCounter > 0) wallJumpCounter -= Time.deltaTime;
         }
 
-        public void SetInput(float input)
-        {
-            horizontalInput = input;
-        }
+        public void SetInput(float input) => horizontalInput = input;
 
         public void Move()
         {
             if (wallJumpCounter > 0) return;
-
-            // Standard Movement
-            if (!isDashing)
-            {
-                body.linearVelocity = new Vector2(horizontalInput * speed, body.linearVelocity.y);
-            }
-            
-            // Flip logic
-            if (horizontalInput > 0.01f && !isFacingRight)
-                Flip();
-            else if (horizontalInput < -0.01f && isFacingRight)
-                Flip();
+            if (!isDashing) body.linearVelocity = new Vector2(horizontalInput * speed, body.linearVelocity.y);
+            if (horizontalInput > 0.01f && !isFacingRight) Flip();
+            else if (horizontalInput < -0.01f && isFacingRight) Flip();
         }
 
         public void Jump(bool isCoyoteAllowed, int jumpCount)
         {
-            if (IsGrounded || isCoyoteAllowed)
-            {
-                ApplyJumpForce(Vector2.up * jumpPower);
-            }
-            else if (jumpCount > 0)
-            {
-                ApplyJumpForce(Vector2.up * jumpPower);
-            }
-            else if (isWallSliding)
-            {
-                PerformWallJump();
-            }
+            if (IsGrounded || isCoyoteAllowed || jumpCount > 0) ApplyJumpForce(Vector2.up * jumpPower);
+            else if (isWallSliding) PerformWallJump();
         }
 
         public void CancelJump()
         {
-            if (body.linearVelocity.y > 0)
-            {
-                body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f);
-            }
+            if (body.linearVelocity.y > 0) body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f);
         }
 
         public void Dash()
@@ -151,31 +122,22 @@ namespace Gameplay.Characters.Player
         {
             isWallSliding = false;
             wallJumpCounter = wallJumpTime;
-            
-            // Calculate direction opposite to wall
-            // Assumes Player scale determines direction
-            float direction = -transform.localScale.x;
-            Vector2 jumpDir = new Vector2(direction, 1f).normalized;
-            
-            // Apply separate forces
-            Vector2 force = new Vector2(jumpDir.x * wallJumpForce, jumpDir.y * jumpPower);
-            
-            body.linearVelocity = force; // Reset velocity for consistent jump
-            
-            // Force flip since we are jumping away
+            float dir = -transform.localScale.x;
+            Vector2 jumpDir = new Vector2(dir, 1f).normalized;
+            body.linearVelocity = new Vector2(jumpDir.x * wallJumpForce, jumpDir.y * jumpPower);
             Flip();
         }
 
         private void ApplyJumpForce(Vector2 force)
         {
-            body.linearVelocity = new Vector2(body.linearVelocity.x, 0); // Reset Y velocity for consistent jump height
-            body.linearVelocity += force; // Adding force (impulse-like via velocity change)
+            body.linearVelocity = new Vector2(body.linearVelocity.x, 0);
+            body.linearVelocity += force;
         }
 
         private void Flip()
         {
             isFacingRight = !isFacingRight;
-            Vector3 scale = transform.localScale;
+            var scale = transform.localScale;
             scale.x *= -1;
             transform.localScale = scale;
         }

@@ -16,26 +16,15 @@ namespace Environment.Platforms
         private Vector3 initialPosition;
         #endregion
 
-        #region Unity Lifecycle Methods
         private void Start()
         {
-            InitializePlatform();
+            initialPosition = transform.position;
+            rb.bodyType = RigidbodyType2D.Static;
         }
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (collision.gameObject.CompareTag(GameConstants.Tags.Player))
-            {
-                StartCoroutine(Fall());
-            }
-        }
-        #endregion
-
-        #region Private Methods
-        private void InitializePlatform()
-        {
-            initialPosition = transform.position;
-            rb.bodyType = RigidbodyType2D.Static;
+            if (collision.gameObject.CompareTag(GameConstants.Tags.Player)) StartCoroutine(Fall());
         }
 
         private IEnumerator Fall()
@@ -45,7 +34,6 @@ namespace Environment.Platforms
             yield return new WaitForSeconds(destroyDelay);
             gameObject.SetActive(false);
         }
-        #endregion
 
         #region Public Methods
         public void ResetPlatform()

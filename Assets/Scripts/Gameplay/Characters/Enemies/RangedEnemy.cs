@@ -72,11 +72,10 @@ namespace Gameplay.Characters.Enemies
         {
             enemyPatrol = GetComponentInParent<EnemyPatrol>();
             
-            GameObject player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player != null)
+            if (Core.Utilities.PlayerReference.IsValid)
             {
-                playerTransform = player.transform;
-                playerController = player.GetComponent<PlayerController>();
+                playerTransform = Core.Utilities.PlayerReference.Transform;
+                playerController = Core.Utilities.PlayerReference.Controller;
                 
                 if (playerController == null)
                 {
@@ -97,7 +96,7 @@ namespace Gameplay.Characters.Enemies
         // Called by Animation Event
         private void RangedAttack()
         {
-            SoundManager.instance.PlaySound(fireballSound);
+            SoundManager.Instance.PlaySound(fireballSound);
             cooldownTimer = 0;
             
             GameObject fireball = GetFireball();
