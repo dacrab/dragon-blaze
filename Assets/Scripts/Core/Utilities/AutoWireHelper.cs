@@ -13,7 +13,7 @@ namespace Core.Utilities
         /// <summary>
         /// Automatically wires a field based on AutoWireAttribute settings.
         /// </summary>
-        public static T WireReference<T>(Component component, AutoWireAttribute attribute) where T : class
+        public static T WireReference<T>(Component component, AutoWireAttribute attribute) where T : Object
         {
             if (component == null) return null;
 
