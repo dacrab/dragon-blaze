@@ -2,6 +2,7 @@ using UnityEngine;
 using Core.Utilities;
 using Core.Managers;
 using Gameplay.Characters.Player;
+using UI.Managers;
 
 namespace Core.Utilities.Examples
 {
