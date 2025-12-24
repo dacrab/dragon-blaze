@@ -88,8 +88,8 @@ namespace Core.Constants
         #region Timing
         public static class Timing
         {
-            public const float DefaultIFrameDuration = 1.0f;
-            public const int DefaultFlashCount = 5;
+            // Note: Combat-specific timing constants are in CombatConstants
+            // This region is for general game timing constants
         }
         #endregion
     }

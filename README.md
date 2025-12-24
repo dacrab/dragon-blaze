@@ -1,88 +1,130 @@
-# 🐉 Dragon Blaze
+# Dragon Blaze
 
-*An enchanting 2D platformer featuring fluid movement, engaging combat, and a polished architecture built with Unity.*
+A 2D action platformer built with Unity 6, featuring responsive movement mechanics, combat systems, and a clean modular architecture.
 
-<div align="center">
-  
-[![Play Now](https://img.shields.io/badge/Play%20Now-itch.io-FA5C5C?style=for-the-badge&logo=itch.io)](https://dacrab.itch.io/unity-2d-platformer)
-[![Watch Gameplay](https://img.shields.io/badge/Watch_Gameplay-4285F4?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1A_-qFr5LuwZUnVla1aqEab6fWn9i16fv/view?usp=drive_link)
+[![Play on itch.io](https://img.shields.io/badge/Play-itch.io-FA5C5C?style=flat-square&logo=itch.io)](https://dacrab.itch.io/unity-2d-platformer)
+[![Gameplay Video](https://img.shields.io/badge/Gameplay-Video-4285F4?style=flat-square&logo=google-drive)](https://drive.google.com/file/d/1A_-qFr5LuwZUnVla1aqEab6fWn9i16fv/view)
 
-</div>
+## Gameplay
 
-## ✨ Features
+- **Movement**: Run, multi-jump, wall slide, wall jump, and dash
+- **Combat**: Melee attacks and ranged projectiles with hit feedback
+- **Enemies**: Patrolling melee guards and ranged spellcasters with FSM-based AI
+- **Environment**: Traps (fire, arrows, spikes), falling platforms, and parallax backgrounds
+- **Progression**: 4 levels with checkpoints, coin collection, and save/load system
 
-### 🎮 Core Gameplay
-- **Fluid Movement System**: Built on a custom `PlayerController` featuring coyote time, multi-jumps, wall sliding, and dynamic dashing.
-- **Combat System**: Ranged and melee combat mechanics with responsive hit detection and visual feedback.
-- **Enemy AI**: Diverse enemy types including patrolling melee guards and ranged spellcasters using finite state machine logic.
-- **Interaction System**: Quest-giving NPCs, dialogue systems, and interactive world objects like Magic Stones.
-
-### 🛠️ Technical Systems
-- **Robust Architecture**: Clean, domain-driven project structure separating `Core` systems, `Gameplay` logic, `Environment` interactions, and `UI`.
-- **Event-Driven Architecture**: Decoupled systems using a central `EventBus` for UI updates, audio triggers, and game state changes.
-- **Save & Persistence**: Reliable JSON-based save system tracking player progress, currency, and level state.
-- **Object Pooling**: Optimized projectile and particle spawning for smooth performance.
-- **Audio Management**: Centralized `SoundManager` with volume controls and persistence.
-
-### 🌍 Environment
-- **Dynamic World**: Parallax background scrolling with depth and mouse-follow effects.
-- **Traps & Hazards**: Variety of traps including Firetraps, Arrow Dispensers, Spikeheads, and Falling Platforms.
-- **Level Design**: Seamless room transitions and checkpoint systems.
-
-## 🚀 Architecture Overview
-
-The project follows a modern, modular folder structure for better scalability:
-
-```
-Assets/Scripts/
-├── Core/           # Singleton managers, Input, Events, Persistence
-├── Gameplay/       # Characters (Player/Enemy), Combat, Items, Health
-├── Environment/    # Traps, Platforms, Parallax, Room logic
-└── UI/             # HUD, Menus, Dialogue systems
-```
-
-## 🎮 Controls
+## Controls
 
 | Action | Input |
 |--------|-------|
-| **Move** | Arrow Keys / A & D |
-| **Jump** | Spacebar |
-| **Attack** | Left Mouse Button |
-| **Dash** | Left Shift (while moving) |
-| **Interact** | E Key |
-| **Wall Slide** | Hold direction against wall |
-| **Pause** | Escape |
+| Move | `A`/`D` or Arrow Keys |
+| Jump | `Space` |
+| Attack | Left Mouse |
+| Dash | `Shift` (while moving) |
+| Interact | `E` |
+| Pause | `Escape` |
 
-## 📦 Installation
+## Architecture
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/dacrab/dragon-blaze.git
-   ```
-2. Open the project in Unity (Recommended Version: 2022.3 LTS or newer).
-3. Open the `_Menu` scene in `Assets/Levels`.
-4. Press Play!
+```
+Assets/Scripts/
+├── Core/           # Reusable framework systems
+│   ├── Combat/     # DamageInfo, damage types
+│   ├── Events/     # EventBus for decoupled communication
+│   ├── Input/      # InputReader (new Input System)
+│   ├── Interfaces/ # IDamageable, IPoolable, IService
+│   ├── Managers/   # SingletonManager<T>, GameManager, SoundManager
+│   ├── Optimization/   # ObjectPoolManager (Unity ObjectPool<T>)
+│   ├── Persistence/    # JSON save system
+│   ├── Services/   # ServiceLocator for DI
+│   ├── State/      # Generic StateMachine<T>
+│   └── Utilities/  # AutoWire system, extensions
+├── Gameplay/       # Game-specific logic
+│   ├── Characters/ # Player, Enemies, NPCs
+│   ├── Combat/     # Projectiles, hitboxes
+│   ├── Health/     # Health component
+│   └── Items/      # Collectables, powerups
+├── Environment/    # World systems
+│   ├── Parallax/   # Background scrolling
+│   ├── Platforms/  # Moving/falling platforms
+│   ├── Rooms/      # Level transitions
+│   └── Traps/      # Hazards with TrapBase
+└── UI/             # HUD, menus, dialogue
+```
 
-## 🗺️ Roadmap
+### Key Patterns
 
-- [x] **Core Mechanics**: Movement, Combat, Dash, Wall Slide.
-- [x] **Currency System**: Coin collection and persistence.
-- [x] **Save System**: Checkpoints and data serialization.
-- [ ] **Shop System**: Spend collected coins on upgrades.
-- [ ] **Boss Battles**: Epic encounters with complex patterns.
-- [ ] **Achievements**: Steam/Platform integration.
+**AutoWire** - Automatic dependency injection via attributes:
+```csharp
+[AutoWire(AutoWireAttribute.WireType.Self)]
+[SerializeField] private Rigidbody2D rb;
 
-## 👥 Credits
+[AutoWire(AutoWireAttribute.WireType.Scene)]
+[SerializeField] private UIManager uiManager;
 
-- **Developer**: [DaCrab](https://github.com/dacrab)
-- **Engine**: [Unity Technologies](https://unity.com/)
-- **Assets**: [Unity Asset Store](https://assetstore.unity.com/)
-- **Sound**: [Freesound](https://freesound.org/)
+private void Awake() => AutoWireHelper.WireAllFields(this);
+```
 
-## 📜 License
+**EventBus** - Decoupled event communication:
+```csharp
+// Subscribe
+EventBus.OnPlayerDied += HandleDeath;
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+// Publish
+EventBus.RaisePlayerDied();
+```
 
-## 📬 Contact
+**ServiceLocator** - Runtime service access:
+```csharp
+ServiceLocator.Register<IAudioService>(soundManager);
+var audio = ServiceLocator.Get<IAudioService>();
+```
 
-For bug reports or suggestions: [vkavouras@proton.me](mailto:vkavouras@proton.me)
+**StateMachine<T>** - Generic FSM for entities:
+```csharp
+stateMachine.RegisterState(EnemyState.Patrol, new PatrolState());
+stateMachine.SetInitialState(EnemyState.Patrol);
+stateMachine.ChangeState(EnemyState.Chase);
+```
+
+## Requirements
+
+- Unity 6000.3+ (Unity 6)
+- Input System package
+- TextMeshPro
+- UniTask (async/await)
+
+## Setup
+
+```bash
+git clone https://github.com/dacrab/dragon-blaze.git
+```
+
+1. Open in Unity Hub
+2. Load `Assets/Levels/_Menu.unity`
+3. Press Play
+
+## Project Status
+
+**Implemented:**
+- Core movement (coyote time, wall mechanics, dash)
+- Combat with IDamageable interface and DamageInfo
+- Enemy AI with patrol and chase behaviors
+- Event-driven architecture
+- Object pooling for projectiles
+- Save/load system
+- 4 playable levels
+
+**Planned:**
+- Player state machine integration
+- Shop system for upgrades
+- Boss encounters
+- Achievement system
+
+## License
+
+MIT License - see [LICENSE](LICENSE)
+
+## Contact
+
+[vkavouras@proton.me](mailto:vkavouras@proton.me)

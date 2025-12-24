@@ -1,10 +1,11 @@
 using UnityEngine;
 using UI.Menus;
 using UI.Managers;
-using UnityEngine.InputSystem;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Constants;
+using Core.Input;
+using Core.Managers;
 using Core.Utilities;
 
 namespace Gameplay.Items
@@ -19,6 +20,7 @@ namespace Gameplay.Items
         [SerializeField] private SpriteRenderer indicatorSprite;
         
         [SerializeField] private GameObject interactParticleSystemPrefab;
+        [SerializeField] private InputReader inputReader;
         #endregion
 
         #region Private Fields
@@ -35,9 +37,21 @@ namespace Gameplay.Items
 
         private void Start() { if (indicatorSprite != null) indicatorSprite.enabled = false; }
 
-        private void Update()
+        private void OnEnable()
         {
-            if (playerInTrigger && Keyboard.current?.eKey.wasPressedThisFrame == true)
+            if (inputReader != null)
+                inputReader.InteractEvent += OnInteract;
+        }
+
+        private void OnDisable()
+        {
+            if (inputReader != null)
+                inputReader.InteractEvent -= OnInteract;
+        }
+
+        private void OnInteract()
+        {
+            if (playerInTrigger)
                 StartCoroutine(PlayParticlesThenLoadLevel(playerPosition));
         }
 
@@ -81,7 +95,7 @@ namespace Gameplay.Items
             }
             else
             {
-                Core.Managers.GameManager.Instance?.SaveGame();
+                GameManager.Instance?.SaveGame();
                 LoadingManager.LoadNextLevel();
             }
         }

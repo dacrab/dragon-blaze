@@ -4,6 +4,8 @@ namespace Gameplay.Characters.Enemies
 {
     public class EnemyPatrol : MonoBehaviour
     {
+        private const string AnimMoving = "moving";
+        
         #region Serialized Fields
         [Header("Patrol Points")]
         [SerializeField] private Transform leftEdge;
@@ -13,8 +15,8 @@ namespace Gameplay.Characters.Enemies
         [SerializeField] private Transform enemy;
 
         [Header("Movement Parameters")]
-        [SerializeField] private float speed;
-        [SerializeField] private float idleDuration;
+        [SerializeField] private float speed = 2f;
+        [SerializeField] private float idleDuration = 1f;
 
         [Header("Enemy Animator")]
         [SerializeField] private Animator anim;
@@ -39,7 +41,7 @@ namespace Gameplay.Characters.Enemies
 
         private void OnDisable()
         {
-            anim.SetBool("moving", false);
+            if (anim != null) anim.SetBool(AnimMoving, false);
         }
 
         private void Update()
@@ -50,13 +52,13 @@ namespace Gameplay.Characters.Enemies
             if ((movingLeft && enemy.position.x >= targetX) || (!movingLeft && enemy.position.x <= targetX))
             {
                 idleTimer = 0;
-                anim.SetBool("moving", true);
+                anim.SetBool(AnimMoving, true);
                 enemy.localScale = new Vector3(Mathf.Abs(initScale.x) * direction, initScale.y, initScale.z);
                 enemy.position = new Vector3(enemy.position.x + Time.deltaTime * direction * speed, enemy.position.y, enemy.position.z);
             }
             else
             {
-                anim.SetBool("moving", false);
+                anim.SetBool(AnimMoving, false);
                 idleTimer += Time.deltaTime;
                 if (idleTimer > idleDuration) { movingLeft = !movingLeft; idleTimer = 0; }
             }

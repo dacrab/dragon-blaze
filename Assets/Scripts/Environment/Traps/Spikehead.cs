@@ -1,4 +1,6 @@
 using UnityEngine;
+using Core.Combat;
+using Core.Interfaces;
 using Core.Managers;
 using Core.Constants;
 using Core.Utilities;
@@ -8,9 +10,9 @@ namespace Environment.Traps
     public class Spikehead : TrapBase
     {
         [Header("SpikeHead Attributes")]
-        [SerializeField] private float speed;
-        [SerializeField] private float range;
-        [SerializeField] private float checkDelay;
+        [SerializeField] private float speed = 5f;
+        [SerializeField] private float range = 5f;
+        [SerializeField] private float checkDelay = 0.5f;
         [SerializeField] private LayerMask playerLayer;
         [SerializeField] private AudioClip impactSound;
 
@@ -19,10 +21,17 @@ namespace Environment.Traps
         private float checkTimer;
         private bool attacking;
 
+        private void Awake()
+        {
+            damageType = DamageType.Physical;
+        }
+
         private void OnEnable() => Stop();
 
         private void Update()
         {
+            if (!GameStateHelpers.IsPlaying) return;
+            
             if (attacking) transform.Translate(destination * Time.deltaTime * speed);
             else
             {

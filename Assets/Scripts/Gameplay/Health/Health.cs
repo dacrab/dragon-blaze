@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Core.Constants;
+using Core.Combat;
+using Core.Interfaces;
 using Core.Events;
 using Core.Utilities;
 using Gameplay.Characters.Player;
@@ -10,15 +12,15 @@ using Environment.Platforms;
 
 namespace Gameplay.Health
 {
-    public class Health : MonoBehaviour
+    public class Health : MonoBehaviour, IDamageable
     {
         #region Serialized Fields
         [Header("Health")]
         [SerializeField] private float startingHealth = 100f;
 
         [Header("Invulnerability Frames")]
-        [SerializeField] private float iFramesDuration;
-        [SerializeField] private int numberOfFlashes;
+        [SerializeField] private float iFramesDuration = CombatConstants.DefaultIFrameDuration;
+        [SerializeField] private int numberOfFlashes = CombatConstants.DefaultFlashCount;
 
         [Header("Components")]
         [SerializeField] private Behaviour[] components;
@@ -35,14 +37,20 @@ namespace Gameplay.Health
         [SerializeField] private List<FallingPlatform> fallingPlatforms;
         #endregion
 
-        #region Public Properties
-        public float currentHealth { get; private set; }
+        #region IDamageable Implementation
+        public float CurrentHealth => currentHealth;
+        public float MaxHealth => startingHealth;
+        public bool IsAlive => !dead;
         #endregion
 
         #region Private Fields
-        private Animator anim;
-        private SpriteRenderer spriteRend;
-        private PlayerController playerController; // Replaced PlayerMovement
+        private float currentHealth;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private Animator anim;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private SpriteRenderer spriteRend;
+        [AutoWire(AutoWireAttribute.WireType.Self, required: false)]
+        [SerializeField] private PlayerController playerController;
         private bool dead;
         private bool invulnerable;
         private bool isPlayer;
@@ -51,6 +59,7 @@ namespace Gameplay.Health
         #region Unity Lifecycle Methods
         private void Awake()
         {
+            AutoWireHelper.WireAllFields(this);
             InitializeComponents();
         }
         #endregion
@@ -59,36 +68,48 @@ namespace Gameplay.Health
         private void InitializeComponents()
         {
             currentHealth = startingHealth;
-            anim = GetComponent<Animator>();
-            spriteRend = GetComponent<SpriteRenderer>();
-            
             isPlayer = gameObject.CompareTag(GameConstants.Tags.Player);
 
             if (isPlayer)
             {
-                // Use PlayerController instead of PlayerMovement
-                playerController = GetComponent<PlayerController>();
                 if (playerController == null)
                 {
                     Debug.LogError("PlayerController component not found on Player!");
                 }
-                // Raise initial health event for UI
                 EventBus.RaiseHealthChanged(currentHealth, startingHealth);
             }
-
-            if (anim == null) Debug.LogError("Animator component not found!");
-            if (spriteRend == null) Debug.LogError("SpriteRenderer component not found!");
         }
         #endregion
 
         #region Public Methods
-        public void TakeDamage(float damage)
+        /// <summary>
+        /// Takes damage using the new DamageInfo system.
+        /// </summary>
+        public float TakeDamage(DamageInfo damageInfo)
         {
-            if (invulnerable || (isPlayer && playerController?.IsInvisible() == true)) return;
-            currentHealth = Mathf.Clamp(currentHealth - damage, 0, startingHealth);
+            if (!damageInfo.IgnoresIFrames && invulnerable) return 0f;
+            if (isPlayer && playerController?.IsInvisible() == true) return 0f;
+
+            float actualDamage = damageInfo.FinalDamage;
+            currentHealth = Mathf.Clamp(currentHealth - actualDamage, 0, startingHealth);
+            
             if (isPlayer) EventBus.RaiseHealthChanged(currentHealth, startingHealth);
+            
+            // Raise combat event with damage type
+            EventBus.RaiseDamageDealt(actualDamage, damageInfo.DamageType);
+            
             if (currentHealth > 0) HandleDamage();
             else if (!dead) Die();
+
+            return actualDamage;
+        }
+
+        /// <summary>
+        /// Simple damage method for backwards compatibility.
+        /// </summary>
+        public void TakeDamage(float damage)
+        {
+            TakeDamage(DamageInfo.Physical(damage));
         }
 
         public void AddHealth(float value)
@@ -153,7 +174,15 @@ namespace Gameplay.Health
         private IEnumerator Invulnerability()
         {
             invulnerable = true;
-            Physics2D.IgnoreLayerCollision(10, 11, true);
+            
+            // Use LayerConstants instead of hardcoded layer indices
+            int playerLayer = LayerConstants.Player;
+            int enemyLayer = LayerConstants.Enemy;
+            
+            if (playerLayer >= 0 && enemyLayer >= 0)
+            {
+                Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
+            }
 
             for (int i = 0; i < numberOfFlashes; i++)
             {
@@ -166,7 +195,10 @@ namespace Gameplay.Health
                 }
             }
 
-            Physics2D.IgnoreLayerCollision(10, 11, false);
+            if (playerLayer >= 0 && enemyLayer >= 0)
+            {
+                Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+            }
             invulnerable = false;
         }
 

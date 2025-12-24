@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Events;
+using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
@@ -14,18 +15,18 @@ namespace Gameplay.Characters.Player
         [SerializeField] private GameObject deathParticlesPrefab;
         
         [Header("Renderer")]
+        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Color invisibleColor = new Color(1f, 1f, 1f, 0.5f);
 
-        private Animator anim;
-        private PlayerLocomotion locomotion;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private Animator anim;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerLocomotion locomotion;
 
         private void Awake()
         {
-            anim = GetComponent<Animator>();
-            locomotion = GetComponent<PlayerLocomotion>();
-            
-            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+            AutoWireHelper.WireAllFields(this);
         }
 
         private void OnEnable()
@@ -59,11 +60,22 @@ namespace Gameplay.Characters.Player
             else if (!locomotion.IsWallSliding && wallSlideParticles.isPlaying) wallSlideParticles.Stop();
         }
 
-        public void PlayJumpEffect() => Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
-        public void PlayDashEffect() => Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
+        public void PlayJumpEffect()
+        {
+            if (jumpParticlesPrefab != null) 
+                Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        
+        public void PlayDashEffect()
+        {
+            if (dashParticlesPrefab != null)
+                Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
+        }
+        
         public void PlayDeathEffect()
         {
-            if (deathParticlesPrefab != null) Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
+            if (deathParticlesPrefab != null) 
+                Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
             anim.SetTrigger(GameConstants.Animation.Die);
         }
         public void PlayRespawnEffect() => anim.SetTrigger(GameConstants.Animation.Respawn);

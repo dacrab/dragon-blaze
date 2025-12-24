@@ -20,7 +20,7 @@ namespace Gameplay.Items
 
         public override void Collect()
         {
-            if (Core.Managers.GameManager.Instance == null) return;
+            if (GameManager.Instance == null) return;
             SoundManager.Instance?.PlaySound(pickupSound);
             if (pickupEffect != null)
             {
@@ -28,7 +28,7 @@ namespace Gameplay.Items
                 effect.Play();
                 Destroy(effect.gameObject, effect.main.duration);
             }
-            Core.Managers.GameManager.Instance.AddCoins(value);
+            GameManager.Instance.AddCoins(value);
             Destroy(gameObject);
         }
 

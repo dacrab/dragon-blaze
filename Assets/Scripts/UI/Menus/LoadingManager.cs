@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Core.Services;
+using Core.Utilities;
 using UI.Managers;
 
 namespace UI.Menus
@@ -39,11 +41,14 @@ namespace UI.Menus
             {
                 Destroy(gameObject);
             }
+            
+            AutoWireHelper.WireAllFields(this);
         }
         #endregion
 
         #region Serialized Fields
         [Header("Scene Loading Settings")]
+        [AutoWire(AutoWireAttribute.WireType.Scene)]
         [SerializeField] private UIManager uiManager;
         #endregion
 
@@ -63,8 +68,6 @@ namespace UI.Menus
         #region Private Methods
         private IEnumerator LoadLevel(int levelIndex)
         {
-            EnsureUIManager();
-
             if (uiManager) uiManager.ShowLoadingScreen(true);
 
             AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
@@ -94,17 +97,6 @@ namespace UI.Menus
             if (uiManager) uiManager.ShowLoadingScreen(false);
         }
 
-        private void EnsureUIManager()
-        {
-            if (uiManager == null)
-            {
-                uiManager = FindFirstObjectByType<UIManager>();
-                if (uiManager == null)
-                {
-                    Debug.LogWarning("UIManager not found. Loading screen will not be shown.");
-                }
-            }
-        }
         #endregion
     }
 }

@@ -1,8 +1,8 @@
 using UnityEngine;
+using Core.Combat;
+using Core.Interfaces;
 using Core.Constants;
 using Core.Utilities;
-using Gameplay.Health;
-using Gameplay.Characters.Enemies;
 
 namespace Gameplay.Combat
 {
@@ -13,10 +13,12 @@ namespace Gameplay.Combat
             base.OnTriggerEnter2D(collision);
             if (!collision.CompareTag(GameConstants.Tags.Enemy)) return;
             
-            if (collision.TryGetHealth(out var health))
+            var damageInfo = DamageInfo.Physical(damage, gameObject);
+            
+            if (collision.TryGetComponent<IDamageable>(out var damageable))
+                damageable.TakeDamage(damageInfo);
+            else if (collision.TryGetHealth(out var health))
                 health.TakeDamage(damage);
-            else if (collision.TryGetComponent<EnemyBase>(out var enemy))
-                enemy.TakeDamage(damage);
         }
     }
 }

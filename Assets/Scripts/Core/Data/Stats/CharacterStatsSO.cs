@@ -1,17 +1,18 @@
 using UnityEngine;
+using Core.Constants;
 
-namespace Gameplay.Characters.Stats
+namespace Core.Data.Stats
 {
     [CreateAssetMenu(fileName = "CharacterStats", menuName = "DragonBlaze/Stats/Character Stats")]
     public class CharacterStatsSO : ScriptableObject
     {
         [Header("Base Attributes")]
         public float maxHealth = 100f;
-        public float damage = 10f;
+        public float damage = CombatConstants.DefaultDamage;
         public float speed = 3f;
 
         [Header("Combat")]
-        public float attackCooldown = 1f;
+        public float attackCooldown = CombatConstants.DefaultAttackCooldown;
         public float attackRange = 1f;
         
         [Header("Effects")]

@@ -4,13 +4,13 @@ using UnityEngine.UI;
 using TMPro;
 using Core.Events;
 using Core.Constants;
+using Core.Input;
 using Core.Managers;
 using Core.State;
 using Core.Services;
 using Core.Utilities;
 using Gameplay.Characters.Player;
 using UI.Menus;
-using UnityEngine.InputSystem;
 
 namespace UI.Managers
 {
@@ -32,6 +32,9 @@ namespace UI.Managers
 
         [Header("Audio")]
         [SerializeField] private AudioClip gameOverSound;
+
+        [Header("Input")]
+        [SerializeField] private InputReader inputReader;
 
         [Header("Player Reference")]
         [AutoWire(AutoWireAttribute.WireType.Player)]
@@ -78,18 +81,23 @@ namespace UI.Managers
         {
             EventBus.OnScoreChanged += UpdateCoinDisplay;
             EventBus.OnPlayerDied += GameOver;
+            
+            if (inputReader != null)
+                inputReader.PauseEvent += OnPauseInput;
         }
 
         private void UnsubscribeFromEvents()
         {
             EventBus.OnScoreChanged -= UpdateCoinDisplay;
             EventBus.OnPlayerDied -= GameOver;
+            
+            if (inputReader != null)
+                inputReader.PauseEvent -= OnPauseInput;
         }
 
-        private void Update()
+        private void OnPauseInput()
         {
-            if (Keyboard.current?.escapeKey.wasPressedThisFrame == true)
-                PauseGame(!IsPauseScreenActive);
+            PauseGame(!IsPauseScreenActive);
         }
         #endregion
 

@@ -1,6 +1,6 @@
 using UnityEngine;
 using Core.Managers;
-using UnityEngine.InputSystem;
+using Core.Input;
 using Core.Constants;
 using UI.Managers;
 
@@ -13,6 +13,7 @@ namespace UI.Menus
         [SerializeField] private RectTransform[] buttons;
         [SerializeField] private AudioClip changeSound;
         [SerializeField] private AudioClip interactSound;
+        [SerializeField] private InputReader inputReader;
         #endregion
 
         #region Private Fields
@@ -26,9 +27,23 @@ namespace UI.Menus
             ShowCursor();
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            HandleInput();
+            if (inputReader != null)
+            {
+                inputReader.NavigateEvent += OnNavigate;
+                inputReader.SubmitEvent += Interact;
+                inputReader.EnableUIInput();
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (inputReader != null)
+            {
+                inputReader.NavigateEvent -= OnNavigate;
+                inputReader.SubmitEvent -= Interact;
+            }
         }
         #endregion
 
@@ -41,21 +56,20 @@ namespace UI.Menus
             arrow.position = new Vector3(arrow.position.x, buttons[currentPosition].position.y);
         }
 
-        public void ContinueGame() => LoadingManager.LoadSpecificLevel(Core.Managers.GameManager.Instance.GetLastSavedLevelIndex());
+        public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance.GetLastSavedLevelIndex());
+        #endregion
 
+        #region Private Methods
         private void ShowCursor()
         {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
 
-        private void HandleInput()
+        private void OnNavigate(Vector2 direction)
         {
-            if (Keyboard.current == null) return;
-            var kb = Keyboard.current;
-            if (kb.upArrowKey.wasPressedThisFrame) ChangePosition(-1);
-            else if (kb.downArrowKey.wasPressedThisFrame) ChangePosition(1);
-            if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) Interact();
+            if (direction.y > 0.5f) ChangePosition(-1);
+            else if (direction.y < -0.5f) ChangePosition(1);
         }
 
         private void Interact()
@@ -63,8 +77,8 @@ namespace UI.Menus
             SoundManager.Instance?.PlaySound(interactSound);
             if (currentPosition == 0)
             {
-                Core.Managers.GameManager.Instance.ResetCoins();
-                Core.Managers.GameManager.Instance.SaveGame(true);
+                GameManager.Instance.ResetCoins();
+                GameManager.Instance.SaveGame(true);
                 LoadingManager.LoadSpecificLevel(1);
             }
             else if (currentPosition == 1) Application.Quit();

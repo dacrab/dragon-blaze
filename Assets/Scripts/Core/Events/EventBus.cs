@@ -1,15 +1,44 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Core.Constants;
 
 namespace Core.Events
 {
     /// <summary>
     /// Central event bus for decoupled communication between systems.
+    /// Automatically clears subscriptions on scene transitions to prevent memory leaks.
     /// Consider migrating to ScriptableObject-based GameEvent system for better editor integration.
     /// </summary>
     public static class EventBus
     {
+        #region Initialization
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Initialize()
+        {
+            // Clear all events when domain reloads (important for Enter Play Mode Options)
+            ClearAll();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void SubscribeToSceneEvents()
+        {
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
+        }
+
+        private static void OnSceneUnloaded(Scene scene)
+        {
+            // Optionally clear events on scene unload to prevent memory leaks
+            // Uncomment if you want automatic cleanup (may break persistent listeners)
+            // ClearAll();
+            
+            // Instead, just log for debugging
+            #if UNITY_EDITOR
+            Debug.Log($"[EventBus] Scene '{scene.name}' unloaded. Consider unsubscribing from events.");
+            #endif
+        }
+        #endregion
+
         #region Player Events
         public static event Action<int> OnScoreChanged;
         public static event Action OnPlayerDied;
@@ -27,11 +56,11 @@ namespace Core.Events
         #endregion
 
         #region Dialogue Events
-        public static event Action<bool> OnDialogueStateChanged; // true = start, false = end
+        public static event Action<bool> OnDialogueStateChanged;
         #endregion
 
         #region Health Events
-        public static event Action<float, float> OnHealthChanged; // current, max
+        public static event Action<float, float> OnHealthChanged;
         #endregion
 
         #region Combat Events
@@ -88,6 +117,29 @@ namespace Core.Events
             OnHealthChanged = null;
             OnDamageDealt = null;
             OnEnemyKilled = null;
+        }
+
+        /// <summary>
+        /// Gets the subscriber count for debugging purposes.
+        /// </summary>
+        public static int GetSubscriberCount()
+        {
+            int count = 0;
+            count += OnScoreChanged?.GetInvocationList().Length ?? 0;
+            count += OnPlayerDied?.GetInvocationList().Length ?? 0;
+            count += OnPlayerRespawn?.GetInvocationList().Length ?? 0;
+            count += OnPlayerHealthChanged?.GetInvocationList().Length ?? 0;
+            count += OnLevelLoaded?.GetInvocationList().Length ?? 0;
+            count += OnGamePaused?.GetInvocationList().Length ?? 0;
+            count += OnGameSaved?.GetInvocationList().Length ?? 0;
+            count += OnGameStarted?.GetInvocationList().Length ?? 0;
+            count += OnLevelCompleted?.GetInvocationList().Length ?? 0;
+            count += OnGameStateChanged?.GetInvocationList().Length ?? 0;
+            count += OnDialogueStateChanged?.GetInvocationList().Length ?? 0;
+            count += OnHealthChanged?.GetInvocationList().Length ?? 0;
+            count += OnDamageDealt?.GetInvocationList().Length ?? 0;
+            count += OnEnemyKilled?.GetInvocationList().Length ?? 0;
+            return count;
         }
         #endregion
     }

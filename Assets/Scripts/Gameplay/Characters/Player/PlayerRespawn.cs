@@ -13,12 +13,13 @@ namespace Gameplay.Characters.Player
         
         private Transform currentCheckpoint;
         private Gameplay.Health.Health playerHealth;
-        private UIManager uiManager;
+        [AutoWire(AutoWireAttribute.WireType.Service, required: false)]
+        [SerializeField] private UIManager uiManager;
 
         private void Awake()
         {
+            AutoWireHelper.WireAllFields(this);
             playerHealth = this.GetHealth();
-            uiManager = ServiceLocator.Get<UIManager>() ?? FindFirstObjectByType<UIManager>();
         }
 
         private void OnTriggerEnter2D(Collider2D collision)

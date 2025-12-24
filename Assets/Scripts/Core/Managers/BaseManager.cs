@@ -6,7 +6,7 @@ namespace Core.Managers
     /// <summary>
     /// Base class for all managers with common functionality.
     /// </summary>
-    public abstract class BaseManager : MonoBehaviour, IService, IInitializable
+    public abstract class BaseManager : MonoBehaviour, IService
     {
         #region Properties
         public bool IsInitialized { get; protected set; }
@@ -38,10 +38,7 @@ namespace Core.Managers
             OnShutdown();
             IsInitialized = false;
         }
-
-        void IInitializable.Initialize() => Initialize();
         #endregion
-
 
         #region Protected Virtual Methods
         /// <summary>

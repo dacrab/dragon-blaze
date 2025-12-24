@@ -6,8 +6,8 @@ namespace Environment.Traps
 {
     public class EnemySideways : TrapBase
     {
-        [SerializeField] private float movementDistance;
-        [SerializeField] private float speed;
+        [SerializeField] private float movementDistance = 3f;
+        [SerializeField] private float speed = 2f;
 
         private bool movingLeft;
         private float leftEdge;
@@ -21,6 +21,8 @@ namespace Environment.Traps
 
         private void Update()
         {
+            if (!GameStateHelpers.IsPlaying) return;
+            
             float direction = movingLeft ? -1f : 1f;
             float newX = transform.position.x + direction * speed * Time.deltaTime;
             

@@ -50,6 +50,18 @@ namespace Core.Utilities
             controller = collider.GetComponent<PlayerController>();
             return controller != null;
         }
+        
+        public static bool TryGetHealth(this Transform transform, out Health health)
+        {
+            health = transform.GetComponent<Health>();
+            return health != null;
+        }
+        
+        public static bool TryGetPlayerController(this Transform transform, out PlayerController controller)
+        {
+            controller = transform.GetComponent<PlayerController>();
+            return controller != null;
+        }
     }
 }
 

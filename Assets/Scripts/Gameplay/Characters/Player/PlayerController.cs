@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Input;
 using Core.Events;
+using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
@@ -13,10 +14,14 @@ namespace Gameplay.Characters.Player
         [SerializeField] private int extraJumps = 2;
         [SerializeField] private float coyoteTime = 0.2f;
 
-        private PlayerLocomotion locomotion;
-        private PlayerVisuals visuals;
-        private PlayerAudio playerAudio;
-        private PlayerPowerups powerups;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerLocomotion locomotion;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerVisuals visuals;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerAudio playerAudio;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerPowerups powerups;
 
         private float coyoteCounter;
         private int jumpCounter;
@@ -24,10 +29,7 @@ namespace Gameplay.Characters.Player
 
         private void Awake()
         {
-            locomotion = GetComponent<PlayerLocomotion>();
-            visuals = GetComponent<PlayerVisuals>();
-            playerAudio = GetComponent<PlayerAudio>();
-            powerups = GetComponent<PlayerPowerups>();
+            AutoWireHelper.WireAllFields(this);
             
             if (locomotion == null) Debug.LogError("PlayerLocomotion missing!");
             if (visuals == null) Debug.LogError("PlayerVisuals missing!");

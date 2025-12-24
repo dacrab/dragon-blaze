@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
@@ -20,8 +21,10 @@ namespace Gameplay.Characters.Player
         private LayerMask groundLayer;
         private float extraHeight;
 
-        private Rigidbody2D body;
-        private BoxCollider2D boxCollider;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private Rigidbody2D body;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private BoxCollider2D boxCollider;
         private float horizontalInput;
         private bool isFacingRight = true;
         private bool isDashing;
@@ -36,8 +39,7 @@ namespace Gameplay.Characters.Player
 
         private void Awake()
         {
-            body = GetComponent<Rigidbody2D>();
-            boxCollider = GetComponent<BoxCollider2D>();
+            Core.Utilities.AutoWireHelper.WireAllFields(this);
             InitializeConfig();
         }
 
@@ -60,7 +62,12 @@ namespace Gameplay.Characters.Player
                 Debug.LogWarning("PlayerConfigSO missing on PlayerLocomotion. Using fallback defaults.");
                 speed = 10f;
                 jumpPower = 15f;
-                // ... other defaults could be set here or rely on serialized defaults if we kept them
+                wallSlideSpeed = 0.3f;
+                wallJumpForce = 15f;
+                wallJumpTime = 0.2f;
+                dashSpeed = 20f;
+                dashDuration = 0.2f;
+                extraHeight = 0.1f;
             }
         }
 

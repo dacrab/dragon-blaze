@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem;
+using Core.Input;
 using Core.Utilities;
 
 namespace UI.Menus
@@ -12,6 +12,7 @@ namespace UI.Menus
         #region Serialized Fields
         [SerializeField] private Image[] backgrounds;
         [SerializeField] private float transitionTime = 2.0f;
+        [SerializeField] private InputReader inputReader;
         #endregion
 
         #region Private Fields
@@ -25,9 +26,21 @@ namespace UI.Menus
             StartCoroutine(BackgroundTransition());
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            CheckForMenuInput();
+            if (inputReader != null)
+                inputReader.InteractEvent += OnInteract;
+        }
+
+        private void OnDisable()
+        {
+            if (inputReader != null)
+                inputReader.InteractEvent -= OnInteract;
+        }
+
+        private void OnInteract()
+        {
+            SceneManager.LoadScene(0);
         }
         #endregion
 
@@ -36,11 +49,6 @@ namespace UI.Menus
         {
             foreach (var bg in backgrounds) bg.color = bg.color.WithAlpha(0);
             backgrounds[0].color = backgrounds[0].color.WithAlpha(1);
-        }
-
-        private void CheckForMenuInput()
-        {
-            if (Keyboard.current?.eKey.wasPressedThisFrame == true) SceneManager.LoadScene(0);
         }
         #endregion
 

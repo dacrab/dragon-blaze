@@ -1,4 +1,6 @@
 using UnityEngine;
+using Core.Combat;
+using Core.Interfaces;
 using Core.Constants;
 using Core.Utilities;
 using Gameplay.Characters.Player;
@@ -8,33 +10,36 @@ namespace Gameplay.Characters.Enemies
     public class MeleeEnemy : EnemyBase
     {
         [Header("Attack Parameters")]
-        [SerializeField] private float attackCooldown;
-        [SerializeField] private float range;
-        // Damage inherited from Base
+        [SerializeField] private float attackCooldownDuration = CombatConstants.DefaultAttackCooldown;
+        [SerializeField] private float range = 1f;
+        [SerializeField] private float attackRangeBuffer = CombatConstants.AttackRangeBuffer;
 
         [Header("AI Parameters")]
-        [SerializeField] private float chaseSpeed = 3.0f; // Differentiate from Patrol speed
+        [SerializeField] private float chaseSpeed = 3.0f;
 
         [Header("Player Detection")]
         [SerializeField] private LayerMask playerLayer;
 
-        private float cooldownTimer = Mathf.Infinity;
+        private CooldownTimer attackCooldown;
         private Transform playerTransform;
-        private EnemyPatrol enemyPatrol;
+        [AutoWire(AutoWireAttribute.WireType.Parent, required: false)]
+        [SerializeField] private EnemyPatrol enemyPatrol;
         private PlayerController playerController;
 
         protected override void Awake()
         {
             base.Awake();
+            AutoWireHelper.WireAllFields(this);
+            attackCooldown = new CooldownTimer(attackCooldownDuration);
             InitializeComponents();
         }
 
         private void Update()
         {
-            if (isDead) return;
+            if (isDead || !GameStateHelpers.IsPlaying) return;
             if (!ValidateComponents()) return;
 
-            cooldownTimer += Time.deltaTime;
+            attackCooldown.Update();
 
             if (PlayerInSight() && PlayerWithinPatrolBounds())
             {
@@ -48,11 +53,11 @@ namespace Gameplay.Characters.Enemies
 
         private void InitializeComponents()
         {
-            enemyPatrol = GetComponentInParent<EnemyPatrol>();
-            if (Core.Utilities.PlayerReference.IsValid)
+            // enemyPatrol is auto-wired via [AutoWire]
+            if (PlayerReference.IsValid)
             {
-                playerTransform = Core.Utilities.PlayerReference.Transform;
-                playerController = Core.Utilities.PlayerReference.Controller;
+                playerTransform = PlayerReference.Transform;
+                playerController = PlayerReference.Controller;
             }
         }
 
@@ -70,7 +75,7 @@ namespace Gameplay.Characters.Enemies
                 FollowPlayer();
             }
 
-            if (cooldownTimer >= attackCooldown)
+            if (attackCooldown.IsReady)
             {
                 Attack();
             }
@@ -78,10 +83,8 @@ namespace Gameplay.Characters.Enemies
 
         private void Attack()
         {
-            cooldownTimer = 0;
+            attackCooldown.Reset();
             anim.SetTrigger(GameConstants.Animation.MeleeAttack);
-            // Damage handled via Animation Event calling DamagePlayer? 
-            // Or instant? Original code called DamagePlayer() immediately.
             DamagePlayer();
         }
 
@@ -93,7 +96,7 @@ namespace Gameplay.Characters.Enemies
         private bool PlayerWithinPatrolBounds()
         {
             if (enemyPatrol == null || enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null)
-                return true; // Default to true if no patrol bounds to restrict chasing (e.g. boss)
+                return true;
 
             return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
                    playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
@@ -101,36 +104,23 @@ namespace Gameplay.Characters.Enemies
 
         private bool CanMoveForward()
         {
-            // Original code used BoxCollider overlap check.
-            // Reusing 'col' from base if it's a BoxCollider2D
             BoxCollider2D box = col as BoxCollider2D;
             if (box == null) return true;
 
             Vector2 direction = transform.right * transform.localScale.x;
             Vector2 checkPosition = (Vector2)transform.position + (direction * box.size.x);
 
-            // Using GameConstants.Layers.Default? Or assuming LayerMask is int.
-            // LayerMask.GetMask requires strings.
-            Collider2D hit = Physics2D.OverlapBox(checkPosition, box.size, 0, LayerMask.GetMask("Default")); 
+            Collider2D hit = Physics2D.OverlapBox(checkPosition, box.size, 0, LayerConstants.GetMask(LayerConstants.DefaultLayer)); 
             return hit == null;
         }
 
         private void FollowPlayer()
         {
-            if (Vector3.Distance(transform.position, playerTransform.position) < range)
-            {
-                 // Stop if in range? Original didn't stop explicitly in FollowPlayer but MoveTowardsPlayer logic
-                 // The original logic just moved towards X.
-            }
-            
             Vector3 direction = (playerTransform.position - transform.position).normalized;
             float proposedXPosition = transform.position.x + direction.x * chaseSpeed * Time.deltaTime;
 
-            // Check bounds again for movement target?
-            // Reuse patrol bounds check logic if needed.
-            if (PlayerWithinPatrolBounds()) // Actually we need to check if proposed position is within bounds
+            if (PlayerWithinPatrolBounds())
             {
-                // We need strict bound check on self, not player
                 if (enemyPatrol == null || (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x))
                 {
                     MoveTowardsPlayer(proposedXPosition, direction);
@@ -151,15 +141,14 @@ namespace Gameplay.Characters.Enemies
 
         private void DamagePlayer()
         {
-            // Check distance or collider overlap?
-            // Original code just assumed if Attack() is called, it hits if in range? 
-            // Actually original checked cooldown then Attack() then DamagePlayer().
-            // But usually attack has a hitbox.
-            // I'll implement a simple distance check to be fair.
-            
-            if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1.0f) // + buffer
+            if (Vector3.Distance(transform.position, playerTransform.position) <= range + attackRangeBuffer)
             {
-                 if (playerTransform.TryGetHealth(out var health)) health.TakeDamage(damage);
+                var damageInfo = DamageInfo.Physical(damage, gameObject);
+                
+                if (playerTransform.TryGetComponent<IDamageable>(out var damageable))
+                    damageable.TakeDamage(damageInfo);
+                else if (playerTransform.TryGetHealth(out var health))
+                    health.TakeDamage(damage);
             }
         }
     }

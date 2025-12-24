@@ -1,15 +1,20 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Core.Utilities;
 
 namespace Environment.Parallax
 {
+    /// <summary>
+    /// Parallax background effect that follows camera movement.
+    /// Uses Unity's Input System for mouse-based parallax in menus.
+    /// </summary>
     public class ParallaxBackground : MonoBehaviour
     {
         #region Serialized Fields
         [SerializeField] private Vector2 parallaxEffectMultiplier;
         [SerializeField] private bool infiniteHorizontal;
         [SerializeField] private bool infiniteVertical;
-        [SerializeField] private bool followMouse; // Added for menu compatibility
+        [SerializeField] private bool followMouse;
         [SerializeField] private float mouseSmoothTime = 0.3f;
         #endregion
 
@@ -18,9 +23,9 @@ namespace Environment.Parallax
         private Vector3 lastCameraPosition;
         private float textureUnitSizeX;
         private float textureUnitSizeY;
-        private SpriteRenderer spriteRenderer;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private SpriteRenderer spriteRenderer;
         
-        // Menu Specific
         private Vector2 startPosition;
         private Vector3 velocity;
         #endregion
@@ -28,6 +33,8 @@ namespace Environment.Parallax
         #region Unity Lifecycle Methods
         void Start()
         {
+            AutoWireHelper.WireAllFields(this);
+            
             if (!followMouse)
             {
                 InitializeComponents();
@@ -54,12 +61,12 @@ namespace Environment.Parallax
             cameraTransform = Camera.main?.transform;
             if (cameraTransform == null) return;
             lastCameraPosition = cameraTransform.position;
-            spriteRenderer = GetComponent<SpriteRenderer>();
+            // spriteRenderer is auto-wired via [AutoWire]
         }
 
         private void SetupTextureSize()
         {
-            if (spriteRenderer == null) return;
+            if (spriteRenderer == null || spriteRenderer.sprite == null) return;
             var texture = spriteRenderer.sprite.texture;
             textureUnitSizeX = texture.width / spriteRenderer.sprite.pixelsPerUnit;
             textureUnitSizeY = texture.height / spriteRenderer.sprite.pixelsPerUnit;
@@ -95,9 +102,11 @@ namespace Environment.Parallax
         
         private void UpdateMouseParallax()
         {
-            if (Camera.main == null || Mouse.current == null) return;
-            var mousePos = Mouse.current.position.ReadValue();
-            var offset = Camera.main.ScreenToViewportPoint(mousePos);
+            if (Camera.main == null) return;
+            
+            // Use Unity's Input System for mouse position
+            var mousePosition = Mouse.current?.position.ReadValue() ?? Vector2.zero;
+            var offset = Camera.main.ScreenToViewportPoint(mousePosition);
             var targetPosition = (Vector3)startPosition + new Vector3(offset.x * parallaxEffectMultiplier.x, offset.y * parallaxEffectMultiplier.y, 0f);
             transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, mouseSmoothTime);
         }

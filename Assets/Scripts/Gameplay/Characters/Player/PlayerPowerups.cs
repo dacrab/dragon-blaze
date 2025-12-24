@@ -1,21 +1,23 @@
 using UnityEngine;
+using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
     public class PlayerPowerups : MonoBehaviour
     {
-        private PlayerController controller;
-        private PlayerLocomotion locomotion;
-        private PlayerVisuals visuals;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerController controller;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerLocomotion locomotion;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private PlayerVisuals visuals;
 
         private bool isInvisible;
         public bool IsInvisible => isInvisible;
 
         private void Awake()
         {
-            controller = GetComponent<PlayerController>();
-            locomotion = GetComponent<PlayerLocomotion>();
-            visuals = GetComponent<PlayerVisuals>();
+            AutoWireHelper.WireAllFields(this);
         }
 
         public void SetInvisible(bool invisible)

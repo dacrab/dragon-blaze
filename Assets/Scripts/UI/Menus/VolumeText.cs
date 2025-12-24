@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Core.Constants;
 using Core.Managers;
+using Core.Utilities;
 
 namespace UI.Menus
 {
@@ -12,28 +14,29 @@ namespace UI.Menus
         #endregion
 
         #region Private Fields
-        private Text txt;
+        [AutoWire(AutoWireAttribute.WireType.Self)]
+        [SerializeField] private Text txt;
         #endregion
 
         #region Unity Lifecycle Methods
         private void Awake()
         {
-            txt = GetComponent<Text>();
+            Core.Utilities.AutoWireHelper.WireAllFields(this);
         }
 
         private void OnEnable()
         {
             UpdateVolumeText(PlayerPrefs.GetFloat(volumeName, 0.5f));
             if (SoundManager.Instance == null) return;
-            if (volumeName == "musicVolume") SoundManager.Instance.OnMusicVolumeChanged += UpdateVolumeText;
-            else if (volumeName == "soundVolume") SoundManager.Instance.OnSoundVolumeChanged += UpdateVolumeText;
+            if (volumeName == GameConstants.Save.MusicVolume) SoundManager.Instance.OnMusicVolumeChanged += UpdateVolumeText;
+            else if (volumeName == GameConstants.Save.SoundVolume) SoundManager.Instance.OnSoundVolumeChanged += UpdateVolumeText;
         }
 
         private void OnDisable()
         {
             if (SoundManager.Instance == null) return;
-            if (volumeName == "musicVolume") SoundManager.Instance.OnMusicVolumeChanged -= UpdateVolumeText;
-            else if (volumeName == "soundVolume") SoundManager.Instance.OnSoundVolumeChanged -= UpdateVolumeText;
+            if (volumeName == GameConstants.Save.MusicVolume) SoundManager.Instance.OnMusicVolumeChanged -= UpdateVolumeText;
+            else if (volumeName == GameConstants.Save.SoundVolume) SoundManager.Instance.OnSoundVolumeChanged -= UpdateVolumeText;
         }
         #endregion
 
