@@ -1,4 +1,5 @@
 using UnityEngine;
+using Core.Constants;
 using Core.Managers;
 using Core.State;
 using Core.Input;
@@ -10,6 +11,7 @@ namespace Gameplay.Characters.Player
     {
         [Header("Attack")]
         [SerializeField] private float attackCooldown = 0.5f;
+        [SerializeField] private float baseDamage = 10f;
         
         [Header("Projectile")]
         [SerializeField] private Transform firePoint;
@@ -24,6 +26,7 @@ namespace Gameplay.Characters.Player
         private Animator anim;
         private PlayerController playerController;
         private float cooldownTimer;
+        private float damageMultiplier = 1f;
 
         private void Awake()
         {
@@ -67,5 +70,8 @@ namespace Gameplay.Characters.Player
                 fireball.GetComponent<ProjectileBase>()?.SetDirection(direction);
             }
         }
+
+        public float GetDamage() => baseDamage * damageMultiplier;
+        public void SetDamage(float newDamage) => damageMultiplier = newDamage / baseDamage;
     }
 }
