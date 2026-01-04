@@ -1,6 +1,5 @@
 using UnityEngine;
 using Core.Constants;
-using Core.Events;
 
 namespace Gameplay.Characters.Enemies
 {
@@ -45,7 +44,6 @@ namespace Gameplay.Characters.Enemies
             if (rb != null) rb.simulated = false;
             if (deathParticles != null) Instantiate(deathParticles, transform.position, Quaternion.identity);
             anim?.SetTrigger(GameConstants.Animation.Die);
-            EventBus.RaiseEnemyKilled();
             Destroy(gameObject, 2f);
         }
 

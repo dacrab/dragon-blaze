@@ -13,13 +13,11 @@ namespace Core.Managers
         protected override void OnInitialize()
         {
             LoadGame();
-            EventBus.OnGameStarted += HandleGameStarted;
             EventBus.OnLevelCompleted += HandleLevelCompleted;
         }
 
         protected override void OnShutdown()
         {
-            EventBus.OnGameStarted -= HandleGameStarted;
             EventBus.OnLevelCompleted -= HandleLevelCompleted;
         }
 
@@ -81,7 +79,6 @@ namespace Core.Managers
             ResetCoins();
         }
 
-        private void HandleGameStarted() { }
         private void HandleLevelCompleted() => SaveGame();
     }
 }

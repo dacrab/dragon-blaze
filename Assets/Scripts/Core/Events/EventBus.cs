@@ -29,8 +29,7 @@ namespace Core.Events
         // Health Events
         public static event Action<float, float> OnHealthChanged;
 
-        // Combat Events
-        public static event Action OnEnemyKilled;
+
 
         // Raise Methods
         public static void RaiseScoreChanged(int score) => OnScoreChanged?.Invoke(score);
@@ -44,7 +43,6 @@ namespace Core.Events
         public static void RaiseGameStateChanged(GameState state) => OnGameStateChanged?.Invoke(state);
         public static void RaiseDialogueStateChanged(bool open) => OnDialogueStateChanged?.Invoke(open);
         public static void RaiseHealthChanged(float current, float max) => OnHealthChanged?.Invoke(current, max);
-        public static void RaiseEnemyKilled() => OnEnemyKilled?.Invoke();
 
         public static void ClearAll()
         {
@@ -59,7 +57,6 @@ namespace Core.Events
             OnGameStateChanged = null;
             OnDialogueStateChanged = null;
             OnHealthChanged = null;
-            OnEnemyKilled = null;
         }
     }
 }

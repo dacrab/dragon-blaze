@@ -7,31 +7,26 @@ namespace Gameplay.Items.PowerUps
 {
     public abstract class PowerUpBase : MonoBehaviour
     {
-        [Header("Settings")]
         [SerializeField] protected float duration = 5f;
-        
-        [Header("Visual")]
         [SerializeField] protected float fadeOutDuration = 0.5f;
         [SerializeField] protected float fadeInDuration = 0.5f;
 
         protected Coroutine powerUpCoroutine;
         protected SpriteRenderer spriteRenderer;
         protected Collider2D powerUpCollider;
-        protected PowerUpIndicatorManager indicatorManager;
         protected bool isActive;
 
         protected virtual void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             powerUpCollider = GetComponent<Collider2D>();
-            indicatorManager = FindFirstObjectByType<PowerUpIndicatorManager>();
         }
 
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
             var playerPowerups = collision.GetComponent<PlayerPowerups>();
-            if (playerPowerups == null || (isActive)) return;
+            if (playerPowerups == null || isActive) return;
 
             ActivatePowerUp(playerPowerups);
             if (powerUpCoroutine != null) StopCoroutine(powerUpCoroutine);
@@ -43,7 +38,8 @@ namespace Gameplay.Items.PowerUps
         protected abstract void ActivatePowerUp(PlayerPowerups playerPowerups);
         protected abstract void DeactivatePowerUp(PlayerPowerups playerPowerups);
 
-        protected void ActivateIndicator(string name, Sprite image) => indicatorManager?.ActivateIndicator(name, image, duration);
+        protected void ActivateIndicator(string name, Sprite image) => 
+            PowerUpIndicatorManager.Instance?.ActivateIndicator(name, image, duration);
 
         protected IEnumerator FadeSprite()
         {

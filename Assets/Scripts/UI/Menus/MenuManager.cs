@@ -2,52 +2,41 @@ using UnityEngine;
 using Core.Managers;
 using Core.Input;
 using Core.Constants;
-using UI.Managers;
 
 namespace UI.Menus
 {
     public class MenuManager : MonoBehaviour
     {
-        #region Serialized Fields
         [SerializeField] private RectTransform arrow;
         [SerializeField] private RectTransform[] buttons;
         [SerializeField] private AudioClip changeSound;
         [SerializeField] private AudioClip interactSound;
         [SerializeField] private InputReader inputReader;
-        #endregion
 
-        #region Private Fields
         private int currentPosition;
-        #endregion
 
-        #region Unity Lifecycle Methods
         private void Awake()
         {
             ChangePosition(0);
-            ShowCursor();
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         private void OnEnable()
         {
-            if (inputReader != null)
-            {
-                inputReader.NavigateEvent += OnNavigate;
-                inputReader.SubmitEvent += Interact;
-                inputReader.EnableUIInput();
-            }
+            if (inputReader == null) return;
+            inputReader.NavigateEvent += OnNavigate;
+            inputReader.SubmitEvent += Interact;
+            inputReader.EnableUIInput();
         }
 
         private void OnDisable()
         {
-            if (inputReader != null)
-            {
-                inputReader.NavigateEvent -= OnNavigate;
-                inputReader.SubmitEvent -= Interact;
-            }
+            if (inputReader == null) return;
+            inputReader.NavigateEvent -= OnNavigate;
+            inputReader.SubmitEvent -= Interact;
         }
-        #endregion
 
-        #region Public Methods
         public void ChangePosition(int change)
         {
             currentPosition += change;
@@ -57,14 +46,6 @@ namespace UI.Menus
         }
 
         public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance.GetLastSavedLevelIndex());
-        #endregion
-
-        #region Private Methods
-        private void ShowCursor()
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
 
         private void OnNavigate(Vector2 direction)
         {
@@ -83,6 +64,5 @@ namespace UI.Menus
             }
             else if (currentPosition == 1) Application.Quit();
         }
-        #endregion
     }
 }

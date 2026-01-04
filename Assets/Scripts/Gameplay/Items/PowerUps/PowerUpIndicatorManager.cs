@@ -3,18 +3,18 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Core.Managers;
 
 namespace Gameplay.Items.PowerUps
 {
-    public class PowerUpIndicatorManager : MonoBehaviour
+    public class PowerUpIndicatorManager : SingletonManager<PowerUpIndicatorManager>
     {
-        [Header("References")]
-        public GameObject indicatorPrefab;
-        public Transform indicatorsPanel;
+        [SerializeField] private GameObject indicatorPrefab;
+        [SerializeField] private Transform indicatorsPanel;
 
         private const int GAP = 10;
         private const float MAX_WIDTH = 200f;
-        private List<GameObject> activeIndicators = new List<GameObject>();
+        private readonly List<GameObject> activeIndicators = new();
 
         public void ActivateIndicator(string powerUpName, Sprite powerUpImage, float duration)
         {
@@ -38,9 +38,7 @@ namespace Gameplay.Items.PowerUps
                 img.color = new Color(img.color.r, img.color.g, img.color.b, 0.5f);
             }
 
-            var text = newIndicator.GetComponentInChildren<TMP_Text>();
-            text?.SetText($"<b><size=120%>{powerUpName}</size></b>");
-
+            newIndicator.GetComponentInChildren<TMP_Text>()?.SetText($"<b><size=120%>{powerUpName}</size></b>");
             StartCoroutine(UpdateIndicator(newIndicator, duration, img));
             activeIndicators.Add(newIndicator);
             UpdatePositions();
