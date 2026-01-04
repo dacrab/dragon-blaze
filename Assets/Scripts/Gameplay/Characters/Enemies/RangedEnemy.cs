@@ -46,7 +46,7 @@ namespace Gameplay.Characters.Enemies
                 if (cooldownTimer >= attackCooldown)
                 {
                     cooldownTimer = 0f;
-                    anim?.SetTrigger("rangedAttack");
+                    anim?.SetTrigger(GameConstants.Animation.RangedAttack);
                 }
                 if (enemyPatrol != null) enemyPatrol.enabled = false;
             }

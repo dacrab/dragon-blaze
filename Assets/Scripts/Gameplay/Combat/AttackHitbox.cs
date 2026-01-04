@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Core.Constants;
 
 namespace Gameplay.Combat
 {
@@ -13,7 +14,7 @@ namespace Gameplay.Combat
 
         [Header("Target")]
         [SerializeField] private LayerMask targetLayers;
-        [SerializeField] private string[] targetTags = { "Enemy" };
+        [SerializeField] private string[] targetTags = { GameConstants.Tags.Enemy };
 
         [Header("Effects")]
         [SerializeField] private GameObject hitEffectPrefab;

@@ -50,7 +50,7 @@ namespace Gameplay.Characters.Player
             if (!GameStateManager.Instance.IsPlaying) return;
 
             SoundManager.Instance?.PlaySound(fireballSound);
-            anim?.SetTrigger("attack");
+            anim?.SetTrigger(GameConstants.Animation.Attack);
             cooldownTimer = 0f;
             SpawnProjectile();
         }

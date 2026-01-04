@@ -53,11 +53,11 @@ namespace Environment.Traps
             SoundManager.Instance?.PlaySound(firetrapSound);
             spriteRend.color = Color.white;
             active = true;
-            anim.SetBool("activated", true);
+            anim.SetBool(GameConstants.Animation.Activated, true);
             yield return new WaitForSeconds(activeTime);
             active = false;
             triggered = false;
-            anim.SetBool("activated", false);
+            anim.SetBool(GameConstants.Animation.Activated, false);
         }
     }
 }

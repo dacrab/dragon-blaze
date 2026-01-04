@@ -78,7 +78,7 @@ namespace Gameplay.Health
 
         private void HandleDamage()
         {
-            anim?.SetTrigger("hurt");
+            anim?.SetTrigger(GameConstants.Animation.Hurt);
             StartCoroutine(Invulnerability());
             SoundManager.Instance?.PlaySound(hurtSound);
             if (hitParticlesPrefab != null) Instantiate(hitParticlesPrefab, transform.position, Quaternion.identity);
@@ -98,8 +98,8 @@ namespace Gameplay.Health
         private IEnumerator Invulnerability()
         {
             invulnerable = true;
-            int playerLayer = LayerMask.NameToLayer("Player");
-            int enemyLayer = LayerMask.NameToLayer("Enemy");
+            int playerLayer = LayerMask.NameToLayer(GameConstants.Layers.Player);
+            int enemyLayer = LayerMask.NameToLayer(GameConstants.Layers.Enemy);
             if (playerLayer >= 0 && enemyLayer >= 0)
                 Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
 

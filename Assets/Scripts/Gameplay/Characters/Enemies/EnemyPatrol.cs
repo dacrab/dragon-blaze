@@ -1,4 +1,5 @@
 using UnityEngine;
+using Core.Constants;
 
 namespace Gameplay.Characters.Enemies
 {
@@ -19,7 +20,7 @@ namespace Gameplay.Characters.Enemies
         private float idleTimer;
 
         private void Awake() => initScale = enemy.localScale;
-        private void OnDisable() => anim?.SetBool("moving", false);
+        private void OnDisable() => anim?.SetBool(GameConstants.Animation.Moving, false);
 
         private void Update()
         {
@@ -29,13 +30,13 @@ namespace Gameplay.Characters.Enemies
             if ((movingLeft && enemy.position.x >= targetX) || (!movingLeft && enemy.position.x <= targetX))
             {
                 idleTimer = 0;
-                anim.SetBool("moving", true);
+                anim.SetBool(GameConstants.Animation.Moving, true);
                 enemy.localScale = new Vector3(Mathf.Abs(initScale.x) * direction, initScale.y, initScale.z);
                 enemy.position = new Vector3(enemy.position.x + Time.deltaTime * direction * speed, enemy.position.y, enemy.position.z);
             }
             else
             {
-                anim.SetBool("moving", false);
+                anim.SetBool(GameConstants.Animation.Moving, false);
                 idleTimer += Time.deltaTime;
                 if (idleTimer > idleDuration) { movingLeft = !movingLeft; idleTimer = 0; }
             }

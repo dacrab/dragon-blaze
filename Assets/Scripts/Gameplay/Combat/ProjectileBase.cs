@@ -57,7 +57,7 @@ namespace Gameplay.Combat
             }
             SoundManager.Instance?.PlaySound(hitSound);
             
-            if (anim != null) anim.SetTrigger("explode");
+            if (anim != null) anim.SetTrigger(Core.Constants.GameConstants.Animation.Explode);
             else Deactivate();
         }
 

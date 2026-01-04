@@ -71,7 +71,7 @@ namespace Gameplay.Characters.Enemies
             if (box == null) return true;
             Vector2 direction = transform.right * transform.localScale.x;
             Vector2 checkPos = (Vector2)transform.position + (direction * box.size.x);
-            return Physics2D.OverlapBox(checkPos, box.size, 0, LayerMask.GetMask("Default")) == null;
+            return Physics2D.OverlapBox(checkPos, box.size, 0, LayerMask.GetMask(Core.Constants.GameConstants.Layers.Default)) == null;
         }
 
         private void FollowPlayer()

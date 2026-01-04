@@ -26,7 +26,7 @@ namespace Gameplay.Characters.Player
             currentCheckpoint = collision.transform;
             SoundManager.Instance?.PlaySound(checkpoint);
             collision.enabled = false;
-            collision.GetComponent<Animator>()?.SetTrigger("activate");
+            collision.GetComponent<Animator>()?.SetTrigger(GameConstants.Animation.Activate);
         }
 
         public void RespawnCheck()

@@ -16,8 +16,20 @@ namespace Core.Constants
             public const string Die = "die";
             public const string Respawn = "respawn";
             public const string MeleeAttack = "meleeAttack";
+            public const string RangedAttack = "rangedAttack";
+            public const string Attack = "attack";
             public const string Moving = "moving";
             public const string Hurt = "hurt";
+            public const string Activated = "activated";
+            public const string Activate = "activate";
+            public const string Explode = "explode";
+        }
+
+        public static class Layers
+        {
+            public const string Player = "Player";
+            public const string Enemy = "Enemy";
+            public const string Default = "Default";
         }
 
         public static class Scenes
