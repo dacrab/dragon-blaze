@@ -1,7 +1,6 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Events;
-using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
@@ -15,18 +14,17 @@ namespace Gameplay.Characters.Player
         [SerializeField] private GameObject deathParticlesPrefab;
         
         [Header("Renderer")]
-        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Color invisibleColor = new Color(1f, 1f, 1f, 0.5f);
 
-        [AutoWire(AutoWireAttribute.WireType.Self)]
-        [SerializeField] private Animator anim;
-        [AutoWire(AutoWireAttribute.WireType.Self)]
-        [SerializeField] private PlayerLocomotion locomotion;
+        private Animator anim;
+        private PlayerLocomotion locomotion;
 
         private void Awake()
         {
-            AutoWireHelper.WireAllFields(this);
+            anim = GetComponent<Animator>();
+            locomotion = GetComponent<PlayerLocomotion>();
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
         private void OnEnable()
@@ -43,18 +41,9 @@ namespace Gameplay.Characters.Player
 
         private void Update()
         {
-            UpdateAnimations();
-            UpdateParticles();
-        }
-
-        private void UpdateAnimations()
-        {
             anim.SetBool(GameConstants.Animation.Grounded, locomotion.IsGrounded);
             anim.SetBool(GameConstants.Animation.Run, locomotion.IsMoving);
-        }
 
-        private void UpdateParticles()
-        {
             if (wallSlideParticles == null) return;
             if (locomotion.IsWallSliding && !wallSlideParticles.isPlaying) wallSlideParticles.Play();
             else if (!locomotion.IsWallSliding && wallSlideParticles.isPlaying) wallSlideParticles.Stop();
@@ -62,22 +51,20 @@ namespace Gameplay.Characters.Player
 
         public void PlayJumpEffect()
         {
-            if (jumpParticlesPrefab != null) 
-                Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
+            if (jumpParticlesPrefab != null) Instantiate(jumpParticlesPrefab, transform.position, Quaternion.identity);
         }
         
         public void PlayDashEffect()
         {
-            if (dashParticlesPrefab != null)
-                Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
+            if (dashParticlesPrefab != null) Instantiate(dashParticlesPrefab, transform.position, Quaternion.identity);
         }
         
         public void PlayDeathEffect()
         {
-            if (deathParticlesPrefab != null) 
-                Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
+            if (deathParticlesPrefab != null) Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
             anim.SetTrigger(GameConstants.Animation.Die);
         }
+
         public void PlayRespawnEffect() => anim.SetTrigger(GameConstants.Animation.Respawn);
         public void SetInvisibility(bool isInvisible) => spriteRenderer.color = isInvisible ? invisibleColor : Color.white;
     }

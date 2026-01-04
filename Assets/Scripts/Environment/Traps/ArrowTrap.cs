@@ -1,14 +1,14 @@
 using UnityEngine;
 using Core.Managers;
 using Core.Constants;
-using Core.Utilities;
+using Core.State;
 using Gameplay.Combat;
 
 namespace Environment.Traps
 {
     public class ArrowTrap : TrapBase
     {
-        [SerializeField] private float attackCooldown = CombatConstants.DefaultAttackCooldown;
+        [SerializeField] private float attackCooldown = 1f;
         [SerializeField] private Transform firePoint;
         [SerializeField] private GameObject[] arrows;
         [SerializeField] private AudioClip arrowSound;
@@ -16,10 +16,18 @@ namespace Environment.Traps
 
         private float cooldownTimer;
         private EnemyProjectile[] cachedProjectiles;
+        private Transform playerTransform;
+        private Gameplay.Characters.Player.PlayerController playerController;
 
         private void Awake()
         {
             CacheProjectiles();
+            var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (player != null)
+            {
+                playerTransform = player.transform;
+                playerController = player.GetComponent<Gameplay.Characters.Player.PlayerController>();
+            }
         }
 
         private void CacheProjectiles()
@@ -27,15 +35,13 @@ namespace Environment.Traps
             if (arrows == null || arrows.Length == 0) return;
             cachedProjectiles = new EnemyProjectile[arrows.Length];
             for (int i = 0; i < arrows.Length; i++)
-            {
                 if (arrows[i] != null)
                     cachedProjectiles[i] = arrows[i].GetComponent<EnemyProjectile>();
-            }
         }
 
         private void Update()
         {
-            if (!GameStateHelpers.IsPlaying) return;
+            if (!GameStateManager.Instance.IsPlaying) return;
             
             cooldownTimer += Time.deltaTime;
             if (cooldownTimer >= attackCooldown && PlayerIsVisible()) Attack();
@@ -47,19 +53,16 @@ namespace Environment.Traps
         {
             cooldownTimer = 0;
             
-            if (PlayerReference.IsValid 
-                && Vector3.Distance(transform.position, PlayerReference.Transform.position) <= soundRange)
+            if (playerTransform != null && Vector3.Distance(transform.position, playerTransform.position) <= soundRange)
                 SoundManager.Instance?.PlaySound(arrowSound);
 
-            int arrowIndex = System.Array.FindIndex(arrows, a => !a.activeInHierarchy);
-            if (arrowIndex < 0) arrowIndex = 0;
+            int idx = System.Array.FindIndex(arrows, a => !a.activeInHierarchy);
+            if (idx < 0) idx = 0;
             
-            arrows[arrowIndex].transform.position = firePoint.position;
-            cachedProjectiles[arrowIndex]?.ActivateProjectile();
+            arrows[idx].transform.position = firePoint.position;
+            cachedProjectiles[idx]?.ActivateProjectile();
         }
 
-        private bool PlayerIsVisible() => PlayerReference.IsValid 
-            && PlayerReference.Controller != null 
-            && !PlayerReference.Controller.IsInvisible();
+        private bool PlayerIsVisible() => playerController != null && !playerController.IsInvisible();
     }
 }

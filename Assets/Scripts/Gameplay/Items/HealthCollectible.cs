@@ -1,7 +1,6 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
-using Core.Utilities;
 
 namespace Gameplay.Items
 {
@@ -15,7 +14,8 @@ namespace Gameplay.Items
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            if (collision.TryGetHealth(out var health)) health.AddHealth(healthValue);
+            var health = collision.GetComponent<Gameplay.Health.Health>();
+            health?.AddHealth(healthValue);
             Collect();
         }
 

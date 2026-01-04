@@ -3,12 +3,8 @@ using Gameplay.Characters.Player;
 
 namespace Gameplay.Items.PowerUps
 {
-    /// <summary>
-    /// Speed boost power-up that temporarily increases player movement speed.
-    /// </summary>
     public class SpeedBoost : PowerUpBase
     {
-        [Header("Speed Boost Settings")]
         [SerializeField] private Sprite speedBoostImage;
         [SerializeField] private float speedMultiplier = 2f;
 

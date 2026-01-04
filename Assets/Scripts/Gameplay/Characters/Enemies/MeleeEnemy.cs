@@ -1,154 +1,89 @@
 using UnityEngine;
-using Core.Combat;
-using Core.Interfaces;
-using Core.Constants;
-using Core.Utilities;
-using Gameplay.Characters.Player;
+using Core.State;
 
 namespace Gameplay.Characters.Enemies
 {
     public class MeleeEnemy : EnemyBase
     {
-        [Header("Attack Parameters")]
-        [SerializeField] private float attackCooldownDuration = CombatConstants.DefaultAttackCooldown;
+        [Header("Attack")]
+        [SerializeField] private float attackCooldown = 1f;
         [SerializeField] private float range = 1f;
-        [SerializeField] private float attackRangeBuffer = CombatConstants.AttackRangeBuffer;
 
-        [Header("AI Parameters")]
+        [Header("AI")]
         [SerializeField] private float chaseSpeed = 3.0f;
 
-        [Header("Player Detection")]
-        [SerializeField] private LayerMask playerLayer;
-
-        private CooldownTimer attackCooldown;
+        private float cooldownTimer;
         private Transform playerTransform;
-        [AutoWire(AutoWireAttribute.WireType.Parent, required: false)]
-        [SerializeField] private EnemyPatrol enemyPatrol;
-        private PlayerController playerController;
+        private EnemyPatrol enemyPatrol;
+        private Gameplay.Characters.Player.PlayerController playerController;
 
         protected override void Awake()
         {
             base.Awake();
-            AutoWireHelper.WireAllFields(this);
-            attackCooldown = new CooldownTimer(attackCooldownDuration);
-            InitializeComponents();
+            enemyPatrol = GetComponentInParent<EnemyPatrol>();
+            var player = GameObject.FindGameObjectWithTag(Core.Constants.GameConstants.Tags.Player);
+            if (player != null)
+            {
+                playerTransform = player.transform;
+                playerController = player.GetComponent<Gameplay.Characters.Player.PlayerController>();
+            }
         }
 
         private void Update()
         {
-            if (isDead || !GameStateHelpers.IsPlaying) return;
-            if (!ValidateComponents()) return;
+            if (isDead || !GameStateManager.Instance.IsPlaying) return;
+            if (playerController == null || playerTransform == null) return;
 
-            attackCooldown.Update();
+            cooldownTimer += Time.deltaTime;
 
             if (PlayerInSight() && PlayerWithinPatrolBounds())
             {
-                HandlePlayerDetected();
+                if (enemyPatrol != null) enemyPatrol.enabled = false;
+                if (CanMoveForward()) FollowPlayer();
+                if (cooldownTimer >= attackCooldown) Attack();
             }
-            else
-            {
-                if (enemyPatrol != null) enemyPatrol.enabled = true;
-            }
-        }
-
-        private void InitializeComponents()
-        {
-            // enemyPatrol is auto-wired via [AutoWire]
-            if (PlayerReference.IsValid)
-            {
-                playerTransform = PlayerReference.Transform;
-                playerController = PlayerReference.Controller;
-            }
-        }
-
-        private bool ValidateComponents()
-        {
-            return playerController != null && playerTransform != null;
-        }
-
-        private void HandlePlayerDetected()
-        {
-            if (enemyPatrol != null) enemyPatrol.enabled = false;
-            
-            if (CanMoveForward())
-            {
-                FollowPlayer();
-            }
-
-            if (attackCooldown.IsReady)
-            {
-                Attack();
-            }
+            else if (enemyPatrol != null) enemyPatrol.enabled = true;
         }
 
         private void Attack()
         {
-            attackCooldown.Reset();
-            anim.SetTrigger(GameConstants.Animation.MeleeAttack);
-            DamagePlayer();
+            cooldownTimer = 0f;
+            anim.SetTrigger(Core.Constants.GameConstants.Animation.MeleeAttack);
+            if (Vector3.Distance(transform.position, playerTransform.position) <= range + 1f)
+            {
+                var health = playerTransform.GetComponent<Gameplay.Health.Health>();
+                health?.TakeDamage(damage);
+            }
         }
 
-        private bool PlayerInSight()
-        {
-            return playerController != null && !playerController.IsInvisible();
-        }
+        private bool PlayerInSight() => playerController != null && !playerController.IsInvisible();
 
         private bool PlayerWithinPatrolBounds()
         {
-            if (enemyPatrol == null || enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null)
-                return true;
-
+            if (enemyPatrol == null || enemyPatrol.LeftEdge == null || enemyPatrol.RightEdge == null) return true;
             return playerTransform.position.x >= enemyPatrol.LeftEdge.position.x &&
                    playerTransform.position.x <= enemyPatrol.RightEdge.position.x;
         }
 
         private bool CanMoveForward()
         {
-            BoxCollider2D box = col as BoxCollider2D;
+            var box = col as BoxCollider2D;
             if (box == null) return true;
-
             Vector2 direction = transform.right * transform.localScale.x;
-            Vector2 checkPosition = (Vector2)transform.position + (direction * box.size.x);
-
-            Collider2D hit = Physics2D.OverlapBox(checkPosition, box.size, 0, LayerConstants.GetMask(LayerConstants.DefaultLayer)); 
-            return hit == null;
+            Vector2 checkPos = (Vector2)transform.position + (direction * box.size.x);
+            return Physics2D.OverlapBox(checkPos, box.size, 0, LayerMask.GetMask("Default")) == null;
         }
 
         private void FollowPlayer()
         {
-            Vector3 direction = (playerTransform.position - transform.position).normalized;
-            float proposedXPosition = transform.position.x + direction.x * chaseSpeed * Time.deltaTime;
+            Vector3 dir = (playerTransform.position - transform.position).normalized;
+            float proposedX = transform.position.x + dir.x * chaseSpeed * Time.deltaTime;
 
-            if (PlayerWithinPatrolBounds())
+            if (enemyPatrol == null || (proposedX >= enemyPatrol.LeftEdge.position.x && proposedX <= enemyPatrol.RightEdge.position.x))
             {
-                if (enemyPatrol == null || (proposedXPosition >= enemyPatrol.LeftEdge.position.x && proposedXPosition <= enemyPatrol.RightEdge.position.x))
-                {
-                    MoveTowardsPlayer(proposedXPosition, direction);
-                }
-            }
-        }
-
-        private void MoveTowardsPlayer(float proposedXPosition, Vector3 direction)
-        {
-            transform.position = new Vector3(proposedXPosition, transform.position.y, transform.position.z);
-            anim.SetBool(GameConstants.Animation.Moving, true);
-
-            if (direction.x > 0)
-                transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-            else if (direction.x < 0)
-                transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-        }
-
-        private void DamagePlayer()
-        {
-            if (Vector3.Distance(transform.position, playerTransform.position) <= range + attackRangeBuffer)
-            {
-                var damageInfo = DamageInfo.Physical(damage, gameObject);
-                
-                if (playerTransform.TryGetComponent<IDamageable>(out var damageable))
-                    damageable.TakeDamage(damageInfo);
-                else if (playerTransform.TryGetHealth(out var health))
-                    health.TakeDamage(damage);
+                transform.position = new Vector3(proposedX, transform.position.y, transform.position.z);
+                anim.SetBool(Core.Constants.GameConstants.Animation.Moving, true);
+                transform.localScale = new Vector3(dir.x > 0 ? Mathf.Abs(transform.localScale.x) : -Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
             }
         }
     }

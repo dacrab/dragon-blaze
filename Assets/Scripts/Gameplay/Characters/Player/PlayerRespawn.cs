@@ -1,8 +1,6 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
-using Core.Services;
-using Core.Utilities;
 using UI.Managers;
 
 namespace Gameplay.Characters.Player
@@ -13,13 +11,12 @@ namespace Gameplay.Characters.Player
         
         private Transform currentCheckpoint;
         private Gameplay.Health.Health playerHealth;
-        [AutoWire(AutoWireAttribute.WireType.Service, required: false)]
-        [SerializeField] private UIManager uiManager;
+        private UIManager uiManager;
 
         private void Awake()
         {
-            AutoWireHelper.WireAllFields(this);
-            playerHealth = this.GetHealth();
+            playerHealth = GetComponent<Gameplay.Health.Health>();
+            uiManager = FindFirstObjectByType<UIManager>();
         }
 
         private void OnTriggerEnter2D(Collider2D collision)

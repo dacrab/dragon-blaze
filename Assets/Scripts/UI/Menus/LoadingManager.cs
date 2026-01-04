@@ -1,17 +1,13 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Core.Services;
-using Core.Utilities;
 using UI.Managers;
 
 namespace UI.Menus
 {
     public class LoadingManager : MonoBehaviour
     {
-        #region Singleton
         private static LoadingManager instance;
-
         public static LoadingManager Instance
         {
             get
@@ -21,14 +17,15 @@ namespace UI.Menus
                     instance = FindFirstObjectByType<LoadingManager>();
                     if (instance == null)
                     {
-                        GameObject obj = new GameObject();
-                        obj.name = typeof(LoadingManager).Name;
+                        var obj = new GameObject(nameof(LoadingManager));
                         instance = obj.AddComponent<LoadingManager>();
                     }
                 }
                 return instance;
             }
         }
+
+        private UIManager uiManager;
 
         private void Awake()
         {
@@ -40,63 +37,50 @@ namespace UI.Menus
             else if (instance != this)
             {
                 Destroy(gameObject);
+                return;
             }
-            
-            AutoWireHelper.WireAllFields(this);
+            uiManager = FindFirstObjectByType<UIManager>();
         }
-        #endregion
 
-        #region Serialized Fields
-        [Header("Scene Loading Settings")]
-        [AutoWire(AutoWireAttribute.WireType.Scene)]
-        [SerializeField] private UIManager uiManager;
-        #endregion
-
-        #region Public Methods
         public static void LoadNextLevel()
         {
-            int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
-            Instance.StartCoroutine(Instance.LoadLevel(nextSceneIndex));
+            int next = SceneManager.GetActiveScene().buildIndex + 1;
+            Instance.StartCoroutine(Instance.LoadLevel(next));
         }
 
         public static void LoadSpecificLevel(int levelIndex)
         {
             Instance.StartCoroutine(Instance.LoadLevel(levelIndex));
         }
-        #endregion
 
-        #region Private Methods
         private IEnumerator LoadLevel(int levelIndex)
         {
-            if (uiManager) uiManager.ShowLoadingScreen(true);
+            if (uiManager == null) uiManager = FindFirstObjectByType<UIManager>();
+            uiManager?.ShowLoadingScreen(true);
 
-            AsyncOperation operation = SceneManager.LoadSceneAsync(levelIndex);
-            if (operation == null)
+            var op = SceneManager.LoadSceneAsync(levelIndex);
+            if (op == null)
             {
-                Debug.LogError($"Scene index {levelIndex} could not be loaded.");
-                if (uiManager) uiManager.ShowLoadingScreen(false);
+                uiManager?.ShowLoadingScreen(false);
                 yield break;
             }
             
-            operation.allowSceneActivation = false;
+            op.allowSceneActivation = false;
 
-            while (!operation.isDone)
+            while (!op.isDone)
             {
-                float progress = Mathf.Clamp01(operation.progress / 0.9f);
-                if (uiManager) uiManager.UpdateLoadingImage(progress);
+                float progress = Mathf.Clamp01(op.progress / 0.9f);
+                uiManager?.UpdateLoadingImage(progress);
 
-                if (operation.progress >= 0.9f)
+                if (op.progress >= 0.9f)
                 {
                     yield return new WaitForSeconds(0.5f);
-                    operation.allowSceneActivation = true;
+                    op.allowSceneActivation = true;
                 }
-
                 yield return null;
             }
 
-            if (uiManager) uiManager.ShowLoadingScreen(false);
+            uiManager?.ShowLoadingScreen(false);
         }
-
-        #endregion
     }
 }

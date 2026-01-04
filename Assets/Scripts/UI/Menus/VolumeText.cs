@@ -2,26 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using Core.Constants;
 using Core.Managers;
-using Core.Utilities;
 
 namespace UI.Menus
 {
     public class VolumeText : MonoBehaviour
     {
-        #region Serialized Fields
-        [SerializeField] private string volumeName; // "musicVolume" or "soundVolume"
-        [SerializeField] private string textIntro; // "Sound: " or "Music: "
-        #endregion
+        [SerializeField] private string volumeName;
+        [SerializeField] private string textIntro;
+        private Text txt;
 
-        #region Private Fields
-        [AutoWire(AutoWireAttribute.WireType.Self)]
-        [SerializeField] private Text txt;
-        #endregion
-
-        #region Unity Lifecycle Methods
         private void Awake()
         {
-            Core.Utilities.AutoWireHelper.WireAllFields(this);
+            txt = GetComponent<Text>();
         }
 
         private void OnEnable()
@@ -38,14 +30,10 @@ namespace UI.Menus
             if (volumeName == GameConstants.Save.MusicVolume) SoundManager.Instance.OnMusicVolumeChanged -= UpdateVolumeText;
             else if (volumeName == GameConstants.Save.SoundVolume) SoundManager.Instance.OnSoundVolumeChanged -= UpdateVolumeText;
         }
-        #endregion
 
-        #region Private Methods
-        private void UpdateVolumeText(float volumeValue)
+        private void UpdateVolumeText(float value)
         {
-            if (txt != null)
-                txt.text = $"{textIntro}{(volumeValue * 100):F0}";
+            if (txt != null) txt.text = $"{textIntro}{(value * 100):F0}";
         }
-        #endregion
     }
 }

@@ -1,6 +1,5 @@
 using UnityEngine;
 using Core.Constants;
-using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
@@ -10,7 +9,6 @@ namespace Gameplay.Characters.Player
         [Header("Configuration")]
         [SerializeField] private PlayerConfigSO config;
 
-        // Local runtime overrides (initialized from config)
         private float speed;
         private float jumpPower;
         private float wallSlideSpeed;
@@ -21,25 +19,24 @@ namespace Gameplay.Characters.Player
         private LayerMask groundLayer;
         private float extraHeight;
 
-        [AutoWire(AutoWireAttribute.WireType.Self)]
-        [SerializeField] private Rigidbody2D body;
-        [AutoWire(AutoWireAttribute.WireType.Self)]
-        [SerializeField] private BoxCollider2D boxCollider;
+        private Rigidbody2D body;
+        private BoxCollider2D boxCollider;
         private float horizontalInput;
         private bool isFacingRight = true;
         private bool isDashing;
         private bool isWallSliding;
         private float wallJumpCounter;
 
-        // Properties for other components
         public bool IsGrounded { get; private set; }
         public bool IsWallSliding => isWallSliding;
         public bool IsMoving => Mathf.Abs(body.linearVelocity.x) > 0.1f;
-        public Vector2 Velocity => body.linearVelocity;
+        public int ExtraJumps => config != null ? config.extraJumps : 2;
+        public float CoyoteTime => config != null ? config.coyoteTime : 0.2f;
 
         private void Awake()
         {
-            Core.Utilities.AutoWireHelper.WireAllFields(this);
+            body = GetComponent<Rigidbody2D>();
+            boxCollider = GetComponent<BoxCollider2D>();
             InitializeConfig();
         }
 
@@ -59,15 +56,9 @@ namespace Gameplay.Characters.Player
             }
             else
             {
-                Debug.LogWarning("PlayerConfigSO missing on PlayerLocomotion. Using fallback defaults.");
-                speed = 10f;
-                jumpPower = 15f;
-                wallSlideSpeed = 0.3f;
-                wallJumpForce = 15f;
-                wallJumpTime = 0.2f;
-                dashSpeed = 20f;
-                dashDuration = 0.2f;
-                extraHeight = 0.1f;
+                speed = 10f; jumpPower = 15f; wallSlideSpeed = 0.3f;
+                wallJumpForce = 15f; wallJumpTime = 0.2f;
+                dashSpeed = 20f; dashDuration = 0.2f; extraHeight = 0.1f;
             }
         }
 
@@ -90,38 +81,32 @@ namespace Gameplay.Characters.Player
 
         public void Jump(bool isCoyoteAllowed, int jumpCount)
         {
-            if (IsGrounded || isCoyoteAllowed || jumpCount > 0) ApplyJumpForce(Vector2.up * jumpPower);
-            else if (isWallSliding) PerformWallJump();
+            if (IsGrounded || isCoyoteAllowed || jumpCount > 0)
+                body.linearVelocity = new Vector2(body.linearVelocity.x, jumpPower);
+            else if (isWallSliding)
+                PerformWallJump();
         }
 
         public void CancelJump()
         {
-            if (body.linearVelocity.y > 0) body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f);
+            if (body.linearVelocity.y > 0)
+                body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f);
         }
 
         public void Dash()
         {
             if (!isDashing && Mathf.Abs(horizontalInput) > 0.01f)
-            {
                 StartCoroutine(DashCoroutine());
-            }
         }
 
         private System.Collections.IEnumerator DashCoroutine()
         {
             isDashing = true;
-            float originalSpeed = speed;
-            speed = dashSpeed;
-            
-            // Preserve vertical velocity or zero it? Original code didn't specify but usually dash overrides gravity
             float originalGravity = body.gravityScale;
             body.gravityScale = 0f;
             body.linearVelocity = new Vector2(transform.localScale.x * dashSpeed, 0f);
-
             yield return new WaitForSeconds(dashDuration);
-
             body.gravityScale = originalGravity;
-            speed = originalSpeed;
             isDashing = false;
         }
 
@@ -135,12 +120,6 @@ namespace Gameplay.Characters.Player
             Flip();
         }
 
-        private void ApplyJumpForce(Vector2 force)
-        {
-            body.linearVelocity = new Vector2(body.linearVelocity.x, 0);
-            body.linearVelocity += force;
-        }
-
         private void Flip()
         {
             isFacingRight = !isFacingRight;
@@ -151,42 +130,23 @@ namespace Gameplay.Characters.Player
 
         private void CheckGrounded()
         {
-            RaycastHit2D raycastHit = Physics2D.BoxCast(
-                boxCollider.bounds.center, 
-                boxCollider.bounds.size, 
-                0f, 
-                Vector2.down, 
-                extraHeight, 
-                groundLayer
-            );
-            IsGrounded = raycastHit.collider != null;
+            RaycastHit2D hit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0f, Vector2.down, extraHeight, groundLayer);
+            IsGrounded = hit.collider != null;
         }
 
         private void CheckWallSlide()
         {
-            // Simple wall check based on original code
             float direction = transform.localScale.x;
             Vector2 start = (Vector2)transform.position + new Vector2(direction * 0.4f, 0.2f);
-            Vector2 end = start + Vector2.down * 0.8f;
-            RaycastHit2D wallHit = Physics2D.Linecast(start, end, groundLayer);
-
-            bool isTouchingWall = wallHit.collider != null;
-            isWallSliding = isTouchingWall && !IsGrounded && Mathf.Abs(horizontalInput) > 0.1f;
-
+            RaycastHit2D wallHit = Physics2D.Linecast(start, start + Vector2.down * 0.8f, groundLayer);
+            isWallSliding = wallHit.collider != null && !IsGrounded && Mathf.Abs(horizontalInput) > 0.1f;
             if (isWallSliding)
-            {
                 body.linearVelocity = new Vector2(body.linearVelocity.x, Mathf.Clamp(body.linearVelocity.y, -wallSlideSpeed, float.MaxValue));
-            }
         }
 
         public void SetSpeed(float newSpeed) => speed = newSpeed;
         public void SetJumpPower(float newPower) => jumpPower = newPower;
-        
         public float GetSpeed() => speed;
         public float GetJumpPower() => jumpPower;
-        
-        // Getter for config values if needed by Controller
-        public int ExtraJumps => config != null ? config.extraJumps : 2;
-        public float CoyoteTime => config != null ? config.coyoteTime : 0.2f;
     }
 }

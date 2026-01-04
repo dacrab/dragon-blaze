@@ -1,58 +1,41 @@
 using UnityEngine;
 using UI.Menus;
-using UI.Managers;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Constants;
 using Core.Input;
 using Core.Managers;
-using Core.Utilities;
 
 namespace Gameplay.Items
 {
     public class MagicStone : MonoBehaviour
     {
-        #region Serialized Fields
-        [AutoWire(AutoWireAttribute.WireType.Scene)]
-        [SerializeField] private UIManager uiManager;
-        
-        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private SpriteRenderer indicatorSprite;
-        
         [SerializeField] private GameObject interactParticleSystemPrefab;
         [SerializeField] private InputReader inputReader;
-        #endregion
 
-        #region Private Fields
-        private bool playerInTrigger = false;
+        private bool playerInTrigger;
         private Vector3 playerPosition;
-        private GameObject activeParticleSystemInstance = null;
-        #endregion
+        private GameObject activeParticleInstance;
 
-        #region Unity Lifecycle Methods
-        private void Awake()
+        private void Start()
         {
-            AutoWireHelper.WireAllFields(this);
+            if (indicatorSprite != null) indicatorSprite.enabled = false;
         }
-
-        private void Start() { if (indicatorSprite != null) indicatorSprite.enabled = false; }
 
         private void OnEnable()
         {
-            if (inputReader != null)
-                inputReader.InteractEvent += OnInteract;
+            if (inputReader != null) inputReader.InteractEvent += OnInteract;
         }
 
         private void OnDisable()
         {
-            if (inputReader != null)
-                inputReader.InteractEvent -= OnInteract;
+            if (inputReader != null) inputReader.InteractEvent -= OnInteract;
         }
 
         private void OnInteract()
         {
-            if (playerInTrigger)
-                StartCoroutine(PlayParticlesThenLoadLevel(playerPosition));
+            if (playerInTrigger) StartCoroutine(PlayParticlesThenLoadLevel(playerPosition));
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -75,10 +58,10 @@ namespace Gameplay.Items
         private void PlayInteractParticleSystem(Vector3 position)
         {
             if (interactParticleSystemPrefab == null) return;
-            if (activeParticleSystemInstance == null || !activeParticleSystemInstance.activeInHierarchy)
+            if (activeParticleInstance == null || !activeParticleInstance.activeInHierarchy)
             {
-                if (activeParticleSystemInstance != null) Destroy(activeParticleSystemInstance);
-                activeParticleSystemInstance = Instantiate(interactParticleSystemPrefab, position + new Vector3(0, 0, -1), Quaternion.identity);
+                if (activeParticleInstance != null) Destroy(activeParticleInstance);
+                activeParticleInstance = Instantiate(interactParticleSystemPrefab, position + new Vector3(0, 0, -1), Quaternion.identity);
             }
         }
 
@@ -99,6 +82,5 @@ namespace Gameplay.Items
                 LoadingManager.LoadNextLevel();
             }
         }
-        #endregion
     }
 }

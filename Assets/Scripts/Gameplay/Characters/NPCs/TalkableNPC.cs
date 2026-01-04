@@ -1,37 +1,25 @@
 using UnityEngine;
-using Core.Services;
-using Core.Utilities;
-using Gameplay.Interaction;
 using UI.Dialogue;
 
 namespace Gameplay.Characters.NPCs
 {
-    /// <summary>
-    /// NPC that can engage in dialogue with the player.
-    /// </summary>
-    public class TalkableNPC : NPC, ITalkable
+    public class TalkableNPC : NPC
     {
         [Header("Dialogue")]
         [SerializeField] private DialogueText dialogueText;
-        [AutoWire(AutoWireAttribute.WireType.Service, required: false)]
         [SerializeField] private DialogueController dialogueController;
         [SerializeField] private AudioClip dialogueSound;
 
         private void Awake()
         {
-            AutoWireHelper.WireAllFields(this);
+            if (dialogueController == null)
+                dialogueController = FindFirstObjectByType<DialogueController>();
         }
 
-        public override void Interact() => Talk();
-
-        public void Talk() => Talk(dialogueText);
-
-        public void Talk(DialogueText text)
+        protected override void Interact()
         {
-            if (dialogueController != null && text != null)
-            {
-                dialogueController.DisplayNextParagraph(text, dialogueSound ?? text.dialogueSound);
-            }
+            if (dialogueController != null && dialogueText != null)
+                dialogueController.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
         }
     }
 }

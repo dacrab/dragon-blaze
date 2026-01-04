@@ -1,63 +1,51 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Input;
-using Core.Utilities;
-using Gameplay.Interaction;
+using Core.State;
 
 namespace Gameplay.Characters.NPCs
 {
-    public abstract class NPC : MonoBehaviour, IInteractable
+    public class NPC : MonoBehaviour
     {
-        #region Serialized Fields
         [SerializeField] private float interactDistance = 5f;
-        [SerializeField] private SpriteRenderer _interactSprite;
+        [SerializeField] private SpriteRenderer interactSprite;
         [SerializeField] private InputReader inputReader;
-        #endregion
 
-        #region Private Fields
-        private Transform _playerTransform;
-        #endregion
+        private Transform playerTransform;
 
         private void Start()
         {
-            _playerTransform = PlayerReference.Transform;
+            var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (player != null) playerTransform = player.transform;
         }
 
         private void OnEnable()
         {
-            if (inputReader != null)
-                inputReader.InteractEvent += OnInteractInput;
+            if (inputReader != null) inputReader.InteractEvent += OnInteractInput;
         }
 
         private void OnDisable()
         {
-            if (inputReader != null)
-                inputReader.InteractEvent -= OnInteractInput;
+            if (inputReader != null) inputReader.InteractEvent -= OnInteractInput;
         }
         
         private void Update()
         {
-            if (!GameStateHelpers.IsPlaying) return;
-            UpdateInteractSprite();
+            if (!GameStateManager.Instance.IsPlaying) return;
+            if (interactSprite == null) return;
+            bool shouldShow = IsWithinInteractDistance();
+            if (interactSprite.gameObject.activeSelf != shouldShow)
+                interactSprite.gameObject.SetActive(shouldShow);
         }
 
         private void OnInteractInput()
         {
-            if (IsWithinInteractDistance())
-                Interact();
+            if (IsWithinInteractDistance()) Interact();
         }
 
-        public abstract void Interact();
+        protected virtual void Interact() { }
 
-        private void UpdateInteractSprite()
-        {
-            if (_interactSprite == null) return;
-            bool shouldBeActive = IsWithinInteractDistance();
-            if (_interactSprite.gameObject.activeSelf != shouldBeActive)
-                _interactSprite.gameObject.SetActive(shouldBeActive);
-        }
-
-        private bool IsWithinInteractDistance() => _playerTransform != null 
-            && Vector2.Distance(_playerTransform.position, transform.position) < interactDistance;
+        private bool IsWithinInteractDistance() => playerTransform != null 
+            && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
     }
 }

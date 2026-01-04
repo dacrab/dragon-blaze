@@ -7,22 +7,15 @@ using Core.Constants;
 using Core.Input;
 using Core.Managers;
 using Core.State;
-using Core.Services;
-using Core.Utilities;
-using Gameplay.Characters.Player;
-using UI.Menus;
 
 namespace UI.Managers
 {
     public class UIManager : SingletonManager<UIManager>
     {
-
-        #region Serialized Fields
         [Header("Screens")]
         [SerializeField] private GameObject gameOverScreen;
         [SerializeField] private GameObject pauseScreen;
         [SerializeField] private GameObject loadingScreen;
-        [SerializeField] private Image loadingBarFill;
 
         [Header("UI Elements")]
         [SerializeField] private Image loadingImage;
@@ -36,110 +29,63 @@ namespace UI.Managers
         [Header("Input")]
         [SerializeField] private InputReader inputReader;
 
-        [Header("Player Reference")]
-        [AutoWire(AutoWireAttribute.WireType.Player)]
-        [SerializeField] private PlayerController playerController;
-        #endregion
+        [Header("Player")]
+        [SerializeField] private Gameplay.Characters.Player.PlayerController playerController;
 
-        #region Properties
-        public bool IsPauseScreenActive => pauseScreen.activeInHierarchy;
-        public bool IsGameOverScreenActive => gameOverScreen.activeInHierarchy;
-        #endregion
-
-        #region Initialization
-        protected override void Awake()
-        {
-            base.Awake();
-            AutoWireHelper.WireAllFields(this);
-        }
+        public bool IsPauseScreenActive => pauseScreen != null && pauseScreen.activeInHierarchy;
+        public bool IsGameOverScreenActive => gameOverScreen != null && gameOverScreen.activeInHierarchy;
 
         protected override void OnInitialize()
         {
-            base.OnInitialize();
-            ServiceLocator.Register<UIManager>(this);
             CheckSaveData();
-        }
-
-        protected override void OnShutdown()
-        {
-            UnsubscribeFromEvents();
-            ServiceLocator.Unregister<UIManager>();
-            base.OnShutdown();
         }
 
         private void OnEnable()
         {
-            SubscribeToEvents();
+            EventBus.OnScoreChanged += UpdateCoinDisplay;
+            EventBus.OnPlayerDied += GameOver;
+            if (inputReader != null) inputReader.PauseEvent += OnPauseInput;
         }
 
         private void OnDisable()
         {
-            UnsubscribeFromEvents();
-        }
-
-        private void SubscribeToEvents()
-        {
-            EventBus.OnScoreChanged += UpdateCoinDisplay;
-            EventBus.OnPlayerDied += GameOver;
-            
-            if (inputReader != null)
-                inputReader.PauseEvent += OnPauseInput;
-        }
-
-        private void UnsubscribeFromEvents()
-        {
             EventBus.OnScoreChanged -= UpdateCoinDisplay;
             EventBus.OnPlayerDied -= GameOver;
-            
-            if (inputReader != null)
-                inputReader.PauseEvent -= OnPauseInput;
+            if (inputReader != null) inputReader.PauseEvent -= OnPauseInput;
         }
 
-        private void OnPauseInput()
+        private void Start()
         {
-            PauseGame(!IsPauseScreenActive);
+            if (playerController == null)
+                playerController = FindFirstObjectByType<Gameplay.Characters.Player.PlayerController>();
         }
-        #endregion
 
-        #region Save Data Methods
+        private void OnPauseInput() => PauseGame(!IsPauseScreenActive);
+
         private void CheckSaveData()
         {
-            if (GameManager.Instance == null)
-            {
-                Debug.LogError("GameManager instance is not initialized");
-                return;
-            }
-
+            if (GameManager.Instance == null) return;
             if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
 
             bool saveExists = GameManager.Instance.SaveDataExists();
-            SetButtonVisibility(continueButton, saveExists, "Continue button");
-            SetButtonVisibility(newGameButton, true, "New Game button");
-        }
-
-        private void SetButtonVisibility(Button button, bool isVisible, string buttonName)
-        {
-            if (button != null) button.gameObject.SetActive(isVisible);
-            else Debug.LogWarning($"{buttonName} is not assigned in the Inspector.");
+            if (continueButton != null) continueButton.gameObject.SetActive(saveExists);
+            if (newGameButton != null) newGameButton.gameObject.SetActive(true);
         }
 
         public void SaveGame() => GameManager.Instance?.SaveGame();
-        #endregion
 
-        #region Game Flow Methods
         public void NewGame()
         {
             GameManager.Instance.ResetCoins();
             GameManager.Instance.SaveGame(true);
-            LoadingManager.LoadSpecificLevel(1);
+            UI.Menus.LoadingManager.LoadSpecificLevel(1);
         }
 
-        public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance.GetLastSavedLevelIndex());
+        public void ContinueGame() => UI.Menus.LoadingManager.LoadSpecificLevel(GameManager.Instance.GetLastSavedLevelIndex());
 
         public void GameOver()
         {
-            if (IsGameOverScreenActive) return; 
-            
+            if (IsGameOverScreenActive) return;
             SetGameOverState(true);
             SoundManager.Instance?.PlaySound(gameOverSound);
         }
@@ -147,20 +93,22 @@ namespace UI.Managers
         public void Restart()
         {
             SetGameOverState(false);
-            LoadingManager.LoadSpecificLevel(SceneManager.GetActiveScene().buildIndex);
+            UI.Menus.LoadingManager.LoadSpecificLevel(SceneManager.GetActiveScene().buildIndex);
         }
 
         public void MainMenu()
         {
             SetGameOverState(false);
-            ShowCursor();
-            LoadingManager.LoadSpecificLevel(GameConstants.Scenes.MainMenu);
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+            UI.Menus.LoadingManager.LoadSpecificLevel(GameConstants.Scenes.MainMenu);
         }
 
         public void Quit()
         {
             GameManager.Instance?.SaveGame();
-            ShowCursor();
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
             Application.Quit();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -170,51 +118,26 @@ namespace UI.Managers
         public void PauseGame(bool status)
         {
             if (IsGameOverScreenActive) return;
-
-            pauseScreen.SetActive(status);
-            
+            pauseScreen?.SetActive(status);
             GameStateManager.Instance?.ChangeState(status ? GameState.Paused : GameState.Gameplay);
-            
             Cursor.visible = status;
             Cursor.lockState = status ? CursorLockMode.None : CursorLockMode.Locked;
-            TogglePlayerMovement(!status);
-            
+            if (playerController != null) playerController.enabled = !status;
             EventBus.RaiseGamePaused(status);
         }
-        #endregion
 
-        #region UI Update Methods
         public void ShowLoadingScreen(bool show) => loadingScreen?.SetActive(show);
-        public void UpdateLoadingImage(float progress) => loadingImage.fillAmount = progress;
+        public void UpdateLoadingImage(float progress) { if (loadingImage != null) loadingImage.fillAmount = progress; }
         public void UpdateCoinDisplay(int coins) => coinText?.SetText($": {coins}");
-
         public void RefreshUI() => UpdateCoinDisplay(GameManager.Instance?.TotalCoins ?? 0);
 
         private void SetGameOverState(bool isGameOver)
         {
-            gameOverScreen.SetActive(isGameOver);
+            gameOverScreen?.SetActive(isGameOver);
             Cursor.visible = isGameOver;
             Cursor.lockState = isGameOver ? CursorLockMode.None : CursorLockMode.Locked;
-            
             GameStateManager.Instance?.ChangeState(isGameOver ? GameState.GameOver : GameState.Gameplay);
-            
-            TogglePlayerMovement(!isGameOver);
+            if (playerController != null) playerController.enabled = !isGameOver;
         }
-        #endregion
-
-        #region Utility Methods
-        private void ShowCursor()
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-
-        public void TogglePlayerMovement(bool enable)
-        {
-            if (playerController != null)
-                playerController.enabled = enable;
-        }
-        #endregion
-
     }
 }

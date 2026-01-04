@@ -1,6 +1,6 @@
 using UnityEngine;
 using Core.Constants;
-using Core.Utilities;
+using Core.State;
 
 namespace Environment.Traps
 {
@@ -21,7 +21,7 @@ namespace Environment.Traps
 
         private void Update()
         {
-            if (!GameStateHelpers.IsPlaying) return;
+            if (!GameStateManager.Instance.IsPlaying) return;
             
             float direction = movingLeft ? -1f : 1f;
             float newX = transform.position.x + direction * speed * Time.deltaTime;
@@ -34,9 +34,10 @@ namespace Environment.Traps
 
         protected override void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag(GameConstants.Tags.Player) 
-                && collision.TryGetPlayerController(out var pc) && !pc.IsInvisible())
-                base.OnTriggerEnter2D(collision);
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            var player = collision.GetComponent<Gameplay.Characters.Player.PlayerController>();
+            if (player != null && player.IsInvisible()) return;
+            base.OnTriggerEnter2D(collision);
         }
     }
 }

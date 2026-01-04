@@ -3,83 +3,56 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Input;
-using Core.Utilities;
 
 namespace UI.Menus
 {
     public class BackgroundManager : MonoBehaviour
     {
-        #region Serialized Fields
         [SerializeField] private Image[] backgrounds;
         [SerializeField] private float transitionTime = 2.0f;
         [SerializeField] private InputReader inputReader;
-        #endregion
 
-        #region Private Fields
-        private int currentBackgroundIndex = 0;
-        #endregion
+        private int currentIndex;
 
-        #region Unity Lifecycle Methods
         private void Start()
         {
-            InitializeBackgrounds();
+            foreach (var bg in backgrounds)
+                bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0);
+            backgrounds[0].color = new Color(backgrounds[0].color.r, backgrounds[0].color.g, backgrounds[0].color.b, 1);
             StartCoroutine(BackgroundTransition());
         }
 
         private void OnEnable()
         {
-            if (inputReader != null)
-                inputReader.InteractEvent += OnInteract;
+            if (inputReader != null) inputReader.InteractEvent += OnInteract;
         }
 
         private void OnDisable()
         {
-            if (inputReader != null)
-                inputReader.InteractEvent -= OnInteract;
+            if (inputReader != null) inputReader.InteractEvent -= OnInteract;
         }
 
-        private void OnInteract()
-        {
-            SceneManager.LoadScene(0);
-        }
-        #endregion
+        private void OnInteract() => SceneManager.LoadScene(0);
 
-        #region Private Methods
-        private void InitializeBackgrounds()
-        {
-            foreach (var bg in backgrounds) bg.color = bg.color.WithAlpha(0);
-            backgrounds[0].color = backgrounds[0].color.WithAlpha(1);
-        }
-        #endregion
-
-        #region Coroutines
         private IEnumerator BackgroundTransition()
         {
             while (true)
             {
-                Image currentBg = backgrounds[currentBackgroundIndex];
-                Image nextBg = backgrounds[(currentBackgroundIndex + 1) % backgrounds.Length];
+                var current = backgrounds[currentIndex];
+                var next = backgrounds[(currentIndex + 1) % backgrounds.Length];
 
-                yield return StartCoroutine(FadeBackgrounds(currentBg, nextBg));
+                float elapsed = 0f;
+                while (elapsed < transitionTime)
+                {
+                    elapsed += Time.deltaTime;
+                    float alpha = elapsed / transitionTime;
+                    current.color = new Color(current.color.r, current.color.g, current.color.b, 1 - alpha);
+                    next.color = new Color(next.color.r, next.color.g, next.color.b, alpha);
+                    yield return null;
+                }
 
-                currentBackgroundIndex = (currentBackgroundIndex + 1) % backgrounds.Length;
+                currentIndex = (currentIndex + 1) % backgrounds.Length;
             }
         }
-
-        private IEnumerator FadeBackgrounds(Image currentBg, Image nextBg)
-        {
-            float elapsed = 0f;
-            while (elapsed < transitionTime)
-            {
-                elapsed += Time.deltaTime;
-                float alpha = Mathf.Lerp(0, 1, elapsed / transitionTime);
-                currentBg.color = currentBg.color.WithAlpha(1 - alpha);
-                nextBg.color = nextBg.color.WithAlpha(alpha);
-                yield return null;
-            }
-            currentBg.color = currentBg.color.WithAlpha(0);
-            nextBg.color = nextBg.color.WithAlpha(1);
-        }
-        #endregion
     }
 }

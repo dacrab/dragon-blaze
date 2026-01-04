@@ -1,7 +1,6 @@
 using UnityEngine;
 using Core.Input;
 using Core.Events;
-using Core.Utilities;
 
 namespace Gameplay.Characters.Player
 {
@@ -9,35 +8,30 @@ namespace Gameplay.Characters.Player
     {
         [Header("Dependencies")]
         [SerializeField] private InputReader inputReader;
-        
-        [Header("Jump Settings")]
-        [SerializeField] private int extraJumps = 2;
-        [SerializeField] private float coyoteTime = 0.2f;
-
-        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private PlayerLocomotion locomotion;
-        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private PlayerVisuals visuals;
-        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private PlayerAudio playerAudio;
-        [AutoWire(AutoWireAttribute.WireType.Self)]
         [SerializeField] private PlayerPowerups powerups;
 
         private float coyoteCounter;
         private int jumpCounter;
         private bool isInteracting;
 
+        // Read from locomotion config
+        private int ExtraJumps => locomotion?.ExtraJumps ?? 2;
+        private float CoyoteTime => locomotion?.CoyoteTime ?? 0.2f;
+
         private void Awake()
         {
-            AutoWireHelper.WireAllFields(this);
-            
-            if (locomotion == null) Debug.LogError("PlayerLocomotion missing!");
-            if (visuals == null) Debug.LogError("PlayerVisuals missing!");
+            if (locomotion == null) locomotion = GetComponent<PlayerLocomotion>();
+            if (visuals == null) visuals = GetComponent<PlayerVisuals>();
+            if (playerAudio == null) playerAudio = GetComponent<PlayerAudio>();
+            if (powerups == null) powerups = GetComponent<PlayerPowerups>();
         }
 
         private void OnEnable()
         {
-            if (inputReader == null) { Debug.LogWarning("InputReader is not assigned in PlayerController"); return; }
+            if (inputReader == null) return;
             inputReader.MoveEvent += OnMove;
             inputReader.JumpEvent += OnJump;
             inputReader.JumpCanceledEvent += OnJumpCanceled;
@@ -58,7 +52,7 @@ namespace Gameplay.Characters.Player
         private void Update()
         {
             if (isInteracting) return;
-            if (locomotion.IsGrounded) { coyoteCounter = coyoteTime; jumpCounter = extraJumps; }
+            if (locomotion.IsGrounded) { coyoteCounter = CoyoteTime; jumpCounter = ExtraJumps; }
             else coyoteCounter -= Time.deltaTime;
             locomotion.Move();
         }
@@ -84,7 +78,7 @@ namespace Gameplay.Characters.Player
             playerAudio?.PlayJumpSound();
 
             if (!locomotion.IsGrounded && !isCoyoteAllowed && !locomotion.IsWallSliding) jumpCounter--;
-            else if (locomotion.IsWallSliding) jumpCounter = extraJumps;
+            else if (locomotion.IsWallSliding) jumpCounter = ExtraJumps;
             if (isCoyoteAllowed) coyoteCounter = 0;
         }
 

@@ -3,12 +3,8 @@ using Gameplay.Characters.Player;
 
 namespace Gameplay.Items.PowerUps
 {
-    /// <summary>
-    /// Higher jump power-up that temporarily increases player jump power.
-    /// </summary>
     public class HigherJump : PowerUpBase
     {
-        [Header("Higher Jump Settings")]
         [SerializeField] private float jumpMultiplier = 1.5f;
         [SerializeField] private Sprite higherJumpImage;
 

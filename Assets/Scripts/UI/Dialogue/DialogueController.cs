@@ -9,23 +9,16 @@ namespace UI.Dialogue
 {
     public class DialogueController : MonoBehaviour
     {
-        #region Serialized Fields
         [SerializeField] private TextMeshProUGUI NPCNameText;
         [SerializeField] private TextMeshProUGUI NPCDialogueText;
         [SerializeField] private float typeSpeed = 10f;
-        [SerializeField] private AudioClip dialogueSound;
-        #endregion
 
-        #region Private Fields
-        private Queue<string> paragraphs = new Queue<string>();
+        private Queue<string> paragraphs = new();
         private bool conversationEnded;
-        private string p;
-        private Coroutine typeDialogueCoroutine;
+        private string currentParagraph;
+        private Coroutine typeCoroutine;
         private bool isTyping;
-        private const float MAX_TYPE_TIME = 0.1f;
-        #endregion
 
-        #region Public Methods
         public void DisplayNextParagraph(DialogueText dialogueText, AudioClip dialogueSound = null)
         {
             if (paragraphs.Count == 0)
@@ -36,16 +29,14 @@ namespace UI.Dialogue
 
             if (!isTyping)
             {
-                p = paragraphs.Dequeue();
-                typeDialogueCoroutine = StartCoroutine(TypeDialogueText(p));
+                currentParagraph = paragraphs.Dequeue();
+                typeCoroutine = StartCoroutine(TypeDialogueText(currentParagraph));
             }
             else FinishParagraphEarly();
 
             if (paragraphs.Count == 0) conversationEnded = true;
         }
-        #endregion
 
-        #region Private Methods
         private void StartConversation(DialogueText dialogueText, AudioClip dialogueSound = null)
         {
             EventBus.RaiseDialogueStateChanged(true);
@@ -63,34 +54,25 @@ namespace UI.Dialogue
             if (gameObject.activeSelf) gameObject.SetActive(false);
         }
 
-        private IEnumerator TypeDialogueText(string p)
+        private IEnumerator TypeDialogueText(string text)
         {
             isTyping = true;
-            int maxVisibleChars = 0;
+            NPCDialogueText.text = text;
+            NPCDialogueText.maxVisibleCharacters = 0;
 
-            NPCDialogueText.text = p;
-            NPCDialogueText.maxVisibleCharacters = maxVisibleChars;        
-
-            foreach (char c in p.ToCharArray())
+            for (int i = 1; i <= text.Length; i++)
             {
-                maxVisibleChars++;
-                NPCDialogueText.maxVisibleCharacters = maxVisibleChars;
-
-                yield return new WaitForSeconds(MAX_TYPE_TIME / typeSpeed);
+                NPCDialogueText.maxVisibleCharacters = i;
+                yield return new WaitForSeconds(0.1f / typeSpeed);
             }
-
             isTyping = false;
         }
 
         private void FinishParagraphEarly()
         {
-            StopCoroutine(typeDialogueCoroutine);
-
-            NPCDialogueText.maxVisibleCharacters = p.Length;
-            NPCDialogueText.text = p;
-            
+            StopCoroutine(typeCoroutine);
+            NPCDialogueText.maxVisibleCharacters = currentParagraph.Length;
             isTyping = false;
         }
-        #endregion
     }
 }

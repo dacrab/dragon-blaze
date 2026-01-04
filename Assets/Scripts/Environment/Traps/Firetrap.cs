@@ -1,18 +1,13 @@
 using UnityEngine;
-using Core.Combat;
-using Core.Interfaces;
 using Core.Managers;
 using System.Collections;
 using Core.Constants;
-using Core.Utilities;
 
 namespace Environment.Traps
 {
     public class Firetrap : TrapBase
     {
-        private const string AnimActivated = "activated";
-        
-        [Header("Firetrap Timers")]
+        [Header("Firetrap")]
         [SerializeField] private float activationDelay = 0.5f;
         [SerializeField] private float activeTime = 2f;
         [SerializeField] private AudioClip firetrapSound;
@@ -21,33 +16,27 @@ namespace Environment.Traps
         private SpriteRenderer spriteRend;
         private bool triggered;
         private bool active;
-        private IDamageable currentTarget;
+        private Gameplay.Health.Health currentTarget;
 
         private void Awake()
         {
             anim = GetComponent<Animator>();
             spriteRend = GetComponent<SpriteRenderer>();
-            damageType = DamageType.Fire;
-        }
-
-        protected override DamageInfo CreateDamageInfo()
-        {
-            // Fire traps deal continuous hazard damage that ignores i-frames
-            return DamageInfo.Hazard(damage * Time.deltaTime, DamageType.Fire);
         }
 
         private void Update()
         {
             if (currentTarget != null && active && currentTarget.IsAlive)
-                currentTarget.TakeDamage(CreateDamageInfo());
+                currentTarget.TakeDamage(damage * Time.deltaTime);
         }
         
         protected override void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            if (!collision.TryGetPlayerController(out var pc) || pc.IsInvisible()) return;
+            var player = collision.GetComponent<Gameplay.Characters.Player.PlayerController>();
+            if (player != null && player.IsInvisible()) return;
             
-            collision.TryGetComponent(out currentTarget);
+            currentTarget = collision.GetComponent<Gameplay.Health.Health>();
             if (!triggered) StartCoroutine(ActivateFiretrap());
         }
 
@@ -64,11 +53,11 @@ namespace Environment.Traps
             SoundManager.Instance?.PlaySound(firetrapSound);
             spriteRend.color = Color.white;
             active = true;
-            anim.SetBool(AnimActivated, true);
+            anim.SetBool("activated", true);
             yield return new WaitForSeconds(activeTime);
             active = false;
             triggered = false;
-            anim.SetBool(AnimActivated, false);
+            anim.SetBool("activated", false);
         }
     }
 }

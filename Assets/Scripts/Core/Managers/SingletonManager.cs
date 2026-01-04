@@ -2,12 +2,8 @@ using UnityEngine;
 
 namespace Core.Managers
 {
-    /// <summary>
-    /// Base class for singleton managers with proper lifecycle management.
-    /// </summary>
-    public abstract class SingletonManager<T> : BaseManager where T : SingletonManager<T>
+    public abstract class SingletonManager<T> : MonoBehaviour where T : SingletonManager<T>
     {
-        #region Singleton
         private static T instance;
         public static T Instance
         {
@@ -17,54 +13,45 @@ namespace Core.Managers
                 {
                     instance = FindFirstObjectByType<T>();
                     if (instance == null)
-                    {
-                        Debug.LogWarning($"[{typeof(T).Name}] Instance not found. Creating temporary instance.");
-                        var go = new GameObject(typeof(T).Name);
-                        instance = go.AddComponent<T>();
-                    }
+                        Debug.LogWarning($"[{typeof(T).Name}] Instance not found.");
                 }
                 return instance;
             }
         }
 
+        public bool IsInitialized { get; private set; }
         protected virtual bool ShouldPersist => true;
-        #endregion
 
-        #region Unity Lifecycle
-        protected override void Awake()
+        protected virtual void Awake()
         {
             if (instance == null)
             {
                 instance = this as T;
-                if (ShouldPersist)
-                {
-                    DontDestroyOnLoad(gameObject);
-                }
-                base.Awake();
+                if (ShouldPersist) DontDestroyOnLoad(gameObject);
+                Initialize();
             }
             else if (instance != this)
-            {
-                Debug.LogWarning($"[{typeof(T).Name}] Duplicate instance detected. Destroying.");
                 Destroy(gameObject);
-            }
         }
 
-        protected override void OnDestroy()
+        protected virtual void OnDestroy()
         {
             if (instance == this)
             {
+                OnShutdown();
                 instance = null;
             }
-            base.OnDestroy();
         }
-        #endregion
 
-        #region Protected Methods
-        /// <summary>
-        /// Checks if the singleton instance exists.
-        /// </summary>
+        private void Initialize()
+        {
+            if (IsInitialized) return;
+            OnInitialize();
+            IsInitialized = true;
+        }
+
+        protected virtual void OnInitialize() { }
+        protected virtual void OnShutdown() { }
         protected static bool HasInstance => instance != null;
-        #endregion
     }
 }
-
