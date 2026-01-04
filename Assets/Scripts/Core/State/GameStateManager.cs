@@ -11,6 +11,7 @@ namespace Core.State
         public GameState CurrentState { get; private set; } = GameState.MainMenu;
 
         public bool IsPlaying => CurrentState == GameState.Gameplay;
+        public static bool IsCurrentlyPlaying => Instance != null && Instance.IsPlaying;
 
         protected override void OnInitialize()
         {

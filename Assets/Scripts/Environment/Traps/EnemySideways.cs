@@ -21,7 +21,7 @@ namespace Environment.Traps
 
         private void Update()
         {
-            if (!GameStateManager.Instance.IsPlaying) return;
+            if (!GameStateManager.IsCurrentlyPlaying) return;
             
             float direction = movingLeft ? -1f : 1f;
             float newX = transform.position.x + direction * speed * Time.deltaTime;

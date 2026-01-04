@@ -47,7 +47,7 @@ namespace Gameplay.Characters.Player
         {
             if (cooldownTimer < attackCooldown) return;
             if (playerController != null && !playerController.CanAttack()) return;
-            if (!GameStateManager.Instance.IsPlaying) return;
+            if (!GameStateManager.IsCurrentlyPlaying) return;
 
             SoundManager.Instance?.PlaySound(fireballSound);
             anim?.SetTrigger(GameConstants.Animation.Attack);

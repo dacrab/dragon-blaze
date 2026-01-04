@@ -31,7 +31,7 @@ namespace Gameplay.Characters.NPCs
         
         private void Update()
         {
-            if (!GameStateManager.Instance.IsPlaying) return;
+            if (!GameStateManager.IsCurrentlyPlaying) return;
             if (interactSprite == null) return;
             bool shouldShow = IsWithinInteractDistance();
             if (interactSprite.gameObject.activeSelf != shouldShow)

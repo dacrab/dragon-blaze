@@ -23,7 +23,7 @@ namespace Environment.Traps
 
         private void Update()
         {
-            if (!GameStateManager.Instance.IsPlaying) return;
+            if (!GameStateManager.IsCurrentlyPlaying) return;
             
             if (attacking) transform.Translate(destination * Time.deltaTime * speed);
             else

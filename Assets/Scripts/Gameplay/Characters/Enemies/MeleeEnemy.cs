@@ -31,7 +31,7 @@ namespace Gameplay.Characters.Enemies
 
         private void Update()
         {
-            if (isDead || !GameStateManager.Instance.IsPlaying) return;
+            if (isDead || !GameStateManager.IsCurrentlyPlaying) return;
             if (playerController == null || playerTransform == null) return;
 
             cooldownTimer += Time.deltaTime;

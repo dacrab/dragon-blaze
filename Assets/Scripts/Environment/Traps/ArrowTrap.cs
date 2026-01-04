@@ -41,7 +41,7 @@ namespace Environment.Traps
 
         private void Update()
         {
-            if (!GameStateManager.Instance.IsPlaying) return;
+            if (!GameStateManager.IsCurrentlyPlaying) return;
             
             cooldownTimer += Time.deltaTime;
             if (cooldownTimer >= attackCooldown && PlayerIsVisible()) Attack();

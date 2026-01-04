@@ -45,7 +45,7 @@ namespace UI.Menus
             arrow.position = new Vector3(arrow.position.x, buttons[currentPosition].position.y);
         }
 
-        public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance.GetLastSavedLevelIndex());
+        public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? 1);
 
         private void OnNavigate(Vector2 direction)
         {
@@ -58,8 +58,8 @@ namespace UI.Menus
             SoundManager.Instance?.PlaySound(interactSound);
             if (currentPosition == 0)
             {
-                GameManager.Instance.ResetCoins();
-                GameManager.Instance.SaveGame(true);
+                GameManager.Instance?.ResetCoins();
+                GameManager.Instance?.SaveGame(true);
                 LoadingManager.LoadSpecificLevel(1);
             }
             else if (currentPosition == 1) Application.Quit();
