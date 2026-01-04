@@ -19,7 +19,7 @@ namespace Environment.Parallax
         private Vector2 startPosition;
         private Vector3 velocity;
 
-        void Start()
+        private void Start()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             

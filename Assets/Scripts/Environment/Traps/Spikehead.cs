@@ -14,7 +14,7 @@ namespace Environment.Traps
         [SerializeField] private LayerMask playerLayer;
         [SerializeField] private AudioClip impactSound;
 
-        private Vector3[] directions = new Vector3[4];
+        private readonly Vector3[] directions = new Vector3[4];
         private Vector3 destination;
         private float checkTimer;
         private bool attacking;
@@ -47,7 +47,11 @@ namespace Environment.Traps
 
         private void CheckForPlayer()
         {
-            CalculateDirections();
+            directions[0] = transform.right;
+            directions[1] = -transform.right;
+            directions[2] = transform.up;
+            directions[3] = -transform.up;
+            
             for (int i = 0; i < directions.Length; i++)
             {
                 var hit = Physics2D.Raycast(transform.position, directions[i], range, playerLayer);
@@ -62,14 +66,6 @@ namespace Environment.Traps
                     }
                 }
             }
-        }
-
-        private void CalculateDirections()
-        {
-            directions[0] = transform.right * range;
-            directions[1] = -transform.right * range;
-            directions[2] = transform.up * range;
-            directions[3] = -transform.up * range;
         }
 
         private void Stop()

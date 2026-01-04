@@ -15,8 +15,8 @@ namespace Core.Managers
         [SerializeField] private AudioSource musicSource;
 
         [Header("UI References")]
-        public Slider musicSlider;
-        public Slider soundSlider;
+        [SerializeField] private Slider musicSlider;
+        [SerializeField] private Slider soundSlider;
 
         protected override void OnInitialize()
         {

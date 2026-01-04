@@ -51,7 +51,6 @@ namespace Core.Managers
                 currentLevel = isNewGame ? Core.Constants.GameConstants.Scenes.FirstLevel : SceneManager.GetActiveScene().buildIndex
             };
             SaveSystem.SaveGame(data);
-            EventBus.RaiseGameSaved();
         }
 
         public bool SaveDataExists() => SaveSystem.SaveExists();
