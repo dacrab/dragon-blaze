@@ -3,7 +3,8 @@ using Core.Constants;
 using Core.Input;
 using Core.State;
 
-namespace Gameplay.Characters.NPCs;
+namespace Gameplay.Characters.NPCs
+{
 
 public class NPC : MonoBehaviour
 {
@@ -40,4 +41,5 @@ public class NPC : MonoBehaviour
     void OnInteractInput() { if (IsWithinRange()) Interact(); }
     protected virtual void Interact() { }
     bool IsWithinRange() => playerTransform != null && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
+}
 }

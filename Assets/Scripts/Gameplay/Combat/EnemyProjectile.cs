@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Constants;
 using Core.Interfaces;
 
-namespace Gameplay.Combat;
+namespace Gameplay.Combat
+{
 
 public sealed class EnemyProjectile : ProjectileBase
 {
@@ -21,4 +22,5 @@ public sealed class EnemyProjectile : ProjectileBase
     }
 
     public void ActivateProjectile() => SetDirection(transform.lossyScale.x > 0 ? 1 : -1);
+}
 }

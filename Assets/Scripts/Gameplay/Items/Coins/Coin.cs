@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Managers;
 using Core.Constants;
 
-namespace Gameplay.Items.Coins;
+namespace Gameplay.Items.Coins
+{
 
 public sealed class Coin : Collectable
 {
@@ -33,4 +34,5 @@ public sealed class Coin : Collectable
     }
 
     public void ResetValue() => value = storedValue;
+}
 }

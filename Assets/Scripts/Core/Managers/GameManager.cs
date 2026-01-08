@@ -4,7 +4,8 @@ using Core.Persistence;
 using Core.Events;
 using Core.Constants;
 
-namespace Core.Managers;
+namespace Core.Managers
+{
 
 public interface IGameManager
 {
@@ -84,4 +85,5 @@ public sealed class GameManager : SingletonManager<GameManager>, IGameManager
         saveSystem.DeleteSave();
         ResetCoins();
     }
+}
 }

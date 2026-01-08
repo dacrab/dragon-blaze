@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Environment.Platforms;
+namespace Environment.Platforms
+{
 
 [RequireComponent(typeof(Collider2D))]
 public sealed class StickyPlatform : MonoBehaviour
@@ -17,4 +18,5 @@ public sealed class StickyPlatform : MonoBehaviour
         if (collision.CompareTag(GameConstants.Tags.Player))
             collision.transform.SetParent(null);
     }
+}
 }

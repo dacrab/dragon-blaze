@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace UI.Dialogue;
+namespace UI.Dialogue
+{
 
 [CreateAssetMenu(fileName = "DialogueText", menuName = "DragonBlaze/Dialogue/Dialogue Text")]
 public sealed class DialogueText : ScriptableObject
@@ -10,4 +11,5 @@ public sealed class DialogueText : ScriptableObject
     
     [TextArea(5, 10)]
     public string[] paragraphs;
+}
 }

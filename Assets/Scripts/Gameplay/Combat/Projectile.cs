@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Constants;
 using Core.Interfaces;
 
-namespace Gameplay.Combat;
+namespace Gameplay.Combat
+{
 
 public sealed class Projectile : ProjectileBase
 {
@@ -12,4 +13,5 @@ public sealed class Projectile : ProjectileBase
         if (collision.CompareTag(GameConstants.Tags.Enemy))
             if (collision.TryGetComponent<IDamageable>(out var target)) target.TakeDamage(damage);
     }
+}
 }

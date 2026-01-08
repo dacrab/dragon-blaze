@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Gameplay.Items.PowerUps;
+namespace Gameplay.Items.PowerUps
+{
 
 public sealed class HigherJump : PowerUpBase
 {
@@ -14,4 +15,5 @@ public sealed class HigherJump : PowerUpBase
     }
 
     protected override void Deactivate(Characters.Player.Player player) => player.ModifyJump(1f / multiplier);
+}
 }

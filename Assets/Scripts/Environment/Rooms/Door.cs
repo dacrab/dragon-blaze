@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Environment.Rooms;
+namespace Environment.Rooms
+{
 
 public sealed class Door : MonoBehaviour
 {
@@ -11,4 +12,5 @@ public sealed class Door : MonoBehaviour
     {
         if (collision.CompareTag(GameConstants.Tags.Player)) room?.ActivateRoom(true);
     }
+}
 }

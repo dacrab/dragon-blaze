@@ -8,7 +8,8 @@ using Core.Managers;
 using Core.State;
 using Gameplay.Combat;
 
-namespace Gameplay.Characters.Player;
+namespace Gameplay.Characters.Player
+{
 
 [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(Animator), typeof(SpriteRenderer))]
 public sealed class Player : MonoBehaviour, IInvisible
@@ -236,4 +237,5 @@ public sealed class Player : MonoBehaviour, IInvisible
     public void ModifyJump(float mult) => config.jumpPower *= mult;
 
     void SpawnVfx(GameObject prefab) { if (prefab != null) Instantiate(prefab, transform.position, Quaternion.identity); }
+}
 }

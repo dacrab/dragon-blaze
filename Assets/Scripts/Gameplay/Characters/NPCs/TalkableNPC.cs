@@ -1,7 +1,8 @@
 using UnityEngine;
 using UI.Dialogue;
 
-namespace Gameplay.Characters.NPCs;
+namespace Gameplay.Characters.NPCs
+{
 
 public sealed class TalkableNPC : NPC
 {
@@ -16,4 +17,5 @@ public sealed class TalkableNPC : NPC
         if (dialogueController != null && dialogueText != null)
             dialogueController.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
     }
+}
 }

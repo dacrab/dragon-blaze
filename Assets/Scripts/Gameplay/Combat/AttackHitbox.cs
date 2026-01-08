@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Constants;
 using Core.Interfaces;
 
-namespace Gameplay.Combat;
+namespace Gameplay.Combat
+{
 
 [RequireComponent(typeof(Collider2D))]
 public sealed class AttackHitbox : MonoBehaviour
@@ -12,7 +13,7 @@ public sealed class AttackHitbox : MonoBehaviour
     [SerializeField] float knockbackForce = 5f;
     
     [Header("Targeting")]
-    [SerializeField] string[] targetTags = [GameConstants.Tags.Enemy];
+    [SerializeField] string[] targetTags = new[] { GameConstants.Tags.Enemy };
     
     [Header("Effects")]
     [SerializeField] GameObject hitEffectPrefab;
@@ -52,4 +53,5 @@ public sealed class AttackHitbox : MonoBehaviour
             if (other.CompareTag(tag)) return true;
         return false;
     }
+}
 }

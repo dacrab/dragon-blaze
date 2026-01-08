@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Gameplay.Characters.Enemies;
+namespace Gameplay.Characters.Enemies
+{
 
 [RequireComponent(typeof(Animator))]
 public class EnemyPatrol : MonoBehaviour
@@ -44,4 +45,5 @@ public class EnemyPatrol : MonoBehaviour
             if (idleTimer >= idleDuration) { movingLeft = !movingLeft; idleTimer = 0; }
         }
     }
+}
 }

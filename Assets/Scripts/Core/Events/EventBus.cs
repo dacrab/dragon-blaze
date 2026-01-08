@@ -1,7 +1,8 @@
 using System;
 using Core.Constants;
 
-namespace Core.Events;
+namespace Core.Events
+{
 
 public interface IEventBus
 {
@@ -91,4 +92,5 @@ internal class EventBusImpl : IEventBus
         OnDialogueStateChanged = null;
         OnHealthChanged = null;
     }
+}
 }

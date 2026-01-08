@@ -4,7 +4,8 @@ using Core.Managers;
 using Core.Constants;
 using Core.Input;
 
-namespace UI.Menus;
+namespace UI.Menus
+{
 
 [System.Serializable]
 public class MenuAction
@@ -99,4 +100,5 @@ public sealed class MenuManager : MonoBehaviour
     }
 
     public void QuitGame() => Application.Quit();
+}
 }

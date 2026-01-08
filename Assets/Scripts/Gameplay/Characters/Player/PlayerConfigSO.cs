@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Gameplay.Characters.Player;
+namespace Gameplay.Characters.Player
+{
 
 [CreateAssetMenu(fileName = "PlayerConfig", menuName = "DragonBlaze/Player/Player Config")]
 public sealed class PlayerConfigSO : ScriptableObject
@@ -38,4 +39,5 @@ public sealed class PlayerConfigSO : ScriptableObject
 
     [Header("Visuals")]
     public Color invisibleColor = new(1, 1, 1, 0.5f);
+}
 }

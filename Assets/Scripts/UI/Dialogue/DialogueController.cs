@@ -5,7 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Core.Events;
 
-namespace UI.Dialogue;
+namespace UI.Dialogue
+{
 
 public sealed class DialogueController : MonoBehaviour
 {
@@ -72,4 +73,5 @@ public sealed class DialogueController : MonoBehaviour
         }
         typeRoutine = null;
     }
+}
 }

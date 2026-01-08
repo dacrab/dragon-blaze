@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Environment.Platforms;
+namespace Environment.Platforms
+{
 
 public sealed class WaypointFollower : MonoBehaviour
 {
@@ -31,4 +32,5 @@ public sealed class WaypointFollower : MonoBehaviour
         else if (loop) currentIndex = (currentIndex + 1) % waypoints.Length;
         else currentIndex = Mathf.Min(currentIndex + 1, waypoints.Length - 1);
     }
+}
 }

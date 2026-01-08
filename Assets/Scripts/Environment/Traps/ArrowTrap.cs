@@ -5,7 +5,8 @@ using Core.State;
 using Core.Interfaces;
 using Gameplay.Combat;
 
-namespace Environment.Traps;
+namespace Environment.Traps
+{
 
 public sealed class ArrowTrap : TrapBase
 {
@@ -57,4 +58,5 @@ public sealed class ArrowTrap : TrapBase
         arrow.transform.position = firePoint.position;
         if (arrow.TryGetComponent<EnemyProjectile>(out var proj)) proj.ActivateProjectile();
     }
+}
 }

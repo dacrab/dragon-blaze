@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.State;
 
-namespace Environment.Traps;
+namespace Environment.Traps
+{
 
 public sealed class EnemySideways : TrapBase
 {
@@ -28,4 +29,5 @@ public sealed class EnemySideways : TrapBase
         
         transform.position = new(newX, transform.position.y, transform.position.z);
     }
+}
 }

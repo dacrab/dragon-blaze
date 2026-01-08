@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Constants;
 using Core.Managers;
 
-namespace Gameplay.Items;
+namespace Gameplay.Items
+{
 
 [RequireComponent(typeof(Collider2D))]
 public sealed class HealthCollectible : Collectable
@@ -29,4 +30,5 @@ public sealed class HealthCollectible : Collectable
         }
         gameObject.SetActive(false);
     }
+}
 }

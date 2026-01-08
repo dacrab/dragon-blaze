@@ -1,4 +1,5 @@
-namespace Core.Interfaces;
+namespace Core.Interfaces
+{
 
 public interface IDamageable
 {
@@ -12,4 +13,5 @@ public interface IDamageable
 public interface IInvisible
 {
     bool IsInvisible { get; }
+}
 }

@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Events;
 using TMPro;
 
-namespace UI.HUD;
+namespace UI.HUD
+{
 
 public sealed class ScoreDisplay : MonoBehaviour
 {
@@ -12,4 +13,5 @@ public sealed class ScoreDisplay : MonoBehaviour
     void OnDisable() => EventBus.OnScoreChanged -= UpdateScore;
 
     void UpdateScore(int score) => coinText?.SetText($": {score}");
+}
 }

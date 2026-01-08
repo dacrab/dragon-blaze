@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Core.Events;
 
-namespace UI.HUD;
+namespace UI.HUD
+{
 
 public sealed class Healthbar : MonoBehaviour
 {
@@ -16,4 +17,5 @@ public sealed class Healthbar : MonoBehaviour
         if (max > 0 && currentHealthBar != null)
             currentHealthBar.fillAmount = current / max;
     }
+}
 }

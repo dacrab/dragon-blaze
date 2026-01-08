@@ -3,7 +3,8 @@ using Core.State;
 using Core.Constants;
 using Core.Interfaces;
 
-namespace Gameplay.Characters.Enemies;
+namespace Gameplay.Characters.Enemies
+{
 
 public sealed class MeleeEnemy : EnemyBase
 {
@@ -74,4 +75,5 @@ public sealed class MeleeEnemy : EnemyBase
 
     bool InPatrolBounds() => patrol == null || (playerTransform.position.x >= patrol.LeftEdge.position.x && playerTransform.position.x <= patrol.RightEdge.position.x);
     bool InAttackRange() => Vector2.Distance(transform.position, playerTransform.position) <= attackRange;
+}
 }

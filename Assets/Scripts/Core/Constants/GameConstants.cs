@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Core.Constants;
+namespace Core.Constants
+{
 
 [CreateAssetMenu(fileName = "GameConfig", menuName = "DragonBlaze/Config/Game Config")]
 public class GameConfig : ScriptableObject
@@ -62,3 +63,4 @@ public static class GameConstants
 }
 
 public enum GameState { MainMenu, Gameplay, Paused, Dialogue, GameOver, Loading }
+}

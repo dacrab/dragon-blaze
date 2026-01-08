@@ -4,7 +4,8 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Input;
 
-namespace UI.Menus;
+namespace UI.Menus
+{
 
 public sealed class BackgroundManager : MonoBehaviour
 {
@@ -42,4 +43,5 @@ public sealed class BackgroundManager : MonoBehaviour
             currentIndex = (currentIndex + 1) % backgrounds.Length;
         }
     }
+}
 }

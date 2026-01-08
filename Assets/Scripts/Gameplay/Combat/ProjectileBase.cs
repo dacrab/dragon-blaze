@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Constants;
 using Core.Managers;
 
-namespace Gameplay.Combat;
+namespace Gameplay.Combat
+{
 
 public abstract class ProjectileBase : MonoBehaviour
 {
@@ -62,4 +63,5 @@ public abstract class ProjectileBase : MonoBehaviour
 
     public void OnExplosionComplete() => Deactivate();
     protected void Deactivate() => gameObject.SetActive(false);
+}
 }

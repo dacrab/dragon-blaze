@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using TMPro;
 using Core.Managers;
 
-namespace Gameplay.Items.PowerUps;
+namespace Gameplay.Items.PowerUps
+{
 
 public sealed class PowerUpIndicatorManager : SingletonManager<PowerUpIndicatorManager>
 {
@@ -52,4 +53,5 @@ public sealed class PowerUpIndicatorManager : SingletonManager<PowerUpIndicatorM
         indicators.RemoveAll(i => i.obj == indicator);
         Destroy(indicator);
     }
+}
 }

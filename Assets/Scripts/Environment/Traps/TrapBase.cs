@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Environment.Traps;
+namespace Environment.Traps
+{
 
 public abstract class TrapBase : MonoBehaviour
 {
@@ -13,4 +14,5 @@ public abstract class TrapBase : MonoBehaviour
         if (collision.GetComponent<Gameplay.Characters.Player.Player>() is { IsInvisible: true }) return;
         collision.GetComponent<Gameplay.Health.Health>()?.TakeDamage(damage);
     }
+}
 }

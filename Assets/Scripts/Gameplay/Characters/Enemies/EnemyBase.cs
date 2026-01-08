@@ -1,7 +1,8 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Gameplay.Characters.Enemies;
+namespace Gameplay.Characters.Enemies
+{
 
 [RequireComponent(typeof(Animator))]
 public abstract class EnemyBase : MonoBehaviour
@@ -53,4 +54,5 @@ public abstract class EnemyBase : MonoBehaviour
         if (collision.GetComponent<Player.Player>() is { IsInvisible: true }) return;
         collision.GetComponent<Health.Health>()?.TakeDamage(damage);
     }
+}
 }

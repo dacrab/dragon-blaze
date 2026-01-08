@@ -5,7 +5,8 @@ using Core.Constants;
 using Core.Events;
 using Core.Managers;
 
-namespace Gameplay.Health;
+namespace Gameplay.Health
+{
 
 [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
 public sealed class Health : MonoBehaviour, IDamageable
@@ -111,4 +112,5 @@ public sealed class Health : MonoBehaviour, IDamageable
         Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
         invulnerable = false;
     }
+}
 }

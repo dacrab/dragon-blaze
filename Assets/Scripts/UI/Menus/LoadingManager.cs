@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UI.Managers;
 
-namespace UI.Menus;
+namespace UI.Menus
+{
 
 public sealed class LoadingManager : MonoBehaviour
 {
@@ -52,4 +53,5 @@ public sealed class LoadingManager : MonoBehaviour
         op.allowSceneActivation = true;
         ui?.ShowLoadingScreen(false);
     }
+}
 }

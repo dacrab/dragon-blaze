@@ -2,7 +2,8 @@ using System.Collections;
 using UnityEngine;
 using Core.Constants;
 
-namespace Environment.Platforms;
+namespace Environment.Platforms
+{
 
 public sealed class FallingPlatform : MonoBehaviour
 {
@@ -37,4 +38,5 @@ public sealed class FallingPlatform : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Static;
         rb.linearVelocity = Vector2.zero;
     }
+}
 }

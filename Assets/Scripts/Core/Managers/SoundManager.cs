@@ -2,7 +2,8 @@ using UnityEngine;
 using System;
 using Core.Constants;
 
-namespace Core.Managers;
+namespace Core.Managers
+{
 
 public interface ISoundManager
 {
@@ -69,4 +70,5 @@ public sealed class SoundManager : SingletonManager<SoundManager>, ISoundManager
         PlayerPrefs.SetFloat(gameConfig.musicVolumeKey, volume);
         OnMusicVolumeChanged?.Invoke(volume);
     }
+}
 }

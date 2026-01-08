@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Core.Config;
+namespace Core.Config
+{
 
 [CreateAssetMenu(fileName = "GameConfig", menuName = "DragonBlaze/Config/Game Config")]
 public sealed class GameConfigSO : ScriptableObject
@@ -25,4 +26,5 @@ public sealed class GameConfigSO : ScriptableObject
     [Header("Loading")]
     public float loadingCompleteThreshold = 0.9f;
     public float loadingActivationDelay = 0.3f;
+}
 }

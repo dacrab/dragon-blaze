@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections;
 using Core.Constants;
 
-namespace Gameplay.Items.PowerUps;
+namespace Gameplay.Items.PowerUps
+{
 
 [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
 public abstract class PowerUpBase : MonoBehaviour
@@ -42,4 +43,5 @@ public abstract class PowerUpBase : MonoBehaviour
         col.enabled = true;
         sprite.enabled = true;
     }
+}
 }

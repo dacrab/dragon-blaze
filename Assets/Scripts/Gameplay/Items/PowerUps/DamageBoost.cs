@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Gameplay.Items.PowerUps;
+namespace Gameplay.Items.PowerUps
+{
 
 public sealed class DamageBoost : PowerUpBase
 {
@@ -17,4 +18,5 @@ public sealed class DamageBoost : PowerUpBase
     }
 
     protected override void Deactivate(Characters.Player.Player player) => player.SetDamage(originalDamage);
+}
 }

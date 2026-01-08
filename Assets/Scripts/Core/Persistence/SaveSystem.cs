@@ -2,7 +2,8 @@ using UnityEngine;
 using System.IO;
 using Core.Constants;
 
-namespace Core.Persistence;
+namespace Core.Persistence
+{
 
 [System.Serializable]
 public sealed class SaveData
@@ -44,4 +45,5 @@ public class SaveSystem : ISaveSystem
 
     public bool SaveExists() => File.Exists(SavePath);
     public void DeleteSave() { if (File.Exists(SavePath)) File.Delete(SavePath); }
+}
 }

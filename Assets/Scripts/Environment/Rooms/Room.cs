@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Environment.Rooms;
+namespace Environment.Rooms
+{
 
 public sealed class Room : MonoBehaviour
 {
@@ -25,4 +26,5 @@ public sealed class Room : MonoBehaviour
             if (status) enemies[i].transform.position = initialPositions[i];
         }
     }
+}
 }

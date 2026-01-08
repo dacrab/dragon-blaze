@@ -3,7 +3,8 @@ using Core.Managers;
 using System.Collections;
 using Core.Constants;
 
-namespace Environment.Traps;
+namespace Environment.Traps
+{
 
 [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
 public sealed class FireTrap : TrapBase
@@ -66,4 +67,5 @@ public sealed class FireTrap : TrapBase
         active = false;
         anim.SetBool(GameConstants.Animation.Activated, false);
     }
+}
 }

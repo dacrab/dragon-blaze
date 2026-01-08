@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Environment.Parallax;
+namespace Environment.Parallax
+{
 
 [RequireComponent(typeof(SpriteRenderer))]
 public sealed class ParallaxBackground : MonoBehaviour
@@ -50,4 +51,5 @@ public sealed class ParallaxBackground : MonoBehaviour
                 transform.position = new(transform.position.x, cam.position.y - offsetY);
         }
     }
+}
 }

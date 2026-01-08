@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Core.Managers;
+namespace Core.Managers
+{
 
 public abstract class SingletonManager<T> : MonoBehaviour where T : SingletonManager<T>
 {
@@ -20,4 +21,5 @@ public abstract class SingletonManager<T> : MonoBehaviour where T : SingletonMan
 
     protected virtual void OnDestroy() { if (Instance == this) Instance = null; }
     protected virtual void OnInit() { }
+}
 }

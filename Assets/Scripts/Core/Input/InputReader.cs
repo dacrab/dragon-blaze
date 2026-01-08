@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Events;
 
-namespace Core.Input;
+namespace Core.Input
+{
 
 [CreateAssetMenu(fileName = "InputReader", menuName = "DragonBlaze/Input/Input Reader")]
 public sealed class InputReader : ScriptableObject
@@ -39,4 +40,5 @@ public sealed class InputReader : ScriptableObject
 
     public void EnableGameplayInput() { uiMap?.Disable(); gameplayMap?.Enable(); }
     public void EnableUIInput() { gameplayMap?.Disable(); uiMap?.Enable(); }
+}
 }

@@ -5,7 +5,8 @@ using Core.State;
 using Core.Interfaces;
 using Gameplay.Combat;
 
-namespace Gameplay.Characters.Enemies;
+namespace Gameplay.Characters.Enemies
+{
 
 public sealed class RangedEnemy : EnemyBase
 {
@@ -83,4 +84,5 @@ public sealed class RangedEnemy : EnemyBase
             new Vector3(range, box.bounds.size.y, 1f), 0, Vector2.zero, 0, playerLayer);
         return hit.collider != null;
     }
+}
 }

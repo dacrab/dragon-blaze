@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace Gameplay.Items.PowerUps;
+namespace Gameplay.Items.PowerUps
+{
 
 public sealed class Invisibility : PowerUpBase
 {
@@ -13,4 +14,5 @@ public sealed class Invisibility : PowerUpBase
     }
 
     protected override void Deactivate(Characters.Player.Player player) => player.SetInvisibility(false);
+}
 }

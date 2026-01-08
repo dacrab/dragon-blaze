@@ -3,7 +3,8 @@ using UnityEngine.SceneManagement;
 using Core.Constants;
 using Core.Events;
 
-namespace Core.State;
+namespace Core.State
+{
 
 public interface IGameStateManager
 {
@@ -62,4 +63,5 @@ public sealed class GameStateManager : SingletonManager<GameStateManager>, IGame
         Cursor.visible = showCursor;
         Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
     }
+}
 }

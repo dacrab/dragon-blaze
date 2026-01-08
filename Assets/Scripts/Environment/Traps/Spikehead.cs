@@ -3,7 +3,8 @@ using Core.Managers;
 using Core.Constants;
 using Core.State;
 
-namespace Environment.Traps;
+namespace Environment.Traps
+{
 
 public sealed class Spikehead : TrapBase
 {
@@ -74,4 +75,5 @@ public sealed class Spikehead : TrapBase
         foreach (var dir in checkDirections)
             Gizmos.DrawRay(transform.position, transform.TransformDirection(dir) * range);
     }
+}
 }

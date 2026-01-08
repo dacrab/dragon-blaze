@@ -2,7 +2,8 @@ using UnityEngine;
 using TMPro;
 using Core.Managers;
 
-namespace UI.Menus;
+namespace UI.Menus
+{
 
 public enum VolumeType { Music, Sound }
 
@@ -32,4 +33,5 @@ public sealed class VolumeText : MonoBehaviour
     }
 
     void UpdateText(float value) => text.text = $"{prefix}{value * 100:F0}";
+}
 }

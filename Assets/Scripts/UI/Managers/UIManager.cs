@@ -8,7 +8,8 @@ using Core.Input;
 using Core.Managers;
 using Core.State;
 
-namespace UI.Managers;
+namespace UI.Managers
+{
 
 public sealed class UIManager : SingletonManager<UIManager>
 {
@@ -107,4 +108,5 @@ public sealed class UIManager : SingletonManager<UIManager>
     public void UpdateLoadingImage(float progress) { if (loadingImage != null) loadingImage.fillAmount = progress; }
     void UpdateCoinDisplay(int coins) => coinText?.SetText(string.Format(gameConfig != null ? gameConfig.coinDisplayFormat : ": {0}", coins));
     void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
+}
 }
