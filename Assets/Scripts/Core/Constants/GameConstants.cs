@@ -37,6 +37,11 @@ public static class GameConstants
         public const string Checkpoint = "Checkpoint";
     }
 
+    public static class Scenes
+    {
+        public const int MainMenu = 0;
+    }
+
     public static class Animation
     {
         public const string Grounded = "grounded";

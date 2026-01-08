@@ -22,18 +22,24 @@ public sealed class InputReader : ScriptableObject
         gameplayMap = inputActions.FindActionMap("Gameplay");
         uiMap = inputActions.FindActionMap("UI");
         
-        gameplayMap?.Enable();
-        gameplayMap?["Move"].performed += ctx => MoveEvent?.Invoke(ctx.ReadValue<float>());
-        gameplayMap?["Move"].canceled += _ => MoveEvent?.Invoke(0);
-        gameplayMap?["Jump"].performed += _ => JumpEvent?.Invoke();
-        gameplayMap?["Jump"].canceled += _ => JumpCanceledEvent?.Invoke();
-        gameplayMap?["Dash"].performed += _ => DashEvent?.Invoke();
-        gameplayMap?["Attack"].performed += _ => AttackEvent?.Invoke();
-        gameplayMap?["Interact"].performed += _ => InteractEvent?.Invoke();
-        gameplayMap?["Pause"].performed += _ => PauseEvent?.Invoke();
+        if (gameplayMap != null)
+        {
+            gameplayMap.Enable();
+            gameplayMap["Move"].performed += ctx => MoveEvent?.Invoke(ctx.ReadValue<float>());
+            gameplayMap["Move"].canceled += _ => MoveEvent?.Invoke(0);
+            gameplayMap["Jump"].performed += _ => JumpEvent?.Invoke();
+            gameplayMap["Jump"].canceled += _ => JumpCanceledEvent?.Invoke();
+            gameplayMap["Dash"].performed += _ => DashEvent?.Invoke();
+            gameplayMap["Attack"].performed += _ => AttackEvent?.Invoke();
+            gameplayMap["Interact"].performed += _ => InteractEvent?.Invoke();
+            gameplayMap["Pause"].performed += _ => PauseEvent?.Invoke();
+        }
         
-        uiMap?["Navigate"].performed += ctx => NavigateEvent?.Invoke(ctx.ReadValue<Vector2>());
-        uiMap?["Submit"].performed += _ => SubmitEvent?.Invoke();
+        if (uiMap != null)
+        {
+            uiMap["Navigate"].performed += ctx => NavigateEvent?.Invoke(ctx.ReadValue<Vector2>());
+            uiMap["Submit"].performed += _ => SubmitEvent?.Invoke();
+        }
     }
 
     void OnDisable() => inputActions?.Disable();
