@@ -31,6 +31,12 @@ public sealed class GameManager : SingletonManager<GameManager>, IGameManager
         if (gameConfig == null)
             gameConfig = Resources.Load<GameConfig>("GameConfig");
         
+        if (gameConfig == null)
+        {
+            Debug.LogWarning("GameConfig not found. Creating default settings.");
+            gameConfig = ScriptableObject.CreateInstance<GameConfig>();
+        }
+        
         saveSystem = new SaveSystem(gameConfig);
         LoadGame();
         EventBus.OnLevelCompleted += SaveGame;

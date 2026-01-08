@@ -32,6 +32,12 @@ public sealed class SoundManager : SingletonManager<SoundManager>, ISoundManager
     {
         if (gameConfig == null)
             gameConfig = Resources.Load<GameConfig>("GameConfig");
+        
+        if (gameConfig == null)
+        {
+            Debug.LogWarning("GameConfig not found. Creating default settings.");
+            gameConfig = ScriptableObject.CreateInstance<GameConfig>();
+        }
             
         soundSource ??= gameObject.AddComponent<AudioSource>();
         musicSource ??= gameObject.AddComponent<AudioSource>();

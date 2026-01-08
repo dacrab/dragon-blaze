@@ -23,7 +23,7 @@ public interface ISaveSystem
 public class SaveSystem : ISaveSystem
 {
     private readonly GameConfig config;
-    private string SavePath => Application.persistentDataPath + "/" + config.saveFileName;
+    private string SavePath => Application.persistentDataPath + "/" + (config?.saveFileName ?? "savefile.json");
 
     public SaveSystem(GameConfig gameConfig)
     {
