@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Interfaces;
 
 namespace Gameplay.Combat;
 
@@ -13,9 +14,9 @@ public sealed class EnemyProjectile : ProjectileBase
             return;
         }
 
-        if (collision.GetComponent<Characters.Player.Player>() is { IsInvisible: true }) return;
+        if (collision.TryGetComponent<IInvisible>(out var invisible) && invisible.IsInvisible) return;
+        if (collision.TryGetComponent<IDamageable>(out var target)) target.TakeDamage(damage);
         
-        collision.GetComponent<Health.Health>()?.TakeDamage(damage);
         base.OnTriggerEnter2D(collision);
     }
 

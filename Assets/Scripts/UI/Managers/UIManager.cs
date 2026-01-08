@@ -24,13 +24,16 @@ public sealed class UIManager : SingletonManager<UIManager>
     [Header("Input")]
     [SerializeField] InputReader inputReader;
     
-    [Header("Settings")]
-    [SerializeField] int firstLevelIndex = 1;
-    [SerializeField] string coinDisplayFormat = ": {0}";
+    [Header("Config")]
+    [SerializeField] GameConfig gameConfig;
 
     Gameplay.Characters.Player.Player player;
 
-    protected override void OnInit() => CheckSaveData();
+    protected override void OnInit()
+    {
+        gameConfig ??= Resources.Load<GameConfig>("GameConfig");
+        CheckSaveData();
+    }
 
     void OnEnable()
     {
@@ -58,10 +61,10 @@ public sealed class UIManager : SingletonManager<UIManager>
     {
         GameManager.Instance?.ResetCoins();
         GameManager.Instance?.SaveGame(true);
-        Menus.LoadingManager.LoadSpecificLevel(firstLevelIndex);
+        Menus.LoadingManager.LoadSpecificLevel(gameConfig != null ? gameConfig.firstLevelSceneIndex : 1);
     }
 
-    public void ContinueGame() => Menus.LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? firstLevelIndex);
+    public void ContinueGame() => Menus.LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? (gameConfig != null ? gameConfig.firstLevelSceneIndex : 1));
 
     public void GameOver()
     {
@@ -102,6 +105,6 @@ public sealed class UIManager : SingletonManager<UIManager>
 
     public void ShowLoadingScreen(bool show) => loadingScreen?.SetActive(show);
     public void UpdateLoadingImage(float progress) { if (loadingImage != null) loadingImage.fillAmount = progress; }
-    void UpdateCoinDisplay(int coins) => coinText?.SetText(string.Format(coinDisplayFormat, coins));
+    void UpdateCoinDisplay(int coins) => coinText?.SetText(string.Format(gameConfig != null ? gameConfig.coinDisplayFormat : ": {0}", coins));
     void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
 }

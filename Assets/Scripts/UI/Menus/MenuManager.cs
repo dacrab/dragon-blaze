@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using Core.Managers;
+using Core.Constants;
 using Core.Input;
 
 namespace UI.Menus;
@@ -24,9 +25,8 @@ public sealed class MenuManager : MonoBehaviour
     [Header("Input")]
     [SerializeField] InputReader inputReader;
     
-    [Header("Settings")]
-    [SerializeField] float navigationThreshold = 0.5f;
-    [SerializeField] int firstLevelIndex = 1;
+    [Header("Config")]
+    [SerializeField] GameConfig gameConfig;
     
     [Header("Menu Actions")]
     [SerializeField] MenuAction[] menuActions;
@@ -35,6 +35,7 @@ public sealed class MenuManager : MonoBehaviour
 
     void Awake()
     {
+        gameConfig ??= Resources.Load<GameConfig>("GameConfig");
         UpdateArrow();
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -57,8 +58,9 @@ public sealed class MenuManager : MonoBehaviour
 
     void OnNavigate(Vector2 dir)
     {
-        if (dir.y > navigationThreshold) ChangeIndex(-1);
-        else if (dir.y < -navigationThreshold) ChangeIndex(1);
+        float threshold = gameConfig != null ? gameConfig.navigationThreshold : 0.5f;
+        if (dir.y > threshold) ChangeIndex(-1);
+        else if (dir.y < -threshold) ChangeIndex(1);
     }
 
     void ChangeIndex(int delta)
@@ -75,26 +77,17 @@ public sealed class MenuManager : MonoBehaviour
         SoundManager.Instance?.PlaySound(interactSound);
         
         if (menuActions != null && currentIndex < menuActions.Length)
-        {
             menuActions[currentIndex].action?.Invoke();
-        }
         else
-        {
-            // Fallback for legacy behavior
             ExecuteLegacyAction();
-        }
     }
 
     void ExecuteLegacyAction()
     {
         switch (currentIndex)
         {
-            case 0:
-                StartNewGame();
-                break;
-            case 1:
-                QuitGame();
-                break;
+            case 0: StartNewGame(); break;
+            case 1: QuitGame(); break;
         }
     }
 
@@ -102,7 +95,7 @@ public sealed class MenuManager : MonoBehaviour
     {
         GameManager.Instance?.ResetCoins();
         GameManager.Instance?.SaveGame(true);
-        LoadingManager.LoadSpecificLevel(firstLevelIndex);
+        LoadingManager.LoadSpecificLevel(gameConfig != null ? gameConfig.firstLevelSceneIndex : 1);
     }
 
     public void QuitGame() => Application.Quit();

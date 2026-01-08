@@ -2,29 +2,47 @@ using UnityEngine;
 using Core.Managers;
 using Core.Constants;
 using Core.State;
+using Core.Interfaces;
 using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies;
 
 public sealed class RangedEnemy : EnemyBase
 {
-    [SerializeField] float attackCooldown = 1f, range = 10f;
+    [Header("Combat")]
+    [SerializeField] float attackCooldown = 1f;
+    [SerializeField] float range = 10f;
+    
+    [Header("Projectiles")]
     [SerializeField] Transform firepoint;
     [SerializeField] GameObject[] fireballs;
+    
+    [Header("Detection")]
     [SerializeField] LayerMask playerLayer;
+    
+    [Header("Audio")]
     [SerializeField] AudioClip fireballSound;
+    
+    [Header("Target (auto-finds if empty)")]
+    [SerializeField] Transform playerTransform;
 
     float cooldownTimer;
     EnemyPatrol patrol;
-    Player.Player player;
+    IInvisible playerInvisible;
     int fireballIndex;
 
     protected override void Awake()
     {
         base.Awake();
         patrol = GetComponentInParent<EnemyPatrol>();
-        var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-        if (go != null) player = go.GetComponent<Player.Player>();
+        
+        if (playerTransform == null)
+        {
+            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (go != null) playerTransform = go.transform;
+        }
+        
+        playerTransform?.TryGetComponent(out playerInvisible);
     }
 
     void Update()
@@ -52,12 +70,12 @@ public sealed class RangedEnemy : EnemyBase
         var fb = fireballs[fireballIndex];
         fireballIndex = (fireballIndex + 1) % fireballs.Length;
         fb.transform.position = firepoint.position;
-        fb.GetComponent<EnemyProjectile>()?.ActivateProjectile();
+        if (fb.TryGetComponent<EnemyProjectile>(out var proj)) proj.ActivateProjectile();
     }
 
     bool PlayerInSight()
     {
-        if (player is not { IsInvisible: false }) return false;
+        if (playerInvisible is { IsInvisible: true }) return false;
         if (col is not BoxCollider2D box) return false;
 
         var hit = Physics2D.BoxCast(

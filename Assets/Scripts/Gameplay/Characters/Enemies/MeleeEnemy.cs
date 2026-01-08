@@ -1,27 +1,40 @@
 using UnityEngine;
 using Core.State;
 using Core.Constants;
+using Core.Interfaces;
 
 namespace Gameplay.Characters.Enemies;
 
 public sealed class MeleeEnemy : EnemyBase
 {
-    [SerializeField] float attackCooldown = 1f, attackRange = 1.5f, chaseSpeed = 3f;
+    [Header("Combat")]
+    [SerializeField] float attackCooldown = 1f;
+    [SerializeField] float attackRange = 1.5f;
+    [SerializeField] float chaseSpeed = 3f;
+    
+    [Header("Target (auto-finds if empty)")]
+    [SerializeField] Transform playerTransform;
 
     float cooldownTimer;
-    Transform playerTransform;
-    Player.Player player;
+    IInvisible playerInvisible;
+    IDamageable playerHealth;
     EnemyPatrol patrol;
 
     protected override void Awake()
     {
         base.Awake();
         patrol = GetComponentInParent<EnemyPatrol>();
-        var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-        if (go != null)
+        
+        if (playerTransform == null)
         {
-            playerTransform = go.transform;
-            player = go.GetComponent<Player.Player>();
+            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (go != null) playerTransform = go.transform;
+        }
+        
+        if (playerTransform != null)
+        {
+            playerTransform.TryGetComponent(out playerInvisible);
+            playerTransform.TryGetComponent(out playerHealth);
         }
     }
 
@@ -30,7 +43,7 @@ public sealed class MeleeEnemy : EnemyBase
         if (isDead || !GameStateManager.IsCurrentlyPlaying || playerTransform == null) return;
         cooldownTimer += Time.deltaTime;
 
-        if (player is { IsInvisible: false } && InPatrolBounds())
+        if (playerInvisible is not { IsInvisible: true } && InPatrolBounds())
         {
             if (patrol != null) patrol.enabled = false;
             ChasePlayer();
@@ -43,7 +56,7 @@ public sealed class MeleeEnemy : EnemyBase
     {
         cooldownTimer = 0f;
         anim.SetTrigger(GameConstants.Animation.MeleeAttack);
-        playerTransform.GetComponent<Health.Health>()?.TakeDamage(damage);
+        playerHealth?.TakeDamage(damage);
     }
 
     void ChasePlayer()

@@ -21,6 +21,10 @@ public class GameConfig : ScriptableObject
     public string saveFileName = "savefile.json";
     public string musicVolumeKey = "musicVolume";
     public string soundVolumeKey = "soundVolume";
+    
+    [Header("UI")]
+    public string coinDisplayFormat = ": {0}";
+    public float navigationThreshold = 0.5f;
 }
 
 public static class GameConstants

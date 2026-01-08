@@ -1,13 +1,20 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Interfaces;
 
 namespace Gameplay.Combat;
 
 [RequireComponent(typeof(Collider2D))]
 public sealed class AttackHitbox : MonoBehaviour
 {
-    [SerializeField] float damage = 10f, knockbackForce = 5f;
+    [Header("Damage")]
+    [SerializeField] float damage = 10f;
+    [SerializeField] float knockbackForce = 5f;
+    
+    [Header("Targeting")]
     [SerializeField] string[] targetTags = [GameConstants.Tags.Enemy];
+    
+    [Header("Effects")]
     [SerializeField] GameObject hitEffectPrefab;
     [SerializeField] AudioClip hitSound;
 
@@ -30,7 +37,7 @@ public sealed class AttackHitbox : MonoBehaviour
         if (hasHit || !IsValidTarget(other)) return;
         hasHit = true;
 
-        other.GetComponent<Health.Health>()?.TakeDamage(damage);
+        if (other.TryGetComponent<IDamageable>(out var target)) target.TakeDamage(damage);
 
         if (knockbackForce > 0 && other.TryGetComponent<Rigidbody2D>(out var rb))
             rb.AddForce((other.transform.position - transform.position).normalized * knockbackForce, ForceMode2D.Impulse);

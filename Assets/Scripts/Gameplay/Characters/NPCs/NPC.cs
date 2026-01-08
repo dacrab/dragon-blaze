@@ -7,16 +7,23 @@ namespace Gameplay.Characters.NPCs;
 
 public class NPC : MonoBehaviour
 {
+    [Header("Interaction")]
     [SerializeField] float interactDistance = 5f;
     [SerializeField] SpriteRenderer interactSprite;
+    
+    [Header("Input")]
     [SerializeField] InputReader inputReader;
-
-    Transform playerTransform;
+    
+    [Header("Target (auto-finds if empty)")]
+    [SerializeField] Transform playerTransform;
 
     void Start()
     {
-        var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-        if (player != null) playerTransform = player.transform;
+        if (playerTransform == null)
+        {
+            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (go != null) playerTransform = go.transform;
+        }
     }
 
     void OnEnable() { if (inputReader != null) inputReader.InteractEvent += OnInteractInput; }

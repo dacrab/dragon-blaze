@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Interfaces;
 
 namespace Gameplay.Combat;
 
@@ -9,6 +10,6 @@ public sealed class Projectile : ProjectileBase
     {
         base.OnTriggerEnter2D(collision);
         if (collision.CompareTag(GameConstants.Tags.Enemy))
-            collision.GetComponent<Health.Health>()?.TakeDamage(damage);
+            if (collision.TryGetComponent<IDamageable>(out var target)) target.TakeDamage(damage);
     }
 }
