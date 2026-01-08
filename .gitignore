@@ -20,7 +20,14 @@
 
 # OS
 .DS_Store
+._*
 Thumbs.db
+
+# Source art files
+*.psd
+*.psb
+*.ai
+*.eps
 
 # Build artifacts
 *.apk
