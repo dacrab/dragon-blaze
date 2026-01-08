@@ -2,7 +2,7 @@ using UnityEngine;
 using Core.Managers;
 using Core.Constants;
 
-namespace Gameplay.Items;
+namespace Gameplay.Items.Coins;
 
 public sealed class Coin : Collectable
 {

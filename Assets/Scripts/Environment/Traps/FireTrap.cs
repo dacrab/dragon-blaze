@@ -6,7 +6,7 @@ using Core.Constants;
 namespace Environment.Traps;
 
 [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
-public sealed class Firetrap : TrapBase
+public sealed class FireTrap : TrapBase
 {
     [Header("Timing")]
     [SerializeField] float activationDelay = 0.5f;

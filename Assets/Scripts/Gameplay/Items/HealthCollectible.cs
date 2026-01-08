@@ -14,7 +14,7 @@ public sealed class HealthCollectible : Collectable
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-        collision.GetComponent<Health.Health>()?.AddHealth(healthValue);
+        collision.GetComponent<Health.Health>()?.Heal(healthValue);
         Collect();
     }
 
