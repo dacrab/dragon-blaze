@@ -1,17 +1,14 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Gameplay.Combat
+namespace Gameplay.Combat;
+
+public sealed class Projectile : ProjectileBase
 {
-    public class Projectile : ProjectileBase
+    protected override void OnTriggerEnter2D(Collider2D collision)
     {
-        protected override void OnTriggerEnter2D(Collider2D collision)
-        {
-            base.OnTriggerEnter2D(collision);
-            if (!collision.CompareTag(GameConstants.Tags.Enemy)) return;
-            
-            var health = collision.GetComponent<Gameplay.Health.Health>();
-            health?.TakeDamage(damage);
-        }
+        base.OnTriggerEnter2D(collision);
+        if (collision.CompareTag(GameConstants.Tags.Enemy))
+            collision.GetComponent<Health.Health>()?.TakeDamage(damage);
     }
 }

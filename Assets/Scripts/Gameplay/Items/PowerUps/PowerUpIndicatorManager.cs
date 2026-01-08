@@ -5,70 +5,51 @@ using System.Collections.Generic;
 using TMPro;
 using Core.Managers;
 
-namespace Gameplay.Items.PowerUps
+namespace Gameplay.Items.PowerUps;
+
+public sealed class PowerUpIndicatorManager : SingletonManager<PowerUpIndicatorManager>
 {
-    public class PowerUpIndicatorManager : SingletonManager<PowerUpIndicatorManager>
+    [SerializeField] GameObject indicatorPrefab;
+    [SerializeField] Transform panel;
+
+    readonly List<(GameObject obj, Coroutine routine)> indicators = new();
+
+    public void ActivateIndicator(string name, Sprite icon, float duration)
     {
-        [SerializeField] private GameObject indicatorPrefab;
-        [SerializeField] private Transform indicatorsPanel;
+        if (indicatorPrefab == null || panel == null) return;
 
-        private const int GAP = 10;
-        private const float MAX_WIDTH = 200f;
-        private readonly List<GameObject> activeIndicators = new();
-
-        public void ActivateIndicator(string powerUpName, Sprite powerUpImage, float duration)
+        var existing = indicators.Find(i => i.obj.name == name);
+        if (existing.obj != null)
         {
-            if (indicatorPrefab == null || indicatorsPanel == null) return;
-
-            var existing = activeIndicators.Find(ind => 
-                ind.GetComponentInChildren<TMP_Text>()?.text.Contains(powerUpName) == true);
-            
-            if (existing != null)
-            {
-                existing.SetActive(true);
-                StartCoroutine(UpdateIndicator(existing, duration, existing.GetComponentInChildren<Image>()));
-                return;
-            }
-
-            var newIndicator = Instantiate(indicatorPrefab, indicatorsPanel);
-            var img = newIndicator.transform.Find("Image")?.GetComponent<Image>();
-            if (img != null)
-            {
-                img.sprite = powerUpImage;
-                img.color = new Color(img.color.r, img.color.g, img.color.b, 0.5f);
-            }
-
-            newIndicator.GetComponentInChildren<TMP_Text>()?.SetText($"<b><size=120%>{powerUpName}</size></b>");
-            StartCoroutine(UpdateIndicator(newIndicator, duration, img));
-            activeIndicators.Add(newIndicator);
-            UpdatePositions();
+            if (existing.routine != null) StopCoroutine(existing.routine);
+            indicators.Remove(existing);
+            var newRoutine = StartCoroutine(FadeOut(existing.obj, duration));
+            indicators.Add((existing.obj, newRoutine));
+            return;
         }
 
-        private IEnumerator UpdateIndicator(GameObject indicator, float duration, Image img)
-        {
-            float remaining = duration;
-            while (remaining > 0)
-            {
-                if (img != null) img.color = new Color(img.color.r, img.color.g, img.color.b, remaining / duration);
-                remaining -= Time.deltaTime;
-                yield return null;
-            }
-            activeIndicators.Remove(indicator);
-            Destroy(indicator);
-            UpdatePositions();
-        }
+        var indicator = Instantiate(indicatorPrefab, panel);
+        indicator.name = name;
+        
+        if (indicator.GetComponentInChildren<Image>() is { } img) img.sprite = icon;
+        if (indicator.GetComponentInChildren<TMP_Text>() is { } txt) txt.text = name;
 
-        private void UpdatePositions()
+        var routine = StartCoroutine(FadeOut(indicator, duration));
+        indicators.Add((indicator, routine));
+    }
+
+    IEnumerator FadeOut(GameObject indicator, float duration)
+    {
+        var img = indicator.GetComponentInChildren<Image>();
+        var startAlpha = img != null ? img.color.a : 1f;
+        
+        for (float t = 0; t < duration; t += Time.deltaTime)
         {
-            float x = 0;
-            foreach (var ind in activeIndicators)
-            {
-                var rect = ind.GetComponent<RectTransform>();
-                var text = ind.GetComponentInChildren<TMP_Text>();
-                float width = Mathf.Min(LayoutUtility.GetPreferredWidth(text.rectTransform), MAX_WIDTH);
-                rect.localPosition = new Vector3(x, 0, 0);
-                x += width + GAP;
-            }
+            if (img != null) img.color = new(img.color.r, img.color.g, img.color.b, Mathf.Lerp(startAlpha, 0, t / duration));
+            yield return null;
         }
+        
+        indicators.RemoveAll(i => i.obj == indicator);
+        Destroy(indicator);
     }
 }

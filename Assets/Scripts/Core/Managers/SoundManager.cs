@@ -1,86 +1,72 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System;
 using Core.Constants;
 
-namespace Core.Managers
+namespace Core.Managers;
+
+public interface ISoundManager
 {
-    public class SoundManager : SingletonManager<SoundManager>
+    float SoundVolume { get; }
+    float MusicVolume { get; }
+    event Action<float> OnSoundVolumeChanged;
+    event Action<float> OnMusicVolumeChanged;
+    void PlaySound(AudioClip sound);
+    void PlayMusic(AudioClip music, bool loop = true);
+    void StopMusic();
+    void SetSoundVolume(float volume);
+    void SetMusicVolume(float volume);
+}
+
+public sealed class SoundManager : SingletonManager<SoundManager>, ISoundManager
+{
+    public event Action<float> OnSoundVolumeChanged, OnMusicVolumeChanged;
+
+    [SerializeField] private AudioSource soundSource, musicSource;
+    [SerializeField] private GameConfig gameConfig;
+
+    public float SoundVolume => soundSource?.volume ?? gameConfig.defaultSoundVolume;
+    public float MusicVolume => musicSource?.volume ?? gameConfig.defaultMusicVolume;
+
+    protected override void OnInit()
     {
-        public event Action<float> OnSoundVolumeChanged;
-        public event Action<float> OnMusicVolumeChanged;
+        if (gameConfig == null)
+            gameConfig = Resources.Load<GameConfig>("GameConfig");
+            
+        soundSource ??= gameObject.AddComponent<AudioSource>();
+        musicSource ??= gameObject.AddComponent<AudioSource>();
+        
+        musicSource.volume = PlayerPrefs.GetFloat(gameConfig.musicVolumeKey, gameConfig.defaultMusicVolume);
+        soundSource.volume = PlayerPrefs.GetFloat(gameConfig.soundVolumeKey, gameConfig.defaultSoundVolume);
+    }
 
-        [Header("Audio Sources")]
-        [SerializeField] private AudioSource soundSource;
-        [SerializeField] private AudioSource musicSource;
+    public void PlaySound(AudioClip sound) 
+    { 
+        if (sound != null) soundSource.PlayOneShot(sound); 
+    }
 
-        [Header("UI References")]
-        [SerializeField] private Slider musicSlider;
-        [SerializeField] private Slider soundSlider;
+    public void PlayMusic(AudioClip music, bool loop = true)
+    {
+        if (music == null) return;
+        musicSource.clip = music;
+        musicSource.loop = loop;
+        musicSource.Play();
+    }
 
-        protected override void OnInitialize()
-        {
-            InitializeAudioSources();
-            InitializeSliders();
-        }
+    public void StopMusic() => musicSource.Stop();
 
-        private void InitializeAudioSources()
-        {
-            if (soundSource == null) soundSource = gameObject.AddComponent<AudioSource>();
-            if (musicSource == null) musicSource = gameObject.AddComponent<AudioSource>();
+    public void SetSoundVolume(float volume)
+    {
+        volume = Mathf.Clamp01(volume);
+        soundSource.volume = volume;
+        PlayerPrefs.SetFloat(gameConfig.soundVolumeKey, volume);
+        OnSoundVolumeChanged?.Invoke(volume);
+    }
 
-            musicSource.volume = PlayerPrefs.GetFloat(GameConstants.Save.MusicVolume, 0.5f);
-            soundSource.volume = PlayerPrefs.GetFloat(GameConstants.Save.SoundVolume, 0.5f);
-        }
-
-        private void InitializeSliders()
-        {
-            if (musicSlider != null)
-            {
-                musicSlider.value = PlayerPrefs.GetFloat(GameConstants.Save.MusicVolume, 0.5f);
-                musicSlider.onValueChanged.AddListener(ChangeMusicVolume);
-            }
-            if (soundSlider != null)
-            {
-                soundSlider.value = PlayerPrefs.GetFloat(GameConstants.Save.SoundVolume, 0.5f);
-                soundSlider.onValueChanged.AddListener(ChangeSoundVolume);
-            }
-        }
-
-        public void PlaySound(AudioClip sound)
-        {
-            if (sound != null && soundSource != null)
-                soundSource.PlayOneShot(sound);
-        }
-
-        public void PlayMusic(AudioClip music, bool loop = true)
-        {
-            if (music != null && musicSource != null)
-            {
-                musicSource.clip = music;
-                musicSource.loop = loop;
-                musicSource.Play();
-            }
-        }
-
-        public void StopMusic() => musicSource?.Stop();
-
-        public void ChangeSoundVolume(float volume)
-        {
-            volume = Mathf.Clamp01(volume);
-            soundSource.volume = volume;
-            PlayerPrefs.SetFloat(GameConstants.Save.SoundVolume, volume);
-            if (soundSlider != null) soundSlider.value = volume;
-            OnSoundVolumeChanged?.Invoke(volume);
-        }
-
-        public void ChangeMusicVolume(float volume)
-        {
-            volume = Mathf.Clamp01(volume);
-            musicSource.volume = volume;
-            PlayerPrefs.SetFloat(GameConstants.Save.MusicVolume, volume);
-            if (musicSlider != null) musicSlider.value = volume;
-            OnMusicVolumeChanged?.Invoke(volume);
-        }
+    public void SetMusicVolume(float volume)
+    {
+        volume = Mathf.Clamp01(volume);
+        musicSource.volume = volume;
+        PlayerPrefs.SetFloat(gameConfig.musicVolumeKey, volume);
+        OnMusicVolumeChanged?.Invoke(volume);
     }
 }

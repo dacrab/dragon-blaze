@@ -1,31 +1,17 @@
 using UnityEngine;
-using Gameplay.Characters.Player;
 
-namespace Gameplay.Items.PowerUps
+namespace Gameplay.Items.PowerUps;
+
+public sealed class SpeedBoost : PowerUpBase
 {
-    public class SpeedBoost : PowerUpBase
+    [SerializeField] Sprite icon;
+    [SerializeField] float multiplier = 2f;
+
+    protected override void Activate(Characters.Player.Player player)
     {
-        [SerializeField] private Sprite speedBoostImage;
-        [SerializeField] private float speedMultiplier = 2f;
-
-        private float originalSpeed;
-        private PlayerLocomotion locomotion;
-
-        protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
-            if (locomotion != null)
-            {
-                originalSpeed = locomotion.GetSpeed();
-                locomotion.SetSpeed(originalSpeed * speedMultiplier);
-            }
-            ActivateIndicator("Speed Boost", speedBoostImage);
-        }
-
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            locomotion?.SetSpeed(originalSpeed);
-            locomotion = null;
-        }
+        player.ModifySpeed(multiplier);
+        ShowIndicator("Speed Boost", icon);
     }
+
+    protected override void Deactivate(Characters.Player.Player player) => player.ModifySpeed(1f / multiplier);
 }

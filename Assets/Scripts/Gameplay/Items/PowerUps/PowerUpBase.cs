@@ -1,77 +1,45 @@
 using UnityEngine;
 using System.Collections;
 using Core.Constants;
-using Gameplay.Characters.Player;
 
-namespace Gameplay.Items.PowerUps
+namespace Gameplay.Items.PowerUps;
+
+[RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
+public abstract class PowerUpBase : MonoBehaviour
 {
-    public abstract class PowerUpBase : MonoBehaviour
+    [SerializeField] protected float duration = 5f;
+
+    protected SpriteRenderer sprite;
+    protected Collider2D col;
+
+    protected virtual void Awake()
     {
-        [SerializeField] protected float duration = 5f;
-        [SerializeField] protected float fadeOutDuration = 0.5f;
-        [SerializeField] protected float fadeInDuration = 0.5f;
+        sprite = GetComponent<SpriteRenderer>();
+        col = GetComponent<Collider2D>();
+    }
 
-        protected Coroutine powerUpCoroutine;
-        protected SpriteRenderer spriteRenderer;
-        protected Collider2D powerUpCollider;
-        protected bool isActive;
+    protected virtual void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+        if (collision.GetComponent<Characters.Player.Player>() is not { } player) return;
 
-        protected virtual void Awake()
-        {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            powerUpCollider = GetComponent<Collider2D>();
-        }
+        Activate(player);
+        StartCoroutine(PowerUpRoutine(player));
+    }
 
-        protected virtual void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            var playerPowerups = collision.GetComponent<PlayerPowerups>();
-            if (playerPowerups == null || isActive) return;
+    protected abstract void Activate(Characters.Player.Player player);
+    protected abstract void Deactivate(Characters.Player.Player player);
 
-            ActivatePowerUp(playerPowerups);
-            if (powerUpCoroutine != null) StopCoroutine(powerUpCoroutine);
-            powerUpCoroutine = StartCoroutine(PowerUpTimer(playerPowerups));
-            StartCoroutine(FadeSprite());
-            if (powerUpCollider != null) powerUpCollider.enabled = false;
-        }
+    protected void ShowIndicator(string name, Sprite icon) =>
+        PowerUpIndicatorManager.Instance?.ActivateIndicator(name, icon, duration);
 
-        protected abstract void ActivatePowerUp(PlayerPowerups playerPowerups);
-        protected abstract void DeactivatePowerUp(PlayerPowerups playerPowerups);
-
-        protected void ActivateIndicator(string name, Sprite image) => 
-            PowerUpIndicatorManager.Instance?.ActivateIndicator(name, image, duration);
-
-        protected IEnumerator FadeSprite()
-        {
-            if (spriteRenderer == null) yield break;
-            Color c = spriteRenderer.color;
-            
-            float t = 0;
-            while (t < fadeOutDuration)
-            {
-                t += Time.deltaTime;
-                spriteRenderer.color = new Color(c.r, c.g, c.b, Mathf.Lerp(1f, 0f, t / fadeOutDuration));
-                yield return null;
-            }
-            
-            yield return new WaitForSeconds(duration - fadeOutDuration - fadeInDuration);
-            
-            t = 0;
-            while (t < fadeInDuration)
-            {
-                t += Time.deltaTime;
-                spriteRenderer.color = new Color(c.r, c.g, c.b, Mathf.Lerp(0f, 1f, t / fadeInDuration));
-                yield return null;
-            }
-        }
-
-        protected IEnumerator PowerUpTimer(PlayerPowerups playerPowerups)
-        {
-            isActive = true;
-            yield return new WaitForSeconds(duration);
-            DeactivatePowerUp(playerPowerups);
-            isActive = false;
-            if (powerUpCollider != null) powerUpCollider.enabled = true;
-        }
+    IEnumerator PowerUpRoutine(Characters.Player.Player player)
+    {
+        col.enabled = false;
+        sprite.enabled = false;
+        yield return new WaitForSeconds(duration);
+        Deactivate(player);
+        col.enabled = true;
+        sprite.enabled = true;
     }
 }

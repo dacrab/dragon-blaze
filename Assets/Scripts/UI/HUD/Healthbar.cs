@@ -2,19 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using Core.Events;
 
-namespace UI.HUD
+namespace UI.HUD;
+
+public sealed class Healthbar : MonoBehaviour
 {
-    public class Healthbar : MonoBehaviour
+    [SerializeField] Image currentHealthBar;
+
+    void OnEnable() => EventBus.OnHealthChanged += UpdateHealthUI;
+    void OnDisable() => EventBus.OnHealthChanged -= UpdateHealthUI;
+
+    void UpdateHealthUI(float current, float max)
     {
-        [SerializeField] private Image currenthealthBar;
-
-        private void OnEnable() => EventBus.OnHealthChanged += UpdateHealthUI;
-        private void OnDisable() => EventBus.OnHealthChanged -= UpdateHealthUI;
-
-        public void UpdateHealthUI(float currentHealth, float maxHealth)
-        {
-            if (maxHealth > 0 && currenthealthBar != null)
-                currenthealthBar.fillAmount = currentHealth / maxHealth;
-        }
+        if (max > 0 && currentHealthBar != null)
+            currentHealthBar.fillAmount = current / max;
     }
 }

@@ -1,68 +1,109 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Core.Managers;
 using Core.Input;
-using Core.Constants;
 
-namespace UI.Menus
+namespace UI.Menus;
+
+[System.Serializable]
+public class MenuAction
 {
-    public class MenuManager : MonoBehaviour
+    public string name;
+    public UnityEvent action;
+}
+
+public sealed class MenuManager : MonoBehaviour
+{
+    [Header("UI Elements")]
+    [SerializeField] RectTransform arrow;
+    [SerializeField] RectTransform[] buttons;
+    
+    [Header("Audio")]
+    [SerializeField] AudioClip changeSound, interactSound;
+    
+    [Header("Input")]
+    [SerializeField] InputReader inputReader;
+    
+    [Header("Settings")]
+    [SerializeField] float navigationThreshold = 0.5f;
+    [SerializeField] int firstLevelIndex = 1;
+    
+    [Header("Menu Actions")]
+    [SerializeField] MenuAction[] menuActions;
+
+    int currentIndex;
+
+    void Awake()
     {
-        [SerializeField] private RectTransform arrow;
-        [SerializeField] private RectTransform[] buttons;
-        [SerializeField] private AudioClip changeSound;
-        [SerializeField] private AudioClip interactSound;
-        [SerializeField] private InputReader inputReader;
+        UpdateArrow();
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
 
-        private int currentPosition;
+    void OnEnable()
+    {
+        if (inputReader == null) return;
+        inputReader.NavigateEvent += OnNavigate;
+        inputReader.SubmitEvent += OnSubmit;
+        inputReader.EnableUIInput();
+    }
 
-        private void Awake()
+    void OnDisable()
+    {
+        if (inputReader == null) return;
+        inputReader.NavigateEvent -= OnNavigate;
+        inputReader.SubmitEvent -= OnSubmit;
+    }
+
+    void OnNavigate(Vector2 dir)
+    {
+        if (dir.y > navigationThreshold) ChangeIndex(-1);
+        else if (dir.y < -navigationThreshold) ChangeIndex(1);
+    }
+
+    void ChangeIndex(int delta)
+    {
+        currentIndex = (currentIndex + delta + buttons.Length) % buttons.Length;
+        SoundManager.Instance?.PlaySound(changeSound);
+        UpdateArrow();
+    }
+
+    void UpdateArrow() => arrow.position = new(arrow.position.x, buttons[currentIndex].position.y, arrow.position.z);
+
+    void OnSubmit()
+    {
+        SoundManager.Instance?.PlaySound(interactSound);
+        
+        if (menuActions != null && currentIndex < menuActions.Length)
         {
-            ChangePosition(0);
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
+            menuActions[currentIndex].action?.Invoke();
         }
-
-        private void OnEnable()
+        else
         {
-            if (inputReader == null) return;
-            inputReader.NavigateEvent += OnNavigate;
-            inputReader.SubmitEvent += Interact;
-            inputReader.EnableUIInput();
-        }
-
-        private void OnDisable()
-        {
-            if (inputReader == null) return;
-            inputReader.NavigateEvent -= OnNavigate;
-            inputReader.SubmitEvent -= Interact;
-        }
-
-        public void ChangePosition(int change)
-        {
-            currentPosition += change;
-            if (change != 0) SoundManager.Instance?.PlaySound(changeSound);
-            currentPosition = currentPosition < 0 ? buttons.Length - 1 : currentPosition >= buttons.Length ? 0 : currentPosition;
-            arrow.position = new Vector3(arrow.position.x, buttons[currentPosition].position.y);
-        }
-
-        public void ContinueGame() => LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? 1);
-
-        private void OnNavigate(Vector2 direction)
-        {
-            if (direction.y > 0.5f) ChangePosition(-1);
-            else if (direction.y < -0.5f) ChangePosition(1);
-        }
-
-        private void Interact()
-        {
-            SoundManager.Instance?.PlaySound(interactSound);
-            if (currentPosition == 0)
-            {
-                GameManager.Instance?.ResetCoins();
-                GameManager.Instance?.SaveGame(true);
-                LoadingManager.LoadSpecificLevel(1);
-            }
-            else if (currentPosition == 1) Application.Quit();
+            // Fallback for legacy behavior
+            ExecuteLegacyAction();
         }
     }
+
+    void ExecuteLegacyAction()
+    {
+        switch (currentIndex)
+        {
+            case 0:
+                StartNewGame();
+                break;
+            case 1:
+                QuitGame();
+                break;
+        }
+    }
+
+    public void StartNewGame()
+    {
+        GameManager.Instance?.ResetCoins();
+        GameManager.Instance?.SaveGame(true);
+        LoadingManager.LoadSpecificLevel(firstLevelIndex);
+    }
+
+    public void QuitGame() => Application.Quit();
 }

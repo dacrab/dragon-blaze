@@ -2,15 +2,14 @@ using UnityEngine;
 using Core.Events;
 using TMPro;
 
-namespace UI.HUD
+namespace UI.HUD;
+
+public sealed class ScoreDisplay : MonoBehaviour
 {
-    public class ScoreDisplay : MonoBehaviour
-    {
-        [SerializeField] private TextMeshProUGUI coinText;
+    [SerializeField] TextMeshProUGUI coinText;
 
-        private void OnEnable() => EventBus.OnScoreChanged += UpdateScoreDisplay;
-        private void OnDisable() => EventBus.OnScoreChanged -= UpdateScoreDisplay;
+    void OnEnable() => EventBus.OnScoreChanged += UpdateScore;
+    void OnDisable() => EventBus.OnScoreChanged -= UpdateScore;
 
-        private void UpdateScoreDisplay(int score) => coinText?.SetText($": {score}");
-    }
+    void UpdateScore(int score) => coinText?.SetText($": {score}");
 }

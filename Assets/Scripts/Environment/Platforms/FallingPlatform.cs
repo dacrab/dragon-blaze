@@ -2,41 +2,39 @@ using System.Collections;
 using UnityEngine;
 using Core.Constants;
 
-namespace Environment.Platforms
+namespace Environment.Platforms;
+
+public sealed class FallingPlatform : MonoBehaviour
 {
-    public class FallingPlatform : MonoBehaviour
+    [SerializeField] float fallDelay = 1f, destroyDelay = 2f;
+    [SerializeField] Rigidbody2D rb;
+    
+    Vector3 initialPosition;
+
+    void Start()
     {
-        [SerializeField] private float fallDelay = 1f;
-        [SerializeField] private float destroyDelay = 2f;
-        [SerializeField] private Rigidbody2D rb;
-        
-        private Vector3 initialPosition;
+        initialPosition = transform.position;
+        rb.bodyType = RigidbodyType2D.Static;
+    }
 
-        private void Start()
-        {
-            initialPosition = transform.position;
-            rb.bodyType = RigidbodyType2D.Static;
-        }
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag(GameConstants.Tags.Player)) StartCoroutine(Fall());
+    }
 
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (collision.gameObject.CompareTag(GameConstants.Tags.Player)) StartCoroutine(Fall());
-        }
+    IEnumerator Fall()
+    {
+        yield return new WaitForSeconds(fallDelay);
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        yield return new WaitForSeconds(destroyDelay);
+        gameObject.SetActive(false);
+    }
 
-        private IEnumerator Fall()
-        {
-            yield return new WaitForSeconds(fallDelay);
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            yield return new WaitForSeconds(destroyDelay);
-            gameObject.SetActive(false);
-        }
-
-        public void ResetPlatform()
-        {
-            gameObject.SetActive(true);
-            transform.position = initialPosition;
-            rb.bodyType = RigidbodyType2D.Static;
-            rb.linearVelocity = Vector2.zero;
-        }
+    public void ResetPlatform()
+    {
+        gameObject.SetActive(true);
+        transform.position = initialPosition;
+        rb.bodyType = RigidbodyType2D.Static;
+        rb.linearVelocity = Vector2.zero;
     }
 }

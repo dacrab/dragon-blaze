@@ -1,15 +1,14 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Environment.Rooms
-{
-    public class Door : MonoBehaviour
-    {
-        [SerializeField] private Room room;
+namespace Environment.Rooms;
 
-        private void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (collision.CompareTag(GameConstants.Tags.Player)) room?.ActivateRoom(true);
-        }
+public sealed class Door : MonoBehaviour
+{
+    [SerializeField] Room room;
+
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag(GameConstants.Tags.Player)) room?.ActivateRoom(true);
     }
 }

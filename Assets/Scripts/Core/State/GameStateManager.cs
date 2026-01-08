@@ -2,71 +2,64 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Core.Constants;
 using Core.Events;
-using Core.Managers;
 
-namespace Core.State
+namespace Core.State;
+
+public interface IGameStateManager
 {
-    public class GameStateManager : SingletonManager<GameStateManager>
+    GameState CurrentState { get; }
+    bool IsPlaying { get; }
+    void ChangeState(GameState newState);
+}
+
+public sealed class GameStateManager : SingletonManager<GameStateManager>, IGameStateManager
+{
+    [SerializeField] private GameConfig gameConfig;
+    
+    public GameState CurrentState { get; private set; } = GameState.MainMenu;
+    public bool IsPlaying => CurrentState == GameState.Gameplay;
+    public static bool IsCurrentlyPlaying => Instance is { IsPlaying: true };
+
+    protected override void OnInit()
     {
-        public GameState CurrentState { get; private set; } = GameState.MainMenu;
-
-        public bool IsPlaying => CurrentState == GameState.Gameplay;
-        public static bool IsCurrentlyPlaying => Instance != null && Instance.IsPlaying;
-
-        protected override void OnInitialize()
-        {
-            SceneManager.sceneLoaded += OnSceneLoaded;
-            EventBus.OnGamePaused += HandleGamePaused;
-            EventBus.OnDialogueStateChanged += HandleDialogueStateChanged;
-            EventBus.OnPlayerDied += () => ChangeState(GameState.GameOver);
-            EventBus.OnPlayerRespawn += () => ChangeState(GameState.Gameplay);
-            EventBus.OnLevelCompleted += () => ChangeState(GameState.Loading);
+        if (gameConfig == null)
+            gameConfig = Resources.Load<GameConfig>("GameConfig");
             
-            // Set initial state
-            CurrentState = SceneManager.GetActiveScene().buildIndex == GameConstants.Scenes.MainMenu 
-                ? GameState.MainMenu : GameState.Gameplay;
-            ApplyStateEffects(CurrentState);
-        }
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        EventBus.OnGamePaused += paused => ChangeState(paused ? GameState.Paused : GameState.Gameplay);
+        EventBus.OnDialogueStateChanged += open => { if (CurrentState is GameState.Gameplay or GameState.Dialogue) ChangeState(open ? GameState.Dialogue : GameState.Gameplay); };
+        EventBus.OnPlayerDied += () => ChangeState(GameState.GameOver);
+        EventBus.OnPlayerRespawn += () => ChangeState(GameState.Gameplay);
+        
+        CurrentState = SceneManager.GetActiveScene().buildIndex == gameConfig.mainMenuSceneIndex ? GameState.MainMenu : GameState.Gameplay;
+        ApplyState();
+    }
 
-        protected override void OnShutdown()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-            EventBus.OnGamePaused -= HandleGamePaused;
-            EventBus.OnDialogueStateChanged -= HandleDialogueStateChanged;
-        }
+    protected override void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        base.OnDestroy();
+    }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            ChangeState(scene.buildIndex == GameConstants.Scenes.MainMenu ? GameState.MainMenu : GameState.Gameplay);
-            EventBus.RaiseLevelLoaded(scene.buildIndex);
-        }
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        ChangeState(scene.buildIndex == gameConfig.mainMenuSceneIndex ? GameState.MainMenu : GameState.Gameplay);
+        EventBus.LevelLoaded(scene.buildIndex);
+    }
 
-        public void ChangeState(GameState newState)
-        {
-            if (CurrentState == newState) return;
-            CurrentState = newState;
-            ApplyStateEffects(newState);
-            EventBus.RaiseGameStateChanged(CurrentState);
-        }
+    public void ChangeState(GameState newState)
+    {
+        if (CurrentState == newState) return;
+        CurrentState = newState;
+        ApplyState();
+        EventBus.GameStateChanged(CurrentState);
+    }
 
-        private void ApplyStateEffects(GameState state)
-        {
-            bool showCursor = state != GameState.Gameplay && state != GameState.Loading;
-            Time.timeScale = (state == GameState.Paused || state == GameState.Dialogue || state == GameState.GameOver) ? 0f : 1f;
-            Cursor.visible = showCursor;
-            Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
-        }
-
-        private void HandleGamePaused(bool isPaused)
-        {
-            if (CurrentState == GameState.GameOver) return;
-            ChangeState(isPaused ? GameState.Paused : GameState.Gameplay);
-        }
-
-        private void HandleDialogueStateChanged(bool isOpen)
-        {
-            if (CurrentState == GameState.GameOver || CurrentState == GameState.Paused) return;
-            ChangeState(isOpen ? GameState.Dialogue : GameState.Gameplay);
-        }
+    void ApplyState()
+    {
+        bool showCursor = CurrentState is not (GameState.Gameplay or GameState.Loading);
+        Time.timeScale = CurrentState is GameState.Paused or GameState.Dialogue or GameState.GameOver ? gameConfig.pausedTimeScale : gameConfig.normalTimeScale;
+        Cursor.visible = showCursor;
+        Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
     }
 }

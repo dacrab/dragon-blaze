@@ -1,31 +1,20 @@
 using UnityEngine;
-using Gameplay.Characters.Player;
 
-namespace Gameplay.Items.PowerUps
+namespace Gameplay.Items.PowerUps;
+
+public sealed class DamageBoost : PowerUpBase
 {
-    public class DamageBoost : PowerUpBase
+    [SerializeField] Sprite icon;
+    [SerializeField] float multiplier = 2f;
+
+    float originalDamage;
+
+    protected override void Activate(Characters.Player.Player player)
     {
-        [SerializeField] private Sprite damageBoostImage;
-        [SerializeField] private float damageMultiplier = 2f;
-
-        private float originalDamage;
-        private PlayerAttack playerAttack;
-
-        protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            playerAttack = playerPowerups.GetComponent<PlayerAttack>();
-            if (playerAttack != null)
-            {
-                originalDamage = playerAttack.GetDamage();
-                playerAttack.SetDamage(originalDamage * damageMultiplier);
-            }
-            ActivateIndicator("Damage Boost", damageBoostImage);
-        }
-
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            playerAttack?.SetDamage(originalDamage);
-            playerAttack = null;
-        }
+        originalDamage = player.Damage;
+        player.SetDamage(originalDamage * multiplier);
+        ShowIndicator("Damage Boost", icon);
     }
+
+    protected override void Deactivate(Characters.Player.Player player) => player.SetDamage(originalDamage);
 }

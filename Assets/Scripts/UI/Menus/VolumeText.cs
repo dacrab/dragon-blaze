@@ -1,39 +1,35 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Core.Constants;
+using TMPro;
 using Core.Managers;
 
-namespace UI.Menus
+namespace UI.Menus;
+
+public enum VolumeType { Music, Sound }
+
+[RequireComponent(typeof(TextMeshProUGUI))]
+public sealed class VolumeText : MonoBehaviour
 {
-    public class VolumeText : MonoBehaviour
+    [SerializeField] VolumeType volumeType;
+    [SerializeField] string prefix = "";
+
+    TextMeshProUGUI text;
+
+    void Awake() => text = GetComponent<TextMeshProUGUI>();
+
+    void OnEnable()
     {
-        [SerializeField] private string volumeName;
-        [SerializeField] private string textIntro;
-        private Text txt;
-
-        private void Awake()
-        {
-            txt = GetComponent<Text>();
-        }
-
-        private void OnEnable()
-        {
-            UpdateVolumeText(PlayerPrefs.GetFloat(volumeName, 0.5f));
-            if (SoundManager.Instance == null) return;
-            if (volumeName == GameConstants.Save.MusicVolume) SoundManager.Instance.OnMusicVolumeChanged += UpdateVolumeText;
-            else if (volumeName == GameConstants.Save.SoundVolume) SoundManager.Instance.OnSoundVolumeChanged += UpdateVolumeText;
-        }
-
-        private void OnDisable()
-        {
-            if (SoundManager.Instance == null) return;
-            if (volumeName == GameConstants.Save.MusicVolume) SoundManager.Instance.OnMusicVolumeChanged -= UpdateVolumeText;
-            else if (volumeName == GameConstants.Save.SoundVolume) SoundManager.Instance.OnSoundVolumeChanged -= UpdateVolumeText;
-        }
-
-        private void UpdateVolumeText(float value)
-        {
-            if (txt != null) txt.text = $"{textIntro}{(value * 100):F0}";
-        }
+        UpdateText(volumeType == VolumeType.Music ? SoundManager.Instance?.MusicVolume ?? 0.5f : SoundManager.Instance?.SoundVolume ?? 0.5f);
+        if (SoundManager.Instance == null) return;
+        if (volumeType == VolumeType.Music) SoundManager.Instance.OnMusicVolumeChanged += UpdateText;
+        else SoundManager.Instance.OnSoundVolumeChanged += UpdateText;
     }
+
+    void OnDisable()
+    {
+        if (SoundManager.Instance == null) return;
+        if (volumeType == VolumeType.Music) SoundManager.Instance.OnMusicVolumeChanged -= UpdateText;
+        else SoundManager.Instance.OnSoundVolumeChanged -= UpdateText;
+    }
+
+    void UpdateText(float value) => text.text = $"{prefix}{value * 100:F0}";
 }

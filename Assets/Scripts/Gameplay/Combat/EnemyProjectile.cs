@@ -1,26 +1,23 @@
 using UnityEngine;
 using Core.Constants;
 
-namespace Gameplay.Combat
-{
-    public class EnemyProjectile : ProjectileBase
-    {
-        protected override void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (!collision.CompareTag(GameConstants.Tags.Player))
-            {
-                base.OnTriggerEnter2D(collision);
-                return;
-            }
+namespace Gameplay.Combat;
 
-            var player = collision.GetComponent<Gameplay.Characters.Player.PlayerController>();
-            if (player != null && player.IsInvisible()) return;
-            
-            var health = collision.GetComponent<Gameplay.Health.Health>();
-            health?.TakeDamage(damage);
+public sealed class EnemyProjectile : ProjectileBase
+{
+    protected override void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (!collision.CompareTag(GameConstants.Tags.Player))
+        {
             base.OnTriggerEnter2D(collision);
+            return;
         }
 
-        public void ActivateProjectile() => SetDirection(1);
+        if (collision.GetComponent<Characters.Player.Player>() is { IsInvisible: true }) return;
+        
+        collision.GetComponent<Health.Health>()?.TakeDamage(damage);
+        base.OnTriggerEnter2D(collision);
     }
+
+    public void ActivateProjectile() => SetDirection(transform.lossyScale.x > 0 ? 1 : -1);
 }

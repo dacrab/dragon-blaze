@@ -2,82 +2,86 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Core.Persistence;
 using Core.Events;
+using Core.Constants;
 
-namespace Core.Managers
+namespace Core.Managers;
+
+public interface IGameManager
 {
-    public class GameManager : SingletonManager<GameManager>
+    int TotalCoins { get; }
+    void AddCoins(int value);
+    void ResetCoins();
+    void SaveGame(bool isNewGame = false);
+    bool SaveDataExists();
+    SaveData LoadGame();
+    int GetLastSavedLevelIndex();
+    void DeleteSave();
+}
+
+public sealed class GameManager : SingletonManager<GameManager>, IGameManager
+{
+    [SerializeField] private GameConfig gameConfig;
+    private ISaveSystem saveSystem;
+
+    public int TotalCoins { get; private set; }
+
+    protected override void OnInit()
     {
-        private int totalCoins;
-        public int TotalCoins => totalCoins;
+        if (gameConfig == null)
+            gameConfig = Resources.Load<GameConfig>("GameConfig");
+        
+        saveSystem = new SaveSystem(gameConfig);
+        LoadGame();
+        EventBus.OnLevelCompleted += SaveGame;
+    }
 
-        protected override void OnInitialize()
+    protected override void OnDestroy()
+    {
+        EventBus.OnLevelCompleted -= SaveGame;
+        base.OnDestroy();
+    }
+
+    public void AddCoins(int value)
+    {
+        if (value <= 0) return;
+        TotalCoins += value;
+        EventBus.ScoreChanged(TotalCoins);
+    }
+
+    public void ResetCoins()
+    {
+        TotalCoins = 0;
+        EventBus.ScoreChanged(TotalCoins);
+    }
+
+    public void SaveGame(bool isNewGame = false)
+    {
+        saveSystem.SaveGame(new()
         {
-            LoadGame();
-            EventBus.OnLevelCompleted += HandleLevelCompleted;
-        }
+            totalCoins = TotalCoins,
+            currentLevel = isNewGame ? gameConfig.firstLevelSceneIndex : SceneManager.GetActiveScene().buildIndex
+        });
+    }
 
-        protected override void OnShutdown()
+    public void SaveGame() => SaveGame(false);
+    public bool SaveDataExists() => saveSystem.SaveExists();
+
+    public SaveData LoadGame()
+    {
+        var data = saveSystem.LoadGame();
+        if (data != null)
         {
-            EventBus.OnLevelCompleted -= HandleLevelCompleted;
+            TotalCoins = data.totalCoins;
+            EventBus.ScoreChanged(TotalCoins);
         }
+        return data;
+    }
 
-        public void AddCoins(int value)
-        {
-            if (value <= 0) return;
-            totalCoins += value;
-            EventBus.RaiseScoreChanged(totalCoins);
-            SaveGame();
-        }
+    public int GetLastSavedLevelIndex() => saveSystem.LoadGame()?.currentLevel ?? gameConfig.firstLevelSceneIndex;
 
-        public void ResetCoins()
-        {
-            totalCoins = 0;
-            EventBus.RaiseScoreChanged(totalCoins);
-            SaveGame();
-        }
-
-        public void SetCoins(int value)
-        {
-            totalCoins = Mathf.Max(0, value);
-            EventBus.RaiseScoreChanged(totalCoins);
-            SaveGame();
-        }
-
-        public void SaveGame(bool isNewGame = false)
-        {
-            SaveData data = new SaveData
-            {
-                totalCoins = totalCoins,
-                currentLevel = isNewGame ? Core.Constants.GameConstants.Scenes.FirstLevel : SceneManager.GetActiveScene().buildIndex
-            };
-            SaveSystem.SaveGame(data);
-        }
-
-        public bool SaveDataExists() => SaveSystem.SaveExists();
-
-        public SaveData LoadGame()
-        {
-            SaveData data = SaveSystem.LoadGame();
-            if (data != null)
-            {
-                totalCoins = data.totalCoins;
-                EventBus.RaiseScoreChanged(totalCoins);
-            }
-            return data;
-        }
-
-        public int GetLastSavedLevelIndex()
-        {
-            SaveData saveData = SaveSystem.LoadGame();
-            return saveData != null ? saveData.currentLevel : Core.Constants.GameConstants.Scenes.FirstLevel;
-        }
-
-        public void DeleteSave()
-        {
-            SaveSystem.DeleteSave();
-            ResetCoins();
-        }
-
-        private void HandleLevelCompleted() => SaveGame();
+    public void DeleteSave()
+    {
+        saveSystem.DeleteSave();
+        ResetCoins();
     }
 }

@@ -1,31 +1,17 @@
 using UnityEngine;
-using Gameplay.Characters.Player;
 
-namespace Gameplay.Items.PowerUps
+namespace Gameplay.Items.PowerUps;
+
+public sealed class HigherJump : PowerUpBase
 {
-    public class HigherJump : PowerUpBase
+    [SerializeField] Sprite icon;
+    [SerializeField] float multiplier = 1.5f;
+
+    protected override void Activate(Characters.Player.Player player)
     {
-        [SerializeField] private float jumpMultiplier = 1.5f;
-        [SerializeField] private Sprite higherJumpImage;
-
-        private float originalJumpPower;
-        private PlayerLocomotion locomotion;
-
-        protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            locomotion = playerPowerups.GetComponent<PlayerLocomotion>();
-            if (locomotion != null)
-            {
-                originalJumpPower = locomotion.GetJumpPower();
-                locomotion.SetJumpPower(originalJumpPower * jumpMultiplier);
-            }
-            ActivateIndicator("Higher Jump", higherJumpImage);
-        }
-
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            locomotion?.SetJumpPower(originalJumpPower);
-            locomotion = null;
-        }
+        player.ModifyJump(multiplier);
+        ShowIndicator("Higher Jump", icon);
     }
+
+    protected override void Deactivate(Characters.Player.Player player) => player.ModifyJump(1f / multiplier);
 }

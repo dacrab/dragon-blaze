@@ -1,43 +1,31 @@
 using UnityEngine;
-using Core.Constants;
 using Core.State;
 
-namespace Environment.Traps
+namespace Environment.Traps;
+
+public sealed class EnemySideways : TrapBase
 {
-    public class EnemySideways : TrapBase
+    [SerializeField] float movementDistance = 3f, speed = 2f;
+
+    bool movingLeft;
+    float leftEdge, rightEdge;
+
+    void Awake()
     {
-        [SerializeField] private float movementDistance = 3f;
-        [SerializeField] private float speed = 2f;
+        leftEdge = transform.position.x - movementDistance;
+        rightEdge = transform.position.x + movementDistance;
+    }
 
-        private bool movingLeft;
-        private float leftEdge;
-        private float rightEdge;
-
-        private void Awake()
-        {
-            leftEdge = transform.position.x - movementDistance;
-            rightEdge = transform.position.x + movementDistance;
-        }
-
-        private void Update()
-        {
-            if (!GameStateManager.IsCurrentlyPlaying) return;
-            
-            float direction = movingLeft ? -1f : 1f;
-            float newX = transform.position.x + direction * speed * Time.deltaTime;
-            
-            if (movingLeft && newX <= leftEdge) { newX = leftEdge; movingLeft = false; }
-            else if (!movingLeft && newX >= rightEdge) { newX = rightEdge; movingLeft = true; }
-            
-            transform.position = new Vector3(newX, transform.position.y, transform.position.z);
-        }
-
-        protected override void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            var player = collision.GetComponent<Gameplay.Characters.Player.PlayerController>();
-            if (player != null && player.IsInvisible()) return;
-            base.OnTriggerEnter2D(collision);
-        }
+    void Update()
+    {
+        if (!GameStateManager.IsCurrentlyPlaying) return;
+        
+        float dir = movingLeft ? -1f : 1f;
+        float newX = transform.position.x + dir * speed * Time.deltaTime;
+        
+        if (movingLeft && newX <= leftEdge) { newX = leftEdge; movingLeft = false; }
+        else if (!movingLeft && newX >= rightEdge) { newX = rightEdge; movingLeft = true; }
+        
+        transform.position = new(newX, transform.position.y, transform.position.z);
     }
 }

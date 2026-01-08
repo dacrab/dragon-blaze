@@ -1,25 +1,16 @@
 using UnityEngine;
-using Gameplay.Characters.Player;
 
-namespace Gameplay.Items.PowerUps
+namespace Gameplay.Items.PowerUps;
+
+public sealed class Invisibility : PowerUpBase
 {
-    public class Invisibility : PowerUpBase
+    [SerializeField] Sprite icon;
+
+    protected override void Activate(Characters.Player.Player player)
     {
-        [SerializeField] private Sprite invisibilityImage;
-
-        private PlayerPowerups cachedPowerups;
-
-        protected override void ActivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            cachedPowerups = playerPowerups;
-            cachedPowerups.SetInvisible(true);
-            ActivateIndicator("Invisibility", invisibilityImage);
-        }
-
-        protected override void DeactivatePowerUp(PlayerPowerups playerPowerups)
-        {
-            cachedPowerups?.SetInvisible(false);
-            cachedPowerups = null;
-        }
+        player.SetInvisibility(true);
+        ShowIndicator("Invisibility", icon);
     }
+
+    protected override void Deactivate(Characters.Player.Player player) => player.SetInvisibility(false);
 }

@@ -4,55 +4,42 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Input;
 
-namespace UI.Menus
+namespace UI.Menus;
+
+public sealed class BackgroundManager : MonoBehaviour
 {
-    public class BackgroundManager : MonoBehaviour
+    [SerializeField] Image[] backgrounds;
+    [SerializeField] float transitionTime = 2f;
+    [SerializeField] InputReader inputReader;
+
+    int currentIndex;
+
+    void Start()
     {
-        [SerializeField] private Image[] backgrounds;
-        [SerializeField] private float transitionTime = 2.0f;
-        [SerializeField] private InputReader inputReader;
+        foreach (var bg in backgrounds) bg.color = new(bg.color.r, bg.color.g, bg.color.b, 0);
+        if (backgrounds.Length > 0) backgrounds[0].color = Color.white;
+        StartCoroutine(Transition());
+    }
 
-        private int currentIndex;
+    void OnEnable() { if (inputReader != null) inputReader.InteractEvent += () => SceneManager.LoadScene(0); }
+    void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= () => SceneManager.LoadScene(0); }
 
-        private void Start()
+    IEnumerator Transition()
+    {
+        while (true)
         {
-            foreach (var bg in backgrounds)
-                bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0);
-            backgrounds[0].color = new Color(backgrounds[0].color.r, backgrounds[0].color.g, backgrounds[0].color.b, 1);
-            StartCoroutine(BackgroundTransition());
-        }
+            var current = backgrounds[currentIndex];
+            var next = backgrounds[(currentIndex + 1) % backgrounds.Length];
 
-        private void OnEnable()
-        {
-            if (inputReader != null) inputReader.InteractEvent += OnInteract;
-        }
-
-        private void OnDisable()
-        {
-            if (inputReader != null) inputReader.InteractEvent -= OnInteract;
-        }
-
-        private void OnInteract() => SceneManager.LoadScene(0);
-
-        private IEnumerator BackgroundTransition()
-        {
-            while (true)
+            for (float t = 0; t < transitionTime; t += Time.deltaTime)
             {
-                var current = backgrounds[currentIndex];
-                var next = backgrounds[(currentIndex + 1) % backgrounds.Length];
-
-                float elapsed = 0f;
-                while (elapsed < transitionTime)
-                {
-                    elapsed += Time.deltaTime;
-                    float alpha = elapsed / transitionTime;
-                    current.color = new Color(current.color.r, current.color.g, current.color.b, 1 - alpha);
-                    next.color = new Color(next.color.r, next.color.g, next.color.b, alpha);
-                    yield return null;
-                }
-
-                currentIndex = (currentIndex + 1) % backgrounds.Length;
+                float a = t / transitionTime;
+                current.color = new(1, 1, 1, 1 - a);
+                next.color = new(1, 1, 1, a);
+                yield return null;
             }
+
+            currentIndex = (currentIndex + 1) % backgrounds.Length;
         }
     }
 }

@@ -1,9 +1,8 @@
 using UnityEngine;
 
-namespace Gameplay.Items
+namespace Gameplay.Items;
+
+public abstract class Collectable : MonoBehaviour
 {
-    public abstract class Collectable : MonoBehaviour
-    {
-        public abstract void Collect();
-    }
+    public abstract void Collect();
 }

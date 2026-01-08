@@ -1,57 +1,23 @@
 using UnityEngine;
 
-namespace Core.Managers
+namespace Core.Managers;
+
+public abstract class SingletonManager<T> : MonoBehaviour where T : SingletonManager<T>
 {
-    public abstract class SingletonManager<T> : MonoBehaviour where T : SingletonManager<T>
+    public static T Instance { get; private set; }
+    protected virtual bool Persist => true;
+
+    protected virtual void Awake()
     {
-        private static T instance;
-        public static T Instance
+        if (Instance == null)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = FindFirstObjectByType<T>();
-                    if (instance == null)
-                        Debug.LogWarning($"[{typeof(T).Name}] Instance not found.");
-                }
-                return instance;
-            }
+            Instance = this as T;
+            if (Persist) DontDestroyOnLoad(gameObject);
+            OnInit();
         }
-
-        public bool IsInitialized { get; private set; }
-        protected virtual bool ShouldPersist => true;
-
-        protected virtual void Awake()
-        {
-            if (instance == null)
-            {
-                instance = this as T;
-                if (ShouldPersist) DontDestroyOnLoad(gameObject);
-                Initialize();
-            }
-            else if (instance != this)
-                Destroy(gameObject);
-        }
-
-        protected virtual void OnDestroy()
-        {
-            if (instance == this)
-            {
-                OnShutdown();
-                instance = null;
-            }
-        }
-
-        private void Initialize()
-        {
-            if (IsInitialized) return;
-            OnInitialize();
-            IsInitialized = true;
-        }
-
-        protected virtual void OnInitialize() { }
-        protected virtual void OnShutdown() { }
-        protected static bool HasInstance => instance != null;
+        else if (Instance != this) Destroy(gameObject);
     }
+
+    protected virtual void OnDestroy() { if (Instance == this) Instance = null; }
+    protected virtual void OnInit() { }
 }

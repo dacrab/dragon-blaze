@@ -4,90 +4,65 @@ using Core.Constants;
 using Core.State;
 using Gameplay.Combat;
 
-namespace Gameplay.Characters.Enemies
+namespace Gameplay.Characters.Enemies;
+
+public sealed class RangedEnemy : EnemyBase
 {
-    public class RangedEnemy : EnemyBase
+    [SerializeField] float attackCooldown = 1f, range = 10f;
+    [SerializeField] Transform firepoint;
+    [SerializeField] GameObject[] fireballs;
+    [SerializeField] LayerMask playerLayer;
+    [SerializeField] AudioClip fireballSound;
+
+    float cooldownTimer;
+    EnemyPatrol patrol;
+    Player.Player player;
+    int fireballIndex;
+
+    protected override void Awake()
     {
-        [Header("Attack")]
-        [SerializeField] private float attackCooldown = 1f;
-        [SerializeField] private float range = 10f;
-        [SerializeField] private float colliderDistance = 0.5f;
+        base.Awake();
+        patrol = GetComponentInParent<EnemyPatrol>();
+        var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+        if (go != null) player = go.GetComponent<Player.Player>();
+    }
 
-        [Header("Ranged Attack")]
-        [SerializeField] private Transform firepoint;
-        [SerializeField] private GameObject[] fireballs;
+    void Update()
+    {
+        if (isDead || !GameStateManager.IsCurrentlyPlaying) return;
+        cooldownTimer += Time.deltaTime;
 
-        [Header("Detection")]
-        [SerializeField] private LayerMask playerLayer;
-
-        [Header("Audio")]
-        [SerializeField] private AudioClip fireballSound;
-
-        private float cooldownTimer;
-        private EnemyPatrol enemyPatrol;
-        private Gameplay.Characters.Player.PlayerController playerController;
-
-        protected override void Awake()
+        if (PlayerInSight())
         {
-            base.Awake();
-            enemyPatrol = GetComponentInParent<EnemyPatrol>();
-            var player = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (player != null) playerController = player.GetComponent<Gameplay.Characters.Player.PlayerController>();
-        }
-
-        private void Update()
-        {
-            if (isDead || !GameStateManager.IsCurrentlyPlaying) return;
-
-            cooldownTimer += Time.deltaTime;
-            
-            if (PlayerInSight())
+            if (patrol != null) patrol.enabled = false;
+            if (cooldownTimer >= attackCooldown)
             {
-                if (cooldownTimer >= attackCooldown)
-                {
-                    cooldownTimer = 0f;
-                    anim?.SetTrigger(GameConstants.Animation.RangedAttack);
-                }
-                if (enemyPatrol != null) enemyPatrol.enabled = false;
-            }
-            else if (enemyPatrol != null) enemyPatrol.enabled = true;
-        }
-
-        private void RangedAttack()
-        {
-            SoundManager.Instance?.PlaySound(fireballSound);
-            if (firepoint == null || fireballs == null) return;
-            
-            var fireball = System.Array.Find(fireballs, f => !f.activeInHierarchy);
-            if (fireball != null)
-            {
-                fireball.transform.position = firepoint.position;
-                fireball.GetComponent<EnemyProjectile>()?.ActivateProjectile();
+                cooldownTimer = 0f;
+                anim.SetTrigger(GameConstants.Animation.RangedAttack);
             }
         }
+        else if (patrol != null) patrol.enabled = true;
+    }
 
-        private bool PlayerInSight()
-        {
-            if (playerController == null || playerController.IsInvisible()) return false;
-            var box = col as BoxCollider2D;
-            if (box == null) return false;
+    void RangedAttack()
+    {
+        SoundManager.Instance?.PlaySound(fireballSound);
+        if (fireballs is not { Length: > 0 }) return;
+        
+        var fb = fireballs[fireballIndex];
+        fireballIndex = (fireballIndex + 1) % fireballs.Length;
+        fb.transform.position = firepoint.position;
+        fb.GetComponent<EnemyProjectile>()?.ActivateProjectile();
+    }
 
-            RaycastHit2D hit = Physics2D.BoxCast(
-                box.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
-                new Vector3(box.bounds.size.x * range, box.bounds.size.y, box.bounds.size.z),
-                0, Vector2.left, 0, playerLayer);
+    bool PlayerInSight()
+    {
+        if (player is not { IsInvisible: false }) return false;
+        if (col is not BoxCollider2D box) return false;
 
-            return hit.collider != null && hit.collider.CompareTag(GameConstants.Tags.Player);
-        }
-
-        private void OnDrawGizmos()
-        {
-            var box = GetComponent<BoxCollider2D>();
-            if (box == null) return;
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(
-                box.bounds.center + transform.right * range * transform.localScale.x * colliderDistance,
-                new Vector3(box.bounds.size.x * range, box.bounds.size.y, box.bounds.size.z));
-        }
+        var hit = Physics2D.BoxCast(
+            box.bounds.center + transform.right * range * 0.5f * transform.localScale.x,
+            new Vector3(range, box.bounds.size.y, 1f), 0, Vector2.zero, 0, playerLayer);
+        return hit.collider != null;
     }
 }
