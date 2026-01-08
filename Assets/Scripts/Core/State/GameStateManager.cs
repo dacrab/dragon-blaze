@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Core.Constants;
 using Core.Events;
+using Core.Managers;
 
 namespace Core.State
 {

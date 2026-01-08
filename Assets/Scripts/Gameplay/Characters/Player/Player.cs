@@ -11,7 +11,8 @@ using Gameplay.Combat;
 namespace Gameplay.Characters.Player
 {
 
-[RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(Animator), typeof(SpriteRenderer))]
+[RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(Animator))]
+[RequireComponent(typeof(SpriteRenderer))]
 public sealed class Player : MonoBehaviour, IInvisible
 {
     [Header("Config")]
