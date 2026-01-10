@@ -39,8 +39,8 @@ public sealed class SoundManager : SingletonManager<SoundManager>, ISoundManager
             gameConfig = ScriptableObject.CreateInstance<GameConfig>();
         }
             
-        soundSource ??= gameObject.AddComponent<AudioSource>();
-        musicSource ??= gameObject.AddComponent<AudioSource>();
+        if (soundSource == null) soundSource = gameObject.AddComponent<AudioSource>();
+        if (musicSource == null) musicSource = gameObject.AddComponent<AudioSource>();
         
         musicSource.volume = PlayerPrefs.GetFloat(gameConfig.musicVolumeKey, gameConfig.defaultMusicVolume);
         soundSource.volume = PlayerPrefs.GetFloat(gameConfig.soundVolumeKey, gameConfig.defaultSoundVolume);

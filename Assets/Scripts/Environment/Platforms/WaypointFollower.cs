@@ -13,7 +13,7 @@ public sealed class WaypointFollower : MonoBehaviour
 
     void Update()
     {
-        if (waypoints is not { Length: > 0 }) return;
+        if (waypoints == null || waypoints.Length == 0 || !waypoints[currentIndex]) return;
 
         var target = waypoints[currentIndex].position;
         transform.position = Vector2.MoveTowards(transform.position, target, Time.deltaTime * speed);

@@ -52,7 +52,11 @@ public sealed class Player : MonoBehaviour, IInvisible
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
         health = GetComponent<Health.Health>();
-        currentDamage = config.baseDamage;
+        
+        if (config == null) config = Resources.Load<PlayerConfigSO>("PlayerConfig");
+        if (input == null) input = Resources.Load<Core.Input.InputReader>("InputReader");
+        
+        currentDamage = config != null ? config.baseDamage : 1f;
     }
 
     void OnEnable()
