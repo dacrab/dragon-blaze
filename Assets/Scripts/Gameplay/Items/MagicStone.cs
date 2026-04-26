@@ -6,16 +6,16 @@ using Core.Managers;
 
 namespace Gameplay.Items
 {
-    public class MagicStone : MonoBehaviour
+    public sealed class MagicStone : MonoBehaviour
     {
         [SerializeField] SpriteRenderer indicator;
         [SerializeField] InputReader inputReader;
 
         bool playerInTrigger;
 
-        void Start() { if (indicator != null) indicator.enabled = false; }
-        void OnEnable() { if (inputReader != null) inputReader.InteractEvent += OnInteract; }
-        void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= OnInteract; }
+        void Start() => SetIndicator(false);
+        void OnEnable() => inputReader.InteractEvent += OnInteract;
+        void OnDisable() => inputReader.InteractEvent -= OnInteract;
 
         void OnInteract()
         {
@@ -28,14 +28,19 @@ namespace Gameplay.Items
         {
             if (!other.CompareTag(GameConstants.Tags.Player)) return;
             playerInTrigger = true;
-            if (indicator != null) indicator.enabled = true;
+            SetIndicator(true);
         }
 
         void OnTriggerExit2D(Collider2D other)
         {
             if (!other.CompareTag(GameConstants.Tags.Player)) return;
             playerInTrigger = false;
-            if (indicator != null) indicator.enabled = false;
+            SetIndicator(false);
+        }
+
+        void SetIndicator(bool enabled)
+        {
+            if (indicator != null) indicator.enabled = enabled;
         }
     }
 }

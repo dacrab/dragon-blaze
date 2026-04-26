@@ -46,7 +46,7 @@ namespace Core.Managers
         {
             volume = Mathf.Clamp01(volume);
             soundSource.volume = volume;
-            PlayerPrefs.SetFloat(gameConfig.musicVolumeKey, volume);
+            PlayerPrefs.SetFloat(gameConfig.soundVolumeKey, volume);
             OnSoundVolumeChanged?.Invoke(volume);
         }
 

@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using Core.Constants;
 
@@ -11,6 +10,8 @@ public sealed class FallingPlatform : MonoBehaviour
     [SerializeField] Rigidbody2D rb;
     
     Vector3 initialPosition;
+    float timer;
+    bool falling;
 
     void Start()
     {
@@ -18,17 +19,21 @@ public sealed class FallingPlatform : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Static;
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    void Update()
     {
-        if (collision.gameObject.CompareTag(GameConstants.Tags.Player)) StartCoroutine(Fall());
+        if (!falling) return;
+        
+        timer += Time.deltaTime;
+        if (timer >= fallDelay && rb.bodyType == RigidbodyType2D.Static)
+            rb.bodyType = RigidbodyType2D.Dynamic;
+        else if (timer >= fallDelay + destroyDelay)
+            gameObject.SetActive(false);
     }
 
-    IEnumerator Fall()
+    void OnCollisionEnter2D(Collision2D collision)
     {
-        yield return new WaitForSeconds(fallDelay);
-        rb.bodyType = RigidbodyType2D.Dynamic;
-        yield return new WaitForSeconds(destroyDelay);
-        gameObject.SetActive(false);
+        if (collision.gameObject.CompareTag(GameConstants.Tags.Player) && !falling)
+            falling = true;
     }
 
     public void ResetPlatform()
@@ -37,6 +42,8 @@ public sealed class FallingPlatform : MonoBehaviour
         transform.position = initialPosition;
         rb.bodyType = RigidbodyType2D.Static;
         rb.linearVelocity = Vector2.zero;
+        falling = false;
+        timer = 0;
     }
 }
 }

@@ -24,25 +24,28 @@ public class EnemyPatrol : MonoBehaviour
         initScale = enemy.localScale;
     }
 
-    void OnDisable() => anim.SetBool(GameConstants.Animation.Moving, false);
+    void OnDisable() => anim?.SetBool(GameConstants.Animation.Moving, false);
 
     void Update()
     {
         float dir = movingLeft ? -1f : 1f;
-        float targetX = movingLeft ? leftEdge.position.x : rightEdge.position.x;
-        bool reachedTarget = movingLeft ? enemy.position.x <= targetX : enemy.position.x >= targetX;
+        Transform target = movingLeft ? leftEdge : rightEdge;
+        bool reachedTarget = movingLeft ? enemy.position.x <= target.position.x : enemy.position.x >= target.position.x;
 
-        if (!reachedTarget)
+        if (reachedTarget)
         {
-            anim.SetBool(GameConstants.Animation.Moving, true);
-            enemy.localScale = new(Mathf.Abs(initScale.x) * dir, initScale.y, initScale.z);
-            enemy.position += Vector3.right * (dir * speed * Time.deltaTime);
+            anim?.SetBool(GameConstants.Animation.Moving, false);
+            if ((idleTimer += Time.deltaTime) >= idleDuration)
+            {
+                movingLeft = !movingLeft;
+                idleTimer = 0;
+            }
         }
         else
         {
-            anim.SetBool(GameConstants.Animation.Moving, false);
-            idleTimer += Time.deltaTime;
-            if (idleTimer >= idleDuration) { movingLeft = !movingLeft; idleTimer = 0; }
+            anim?.SetBool(GameConstants.Animation.Moving, true);
+            enemy.localScale = new(Mathf.Abs(initScale.x) * dir, initScale.y, initScale.z);
+            enemy.position += Vector3.right * (dir * speed * Time.deltaTime);
         }
     }
 }

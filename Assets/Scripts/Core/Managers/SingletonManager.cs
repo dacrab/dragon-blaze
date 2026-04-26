@@ -12,7 +12,7 @@ public abstract class SingletonManager<T> : MonoBehaviour where T : SingletonMan
     {
         if (Instance == null)
         {
-            Instance = this as T;
+            Instance = (T)this;
             if (Persist) DontDestroyOnLoad(gameObject);
             OnInit();
         }
