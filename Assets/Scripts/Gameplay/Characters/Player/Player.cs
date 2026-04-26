@@ -39,7 +39,7 @@ public sealed class Player : MonoBehaviour
     int jumpCount, fireballIndex;
     bool facingRight = true, dashing, wallSliding, interacting;
     Transform checkpoint;
-    float currentDamage;
+    float currentDamage, currentSpeed, currentJumpPower;
 
     public bool IsInvisible { get; private set; }
     public bool IsGrounded { get; private set; }
@@ -53,6 +53,8 @@ public sealed class Player : MonoBehaviour
         sprite = GetComponent<SpriteRenderer>();
         health = GetComponent<Health.Health>();
         currentDamage = config.baseDamage;
+        currentSpeed = config.speed;
+        currentJumpPower = config.jumpPower;
     }
 
     void OnEnable()
@@ -97,7 +99,7 @@ public sealed class Player : MonoBehaviour
     void FixedUpdate()
     {
         if (interacting || dashing || wallJumpTimer > 0) return;
-        rb.linearVelocity = new(horizontalInput * config.speed, rb.linearVelocity.y);
+        rb.linearVelocity = new(horizontalInput * currentSpeed, rb.linearVelocity.y);
         if ((horizontalInput > config.movementThreshold && !facingRight) || (horizontalInput < -config.movementThreshold && facingRight)) Flip();
     }
 
@@ -111,7 +113,7 @@ public sealed class Player : MonoBehaviour
         if (wallSliding) { WallJump(); return; }
         if (!IsGrounded && !canCoyote && jumpCount <= 0) return;
 
-        rb.linearVelocity = new(rb.linearVelocity.x, config.jumpPower);
+        rb.linearVelocity = new(rb.linearVelocity.x, currentJumpPower);
         SpawnVfx(jumpVfx);
 
         if (!IsGrounded && !canCoyote) jumpCount--;
@@ -153,7 +155,7 @@ public sealed class Player : MonoBehaviour
         wallJumpTimer = config.wallJumpTime;
         jumpCount = config.extraJumps;
         float dir = -transform.localScale.x;
-        rb.linearVelocity = new(dir * config.wallJumpForce, config.jumpPower);
+        rb.linearVelocity = new(dir * config.wallJumpForce, currentJumpPower);
         Flip();
         SpawnVfx(jumpVfx);
     }
@@ -234,8 +236,8 @@ public sealed class Player : MonoBehaviour
     }
 
     public void SetDamage(float d) => currentDamage = d;
-    public void ModifySpeed(float mult) => config.speed *= mult;
-    public void ModifyJump(float mult) => config.jumpPower *= mult;
+    public void ModifySpeed(float mult) => currentSpeed *= mult;
+    public void ModifyJump(float mult) => currentJumpPower *= mult;
 
     void SpawnVfx(GameObject prefab) { if (prefab != null) Instantiate(prefab, transform.position, Quaternion.identity); }
 }
