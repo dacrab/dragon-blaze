@@ -5,49 +5,43 @@ using Core.Interfaces;
 
 namespace Gameplay.Characters.Enemies
 {
-
-public sealed class MeleeEnemy : EnemyBase
-{
-    [Header("Combat")]
-    [SerializeField] float attackCooldown = 1f;
-    [SerializeField] float attackRange = 1.5f;
-    [SerializeField] float chaseSpeed = 3f;
-    
-    [Header("Target (auto-finds if empty)")]
-    [SerializeField] Transform playerTransform;
-
-    float cooldownTimer;
-    IInvisible playerInvisible;
-    IDamageable playerHealth;
-    EnemyPatrol patrol;
-
-    protected override void Awake()
+    public sealed class MeleeEnemy : EnemyBase
     {
-        base.Awake();
-        patrol = GetComponentInParent<EnemyPatrol>();
+        [Header("Combat")]
+        [SerializeField] float attackCooldown = 1f;
+        [SerializeField] float attackRange = 1.5f;
+        [SerializeField] float chaseSpeed = 3f;
         
-        if (playerTransform == null)
-        {
-            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (go != null) playerTransform = go.transform;
-        }
-        
-        if (playerTransform != null)
-        {
-            playerTransform.TryGetComponent(out playerInvisible);
-            playerTransform.TryGetComponent(out playerHealth);
-        }
-    }
+        [Header("Target (auto-finds if empty)")]
+        [SerializeField] Transform playerTransform;
 
-    void Update()
-    {
-        if (isDead || !GameStateManager.IsCurrentlyPlaying || playerTransform == null) return;
-        cooldownTimer += Time.deltaTime;
+        float cooldownTimer;
+        Player.Player player;
+        IDamageable playerHealth;
+        EnemyPatrol patrol;
 
-        if (playerInvisible is not { IsInvisible: true } && InPatrolBounds())
+        protected override void Awake()
         {
-            if (patrol != null) patrol.enabled = false;
-            ChasePlayer();
+            base.Awake();
+            patrol = GetComponentInParent<EnemyPatrol>();
+            
+            if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
+            if (playerTransform != null)
+            {
+                player = playerTransform.GetComponent<Player.Player>();
+                playerTransform.TryGetComponent(out playerHealth);
+            }
+        }
+
+        void Update()
+        {
+            if (isDead || !GameStateManager.IsCurrentlyPlaying || playerTransform == null) return;
+            cooldownTimer += Time.deltaTime;
+
+            if ((player == null || !player.IsInvisible) && InPatrolBounds())
+            {
+                if (patrol != null) patrol.enabled = false;
+                ChasePlayer();
             if (cooldownTimer >= attackCooldown && InAttackRange()) Attack();
         }
         else if (patrol != null) patrol.enabled = true;

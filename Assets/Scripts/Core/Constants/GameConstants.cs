@@ -65,6 +65,8 @@ public static class GameConstants
         public const string Enemy = "Enemy";
         public const string Default = "Default";
     }
+
+    public static Transform FindPlayer() => GameObject.FindGameObjectWithTag(Tags.Player)?.transform;
 }
 
 public enum GameState { MainMenu, Gameplay, Paused, Dialogue, GameOver, Loading }

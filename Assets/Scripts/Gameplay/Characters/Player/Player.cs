@@ -13,7 +13,7 @@ namespace Gameplay.Characters.Player
 
 [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(Animator))]
 [RequireComponent(typeof(SpriteRenderer))]
-public sealed class Player : MonoBehaviour, IInvisible
+public sealed class Player : MonoBehaviour
 {
     [Header("Config")]
     [SerializeField] PlayerConfigSO config;

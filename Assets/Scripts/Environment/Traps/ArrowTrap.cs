@@ -2,50 +2,43 @@ using UnityEngine;
 using Core.Managers;
 using Core.Constants;
 using Core.State;
-using Core.Interfaces;
 using Gameplay.Combat;
 
 namespace Environment.Traps
 {
-
-public sealed class ArrowTrap : TrapBase
-{
-    [Header("Combat")]
-    [SerializeField] float attackCooldown = 1f;
-    
-    [Header("Projectiles")]
-    [SerializeField] Transform firePoint;
-    [SerializeField] GameObject[] arrows;
-    
-    [Header("Audio")]
-    [SerializeField] AudioClip arrowSound;
-    
-    [Header("Target (auto-finds if empty)")]
-    [SerializeField] Transform playerTransform;
-
-    float cooldownTimer;
-    IInvisible playerInvisible;
-    int arrowIndex;
-
-    void Awake()
+    public sealed class ArrowTrap : TrapBase
     {
-        if (playerTransform == null)
-        {
-            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (go != null) playerTransform = go.transform;
-        }
+        [Header("Combat")]
+        [SerializeField] float attackCooldown = 1f;
         
-        playerTransform?.TryGetComponent(out playerInvisible);
-    }
+        [Header("Projectiles")]
+        [SerializeField] Transform firePoint;
+        [SerializeField] GameObject[] arrows;
+        
+        [Header("Audio")]
+        [SerializeField] AudioClip arrowSound;
+        
+        [Header("Target (auto-finds if empty)")]
+        [SerializeField] Transform playerTransform;
 
-    void Update()
-    {
-        if (!GameStateManager.IsCurrentlyPlaying) return;
-        cooldownTimer += Time.deltaTime;
-        if (cooldownTimer >= attackCooldown && playerInvisible is not { IsInvisible: true }) Attack();
-    }
+        float cooldownTimer;
+        Characters.Player.Player player;
+        int arrowIndex;
 
-    protected override void OnTriggerEnter2D(Collider2D collision) { }
+        void Awake()
+        {
+            if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
+            player = playerTransform?.GetComponent<Characters.Player.Player>();
+        }
+
+        void Update()
+        {
+            if (!GameStateManager.IsCurrentlyPlaying) return;
+            cooldownTimer += Time.deltaTime;
+            if (cooldownTimer >= attackCooldown && (player == null || !player.IsInvisible)) Attack();
+        }
+
+        protected override void OnTriggerEnter2D(Collider2D collision) { }
 
     void Attack()
     {
@@ -56,7 +49,7 @@ public sealed class ArrowTrap : TrapBase
         var arrow = arrows[arrowIndex];
         arrowIndex = (arrowIndex + 1) % arrows.Length;
         arrow.transform.position = firePoint.position;
-        if (arrow.TryGetComponent<EnemyProjectile>(out var proj)) proj.ActivateProjectile();
+        if (arrow.TryGetComponent<ProjectileBase>(out var proj)) proj.ActivateProjectile();
     }
 }
 }

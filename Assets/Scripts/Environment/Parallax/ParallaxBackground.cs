@@ -35,21 +35,23 @@ public sealed class ParallaxBackground : MonoBehaviour
         if (cam == null) return;
 
         var delta = cam.position - lastCamPos;
-        transform.position += new Vector3(delta.x * parallaxMultiplier.x, delta.y * parallaxMultiplier.y);
+        var pos = transform.position + new Vector3(delta.x * parallaxMultiplier.x, delta.y * parallaxMultiplier.y);
         lastCamPos = cam.position;
 
         if (infiniteHorizontal)
         {
-            float offsetX = (cam.position.x - transform.position.x) % textureSizeX;
+            float offsetX = (cam.position.x - pos.x) % textureSizeX;
             if (Mathf.Abs(offsetX) >= textureSizeX * wrapThreshold)
-                transform.position = new(cam.position.x - offsetX, transform.position.y);
+                pos.x = cam.position.x - offsetX;
         }
         if (infiniteVertical)
         {
-            float offsetY = (cam.position.y - transform.position.y) % textureSizeY;
+            float offsetY = (cam.position.y - pos.y) % textureSizeY;
             if (Mathf.Abs(offsetY) >= textureSizeY * wrapThreshold)
-                transform.position = new(transform.position.x, cam.position.y - offsetY);
+                pos.y = cam.position.y - offsetY;
         }
+
+        transform.position = pos;
     }
 }
 }
