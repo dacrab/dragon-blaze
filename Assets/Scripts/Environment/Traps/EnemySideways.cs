@@ -3,31 +3,20 @@ using Core.State;
 
 namespace Environment.Traps
 {
-
-public sealed class EnemySideways : TrapBase
-{
-    [SerializeField] float movementDistance = 3f, speed = 2f;
-
-    bool movingLeft;
-    float leftEdge, rightEdge;
-
-    void Awake()
+    public sealed class EnemySideways : TrapBase
     {
-        leftEdge = transform.position.x - movementDistance;
-        rightEdge = transform.position.x + movementDistance;
-    }
+        [SerializeField] float movementDistance = 3f, speed = 2f;
 
-    void Update()
-    {
-        if (!GameStateManager.IsCurrentlyPlaying) return;
-        
-        float dir = movingLeft ? -1f : 1f;
-        float newX = transform.position.x + dir * speed * Time.deltaTime;
-        
-        if (movingLeft && newX <= leftEdge) { newX = leftEdge; movingLeft = false; }
-        else if (!movingLeft && newX >= rightEdge) { newX = rightEdge; movingLeft = true; }
-        
-        transform.position = new(newX, transform.position.y, transform.position.z);
+        float startX;
+
+        void Awake() => startX = transform.position.x;
+
+        void Update()
+        {
+            if (!GameStateManager.IsCurrentlyPlaying) return;
+            float offset = Mathf.PingPong(Time.time * speed, movementDistance * 2) - movementDistance;
+            transform.position = new(startX + offset, transform.position.y, transform.position.z);
+        }
     }
 }
 }
