@@ -1,71 +1,59 @@
-# 🎮 Unity 2D Platformer
+# Dragon Blaze
 
-*Embark on a magical adventure in this enchanting 2D platformer crafted with Unity*
+A 2D action platformer with fluid movement, dynamic combat, and modular architecture built in Unity 6.
 
-<div align="center">
-  
-[![Play Now](https://img.shields.io/badge/Play%20Now-itch.io-FA5C5C?style=for-the-badge&logo=itch.io)](https://dacrab.itch.io/unity-2d-platformer)
+[![Play on itch.io](https://img.shields.io/badge/Play-itch.io-FA5C5C?style=flat-square)](https://dacrab.itch.io/unity-2d-platformer)
+[![Gameplay Video](https://img.shields.io/badge/Gameplay-Video-4285F4?style=flat-square)](https://drive.google.com/file/d/1A_-qFr5LuwZUnVla1aqEab6fWn9i16fv/view)
+[![Unity](https://img.shields.io/badge/Unity-6000.3.2f1-000000?style=flat-square&logo=unity)](https://unity.com/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-## 🎥 Gameplay Preview
-[<img src="https://img.shields.io/badge/Watch_Gameplay-4285F4?style=for-the-badge&logo=google-drive&logoColor=white" />](https://drive.google.com/file/d/1A_-qFr5LuwZUnVla1aqEab6fWn9i16fv/view?usp=drive_link)
+## Gameplay
 
-</div>
+- Multi-jump, wall slide, wall jump, dash with coyote time
+- Melee and ranged combat with hit feedback
+- Enemy AI with patrol/chase states
+- Traps, moving platforms, parallax backgrounds
+- Checkpoint saves with JSON persistence
+- 4 levels
 
-## ✨ Features
-- 🎯 Fluid player movement and responsive controls
-- 🦸‍♂️ Advanced platforming mechanics:
-  - ⚡ Coyote time and multi-jump capabilities
-  - 🧗‍♂️ Smooth wall sliding
-  - 💨 Dynamic dash ability with particle effects
-- 🏗️ Meticulously crafted levels with progressive challenge
-- 🎨 Stunning visuals and particle systems
-- 🎵 Rich, immersive soundscape
-- 💾 Seamless save system with checkpoints
-- 🔄 Polished scene transitions
-- ⭐ Engaging power-up system
+## Controls
 
-## 🚀 Getting Started
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/dacrab/unity-game.git
-   ```
-2. Open project in Unity
-3. Load the main scene
-4. Press Play to begin your adventure!
+| Action | Key |
+|--------|-----|
+| Move | `A/D` or Arrows |
+| Jump | `Space` |
+| Attack | `Left Click` |
+| Dash | `Shift` |
+| Interact | `E` |
+| Pause | `Esc` |
 
-## 🎮 Controls
-| Action | Input |
-|--------|--------|
-| Move | Arrow keys or A/D |
-| Jump | Spacebar |
-| Dash | Left Shift (while moving) |
-| Wall Slide | Hold direction against wall |
+## Project Structure
 
-## 🆕 Recent Updates
-- 🧗‍♂️ Implemented wall sliding mechanic
-- ✨ Enhanced dash with stunning particle trails
-- 🦘 Improved jump system physics
-- 🎆 Added new particle effects
-- 🏰 Expanded with additional levels
-- 🌐 Launched WebGL build on itch.io
+```
+Assets/
+├── Scripts/
+│   ├── Core/           # EventBus, ServiceLocator, StateMachine, Managers
+│   ├── Gameplay/       # Player, Enemies, Combat, Items
+│   ├── Environment/    # Traps, Platforms, Parallax
+│   └── UI/             # HUD, Menus, Dialogue
+├── Scenes/             # MainMenu, Level1-4, Credits
+├── Prefabs/            # Player, Enemies, Platforms, Traps, UI
+└── Animation/          # Player, Enemy, UI animations
+```
 
-## 🗺️ Roadmap
-- 🌍 New themed worlds
-- 💰 Currency system
-- 👾 Epic boss battles
-- 🏪 Shop system
-- 🎯 Control refinements
-- 🏆 Online leaderboards
-- 🌟 Achievements system
+## Setup
 
-## 👥 Credits
-- 👨‍💻 Developer: [DaCrab](https://github.com/dacrab)
-- 🎮 Engine: [Unity Technologies](https://unity.com/)
-- 🎨 Assets: [Unity Asset Store](https://assetstore.unity.com/)
-- 🎵 Sound: [Freesound](https://freesound.org/)
+1. Clone: `git clone https://github.com/dacrab/dragon-blaze.git`
+2. Open in Unity Hub (6000.3.2f1+)
+3. Load `Assets/Scenes/MainMenu.unity`
+4. Press Play
 
-## 📜 License
-MIT License - See [LICENSE](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt)
+## Tech
 
-## 📬 Contact
-For bug reports or suggestions: [vkavouras@proton.me](mailto:vkavouras@proton.me)
+- Unity 6 with New Input System
+- UniTask for async operations
+- TextMeshPro for UI
+
+## License
+
+MIT
