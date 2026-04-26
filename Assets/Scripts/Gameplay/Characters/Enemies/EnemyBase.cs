@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies
 {

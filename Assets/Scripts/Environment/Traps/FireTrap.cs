@@ -42,7 +42,7 @@ namespace Environment.Traps
             if (!active || !collision.CompareTag(GameConstants.Tags.Player)) return;
             var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
             if (player is { IsInvisible: true }) return;
-            collision.GetComponent<Gameplay.Health.Health>()?.TakeDamage(damage * Time.deltaTime);
+            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage * Time.deltaTime);
         }
 
         IEnumerator Activate()

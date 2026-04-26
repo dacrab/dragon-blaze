@@ -6,7 +6,7 @@ using Core.Input;
 
 namespace UI.Menus
 {
-    public sealed class BackgroundManager : MonoBehaviour
+    public sealed class CreditsBackgroundManager : MonoBehaviour
     {
         [SerializeField] Image[] backgrounds;
         [SerializeField] float transitionTime = 2f;

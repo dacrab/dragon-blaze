@@ -5,7 +5,7 @@ using Core.Constants;
 using Core.Events;
 using Core.Managers;
 
-namespace Gameplay.Health
+namespace Gameplay.Combat
 {
     [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
     public sealed class Health : MonoBehaviour, IDamageable

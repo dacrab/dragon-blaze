@@ -1,8 +1,9 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Gameplay.Combat;
 
-namespace Gameplay.Items
+namespace Gameplay.Items.Collectibles
 {
     [RequireComponent(typeof(Collider2D))]
     public sealed class HealthCollectible : MonoBehaviour
@@ -14,7 +15,7 @@ namespace Gameplay.Items
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            collision.GetComponent<Health.Health>()?.Heal(healthValue);
+            collision.GetComponent<Health>()?.Heal(healthValue);
             Collect();
         }
 

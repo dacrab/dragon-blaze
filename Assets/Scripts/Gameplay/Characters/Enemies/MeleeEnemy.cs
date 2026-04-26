@@ -18,12 +18,12 @@ namespace Gameplay.Characters.Enemies
         float cooldownTimer;
         Player.Player player;
         IDamageable playerHealth;
-        EnemyPatrol patrol;
+        PatrolMovement patrol;
 
         protected override void Awake()
         {
             base.Awake();
-            patrol = GetComponentInParent<EnemyPatrol>();
+            patrol = GetComponentInParent<PatrolMovement>();
             
             if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
             if (playerTransform != null)

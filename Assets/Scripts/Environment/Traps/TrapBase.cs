@@ -10,7 +10,7 @@ namespace Environment.Traps
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player) || ShouldIgnoreCollision(collision)) return;
-            collision.GetComponent<Gameplay.Health.Health>()?.TakeDamage(damage);
+            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
         }
 
         protected bool ShouldIgnoreCollision(Collider2D collision) =>

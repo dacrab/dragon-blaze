@@ -3,7 +3,7 @@ using Core.State;
 
 namespace Environment.Traps
 {
-    public sealed class EnemySideways : TrapBase
+    public sealed class SidewaysTrap : TrapBase
     {
         [SerializeField] float movementDistance = 3f, speed = 2f;
 

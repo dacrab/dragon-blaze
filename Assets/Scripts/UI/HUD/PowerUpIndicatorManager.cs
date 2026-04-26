@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TMPro;
 using Core.Managers;
 
-namespace Gameplay.Items.PowerUps
+namespace UI.HUD
 {
     public sealed class PowerUpIndicatorManager : SingletonManager<PowerUpIndicatorManager>
     {

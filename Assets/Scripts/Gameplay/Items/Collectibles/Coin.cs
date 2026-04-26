@@ -2,7 +2,7 @@ using UnityEngine;
 using Core.Managers;
 using Core.Constants;
 
-namespace Gameplay.Items.Coins
+namespace Gameplay.Items.Collectibles
 {
     public sealed class Coin : MonoBehaviour
     {

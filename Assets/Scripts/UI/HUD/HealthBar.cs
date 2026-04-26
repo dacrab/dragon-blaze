@@ -5,7 +5,7 @@ using Core.Events;
 namespace UI.HUD
 {
 
-public sealed class Healthbar : MonoBehaviour
+public sealed class HealthBar : MonoBehaviour
 {
     [SerializeField] Image currentHealthBar;
 

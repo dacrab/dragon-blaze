@@ -4,7 +4,7 @@ using Core.Constants;
 using Core.Input;
 using Core.Managers;
 
-namespace Gameplay.Items
+namespace Gameplay.Items.Collectibles
 {
     public sealed class MagicStone : MonoBehaviour
     {

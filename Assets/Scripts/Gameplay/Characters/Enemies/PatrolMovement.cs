@@ -5,7 +5,7 @@ namespace Gameplay.Characters.Enemies
 {
 
 [RequireComponent(typeof(Animator))]
-public class EnemyPatrol : MonoBehaviour
+public class PatrolMovement : MonoBehaviour
 {
     [SerializeField] Transform leftEdge, rightEdge, enemy;
     [SerializeField] float speed = 2f, idleDuration = 1f;

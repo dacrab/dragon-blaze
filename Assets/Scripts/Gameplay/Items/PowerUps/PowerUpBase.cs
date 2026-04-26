@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using Core.Constants;
+using UI.HUD;
 
 namespace Gameplay.Items.PowerUps
 {

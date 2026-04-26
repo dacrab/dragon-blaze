@@ -26,14 +26,14 @@ namespace Gameplay.Characters.Enemies
         [SerializeField] Transform playerTransform;
 
         float cooldownTimer;
-        EnemyPatrol patrol;
+        PatrolMovement patrol;
         Player.Player player;
         int fireballIndex;
 
         protected override void Awake()
         {
             base.Awake();
-            patrol = GetComponentInParent<EnemyPatrol>();
+            patrol = GetComponentInParent<PatrolMovement>();
             
             if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
             player = playerTransform?.GetComponent<Player.Player>();
