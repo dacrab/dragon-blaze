@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
+using System.Collections.Generic;
 using Core.Events;
 using Core.Constants;
 using Core.Input;
@@ -28,7 +30,12 @@ public sealed class UIManager : SingletonManager<UIManager>
     [Header("Config")]
     [SerializeField] GameConfig gameConfig;
 
+    [Header("PowerUp Indicators")]
+    [SerializeField] GameObject indicatorPrefab;
+    [SerializeField] Transform indicatorPanel;
+
     Gameplay.Characters.Player.Player player;
+    readonly Dictionary<string, (GameObject obj, Coroutine routine)> indicators = new();
 
     protected override void OnInit()
     {
@@ -40,6 +47,7 @@ public sealed class UIManager : SingletonManager<UIManager>
     {
         EventBus.OnScoreChanged += UpdateCoinDisplay;
         EventBus.OnPlayerDied += GameOver;
+        EventBus.OnPowerUpActivated += ActivateIndicator;
         if (inputReader != null) inputReader.PauseEvent += TogglePause;
     }
 
@@ -47,6 +55,7 @@ public sealed class UIManager : SingletonManager<UIManager>
     {
         EventBus.OnScoreChanged -= UpdateCoinDisplay;
         EventBus.OnPlayerDied -= GameOver;
+        EventBus.OnPowerUpActivated -= ActivateIndicator;
         if (inputReader != null) inputReader.PauseEvent -= TogglePause;
     }
 
@@ -73,7 +82,7 @@ public sealed class UIManager : SingletonManager<UIManager>
         gameOverScreen.SetActive(true);
         SetCursor(true);
         GameStateManager.Instance?.ChangeState(GameState.GameOver);
-        SoundManager.Instance?.PlaySound(gameOverSound);
+        GameManager.Instance?.PlaySound(gameOverSound);
     }
 
     public void Restart() => Menus.LoadingManager.LoadSpecificLevel(SceneManager.GetActiveScene().buildIndex);
@@ -108,5 +117,40 @@ public sealed class UIManager : SingletonManager<UIManager>
     public void UpdateLoadingImage(float progress) { if (loadingImage != null) loadingImage.fillAmount = progress; }
     void UpdateCoinDisplay(int coins) => coinText?.SetText(string.Format(gameConfig != null ? gameConfig.coinDisplayFormat : ": {0}", coins));
     void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
+
+    void ActivateIndicator(string name, Sprite icon, float duration)
+    {
+        if (indicatorPrefab == null || indicatorPanel == null) return;
+
+        if (indicators.TryGetValue(name, out var existing))
+        {
+            if (existing.routine != null) StopCoroutine(existing.routine);
+            var newRoutine = StartCoroutine(FadeOut(name, existing.obj, duration));
+            indicators[name] = (existing.obj, newRoutine);
+            return;
+        }
+
+        var indicator = Instantiate(indicatorPrefab, indicatorPanel);
+        if (indicator.GetComponentInChildren<Image>() is { } img) img.sprite = icon;
+        if (indicator.GetComponentInChildren<TMP_Text>() is { } txt) txt.text = name;
+
+        var routine = StartCoroutine(FadeOut(name, indicator, duration));
+        indicators[name] = (indicator, routine);
+    }
+
+    IEnumerator FadeOut(string name, GameObject indicator, float duration)
+    {
+        var img = indicator.GetComponentInChildren<Image>();
+        var startAlpha = img != null ? img.color.a : 1f;
+        
+        for (float t = 0; t < duration; t += Time.deltaTime)
+        {
+            if (img != null) img.color = new(img.color.r, img.color.g, img.color.b, Mathf.Lerp(startAlpha, 0, t / duration));
+            yield return null;
+        }
+        
+        indicators.Remove(name);
+        Destroy(indicator);
+    }
 }
 }

@@ -4,9 +4,20 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using Core.Events;
+using System;
 
 namespace UI.Dialogue
 {
+
+[Serializable]
+public sealed class DialogueData
+{
+    public string speakerName;
+    public AudioClip dialogueSound;
+    
+    [TextArea(5, 10)]
+    public string[] paragraphs;
+}
 
 public sealed class DialogueController : MonoBehaviour
 {
@@ -24,7 +35,7 @@ public sealed class DialogueController : MonoBehaviour
 
     float TypeDelay => baseTypeDelay / typeSpeed;
 
-    public void DisplayNextParagraph(DialogueText dialogue, AudioClip sound = null)
+    public void DisplayNextParagraph(DialogueData dialogue, AudioClip sound = null)
     {
         if (paragraphs.Count == 0)
         {
@@ -45,10 +56,10 @@ public sealed class DialogueController : MonoBehaviour
         if (paragraphs.Count == 0) conversationEnded = true;
     }
 
-    void StartConversation(DialogueText dialogue, AudioClip sound)
+    void StartConversation(DialogueData dialogue, AudioClip sound)
     {
         EventBus.DialogueStateChanged(true);
-        SoundManager.Instance?.PlaySound(sound);
+        GameManager.Instance?.PlaySound(sound);
         gameObject.SetActive(true);
         nameText.text = dialogue.speakerName;
         foreach (var p in dialogue.paragraphs) paragraphs.Enqueue(p);

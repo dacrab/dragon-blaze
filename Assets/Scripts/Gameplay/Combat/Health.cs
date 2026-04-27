@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using Core.Interfaces;
 using Core.Constants;
 using Core.Events;
 using Core.Managers;
@@ -8,7 +7,7 @@ using Core.Managers;
 namespace Gameplay.Combat
 {
     [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
-    public sealed class Health : MonoBehaviour, IDamageable
+    public sealed class Health : MonoBehaviour
     {
         [Header("Health")]
         [SerializeField] float maxHealth = 100f;
@@ -56,7 +55,7 @@ namespace Gameplay.Combat
             {
                 anim.SetTrigger(GameConstants.Animation.Hurt);
                 StartCoroutine(IFrames());
-                SoundManager.Instance?.PlaySound(hurtSound);
+                GameManager.Instance?.PlaySound(hurtSound);
                 if (hitParticles != null) Instantiate(hitParticles, transform.position, Quaternion.identity);
             }
             else Die();
@@ -87,7 +86,7 @@ namespace Gameplay.Combat
             anim.SetBool(GameConstants.Animation.Grounded, true);
             anim.SetTrigger(GameConstants.Animation.Die);
             dead = true;
-            SoundManager.Instance?.PlaySound(deathSound);
+            GameManager.Instance?.PlaySound(deathSound);
             if (deathParticles != null) Instantiate(deathParticles, transform.position, Quaternion.identity);
             if (isPlayer) EventBus.OnPlayerDied?.Invoke();
         }

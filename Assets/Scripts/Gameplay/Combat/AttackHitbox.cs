@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Core.Constants;
-using Core.Interfaces;
 
 namespace Gameplay.Combat
 {
@@ -40,10 +39,10 @@ namespace Gameplay.Combat
             if (hasHit || !targetTagSet.Contains(other.tag)) return;
             hasHit = true;
 
-            other.TryGetComponent<IDamageable>(out var target)?.TakeDamage(damage);
+            other.TryGetComponent<Health>(out var target)?.TakeDamage(damage);
             ApplyKnockback(other);
             SpawnHitEffect(other);
-            Core.Managers.SoundManager.Instance?.PlaySound(hitSound);
+            Core.Managers.GameManager.Instance?.PlaySound(hitSound);
         }
 
         void ApplyKnockback(Collider2D target)

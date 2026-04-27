@@ -138,7 +138,7 @@ public sealed class Player : MonoBehaviour
         if (Mathf.Abs(rb.linearVelocity.x) > config.velocityThreshold || !IsGrounded) return;
         if (!GameStateManager.IsCurrentlyPlaying) return;
 
-        SoundManager.Instance?.PlaySound(fireballSound);
+        GameManager.Instance?.PlaySound(fireballSound);
         anim.SetTrigger(GameConstants.Animation.Attack);
         attackTimer = 0;
 
@@ -224,7 +224,7 @@ public sealed class Player : MonoBehaviour
     {
         if (!col.CompareTag(GameConstants.Tags.Checkpoint)) return;
         checkpoint = col.transform;
-        SoundManager.Instance?.PlaySound(checkpointSound);
+        GameManager.Instance?.PlaySound(checkpointSound);
         col.enabled = false;
         col.GetComponent<Animator>()?.SetTrigger(GameConstants.Animation.Activate);
     }

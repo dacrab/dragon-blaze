@@ -6,8 +6,11 @@ using Core.State;
 namespace Environment.Traps
 {
 
-public sealed class Spikehead : TrapBase
+public sealed class Spikehead : MonoBehaviour
 {
+    [Header("Damage")]
+    [SerializeField] float damage = 10f;
+    
     [Header("Movement")]
     [SerializeField] float speed = 5f;
     [SerializeField] float range = 5f;
@@ -34,12 +37,12 @@ public sealed class Spikehead : TrapBase
             CheckForPlayer();
     }
 
-    protected override void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerEnter2D(Collider2D collision)
     {
-        SoundManager.Instance?.PlaySound(impactSound);
+        GameManager.Instance?.PlaySound(impactSound);
         if (collision.CompareTag(GameConstants.Tags.Player) && 
             collision.GetComponent<Gameplay.Characters.Player.Player>() is not { IsInvisible: true })
-            base.OnTriggerEnter2D(collision);
+            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
         
         attacking = false;
         moveDir = Vector3.zero;

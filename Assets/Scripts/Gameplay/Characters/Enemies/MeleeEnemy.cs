@@ -1,7 +1,7 @@
 using UnityEngine;
 using Core.State;
 using Core.Constants;
-using Core.Interfaces;
+using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies
 {
@@ -17,7 +17,7 @@ namespace Gameplay.Characters.Enemies
 
         float cooldownTimer;
         Player.Player player;
-        IDamageable playerHealth;
+        Health playerHealth;
         PatrolMovement patrol;
 
         protected override void Awake()

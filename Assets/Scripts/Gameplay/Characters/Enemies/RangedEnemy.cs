@@ -58,7 +58,7 @@ namespace Gameplay.Characters.Enemies
 
     void RangedAttack()
     {
-        SoundManager.Instance?.PlaySound(fireballSound);
+        GameManager.Instance?.PlaySound(fireballSound);
         if (fireballs is not { Length: > 0 }) return;
         
         var fb = fireballs[fireballIndex];

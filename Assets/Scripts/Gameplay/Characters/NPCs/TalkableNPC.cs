@@ -1,21 +1,59 @@
 using UnityEngine;
+using Core.Constants;
+using Core.Input;
+using Core.State;
 using UI.Dialogue;
 
 namespace Gameplay.Characters.NPCs
 {
 
-public sealed class TalkableNPC : NPC
+public sealed class TalkableNPC : MonoBehaviour
 {
-    [SerializeField] DialogueText dialogueText;
+    [Header("Interaction")]
+    [SerializeField] float interactDistance = 5f;
+    [SerializeField] SpriteRenderer interactSprite;
+    
+    [Header("Input")]
+    [SerializeField] InputReader inputReader;
+    
+    [Header("Target (auto-finds if empty)")]
+    [SerializeField] Transform playerTransform;
+
+    [Header("Dialogue")]
+    [SerializeField] DialogueData dialogueText;
     [SerializeField] DialogueController dialogueController;
     [SerializeField] AudioClip dialogueSound;
 
     void Awake() => dialogueController ??= FindFirstObjectByType<DialogueController>();
 
-    protected override void Interact()
+    void Start()
+    {
+        if (playerTransform == null)
+        {
+            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
+            if (go != null) playerTransform = go.transform;
+        }
+    }
+
+    void OnEnable() { if (inputReader != null) inputReader.InteractEvent += OnInteractInput; }
+    void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= OnInteractInput; }
+    
+    void Update()
+    {
+        if (!GameStateManager.IsCurrentlyPlaying || interactSprite == null) return;
+        bool shouldShow = IsWithinRange();
+        if (interactSprite.gameObject.activeSelf != shouldShow)
+            interactSprite.gameObject.SetActive(shouldShow);
+    }
+
+    void OnInteractInput() { if (IsWithinRange()) Interact(); }
+    
+    void Interact()
     {
         if (dialogueController != null && dialogueText != null)
             dialogueController.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
     }
+    
+    bool IsWithinRange() => playerTransform != null && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
 }
 }

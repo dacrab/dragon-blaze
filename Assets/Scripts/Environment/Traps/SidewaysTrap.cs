@@ -1,10 +1,12 @@
 using UnityEngine;
 using Core.State;
+using Core.Constants;
 
 namespace Environment.Traps
 {
-    public sealed class SidewaysTrap : TrapBase
+    public sealed class SidewaysTrap : MonoBehaviour
     {
+        [SerializeField] float damage = 10f;
         [SerializeField] float movementDistance = 3f, speed = 2f;
 
         float startX;
@@ -16,6 +18,13 @@ namespace Environment.Traps
             if (!GameStateManager.IsCurrentlyPlaying) return;
             float offset = Mathf.PingPong(Time.time * speed, movementDistance * 2) - movementDistance;
             transform.position = new(startX + offset, transform.position.y, transform.position.z);
+        }
+
+        void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
+            if (collision.GetComponent<Gameplay.Characters.Player.Player>() is { IsInvisible: true }) return;
+            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
         }
     }
 }

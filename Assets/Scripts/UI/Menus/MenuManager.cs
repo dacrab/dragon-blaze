@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using TMPro;
 using Core.Managers;
 using Core.Constants;
 using Core.Input;
@@ -20,6 +21,10 @@ public sealed class MenuManager : MonoBehaviour
     [SerializeField] RectTransform arrow;
     [SerializeField] RectTransform[] buttons;
     
+    [Header("Volume Display")]
+    [SerializeField] TextMeshProUGUI musicVolumeText;
+    [SerializeField] TextMeshProUGUI soundVolumeText;
+    
     [Header("Audio")]
     [SerializeField] AudioClip changeSound, interactSound;
     
@@ -38,6 +43,7 @@ public sealed class MenuManager : MonoBehaviour
     {
         gameConfig ??= Resources.Load<GameConfig>("GameConfig");
         UpdateArrow();
+        UpdateVolumeDisplays();
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
@@ -48,6 +54,12 @@ public sealed class MenuManager : MonoBehaviour
         inputReader.NavigateEvent += OnNavigate;
         inputReader.SubmitEvent += OnSubmit;
         inputReader.EnableUIInput();
+        
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnMusicVolumeChanged += UpdateMusicVolume;
+            GameManager.Instance.OnSoundVolumeChanged += UpdateSoundVolume;
+        }
     }
 
     void OnDisable()
@@ -55,6 +67,12 @@ public sealed class MenuManager : MonoBehaviour
         if (inputReader == null) return;
         inputReader.NavigateEvent -= OnNavigate;
         inputReader.SubmitEvent -= OnSubmit;
+        
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnMusicVolumeChanged -= UpdateMusicVolume;
+            GameManager.Instance.OnSoundVolumeChanged -= UpdateSoundVolume;
+        }
     }
 
     void OnNavigate(Vector2 dir)
@@ -67,15 +85,34 @@ public sealed class MenuManager : MonoBehaviour
     void ChangeIndex(int delta)
     {
         currentIndex = (currentIndex + delta + buttons.Length) % buttons.Length;
-        SoundManager.Instance?.PlaySound(changeSound);
+        GameManager.Instance?.PlaySound(changeSound);
         UpdateArrow();
     }
 
     void UpdateArrow() => arrow.position = new(arrow.position.x, buttons[currentIndex].position.y, arrow.position.z);
 
+    void UpdateVolumeDisplays()
+    {
+        if (GameManager.Instance != null)
+        {
+            UpdateMusicVolume(GameManager.Instance.MusicVolume);
+            UpdateSoundVolume(GameManager.Instance.SoundVolume);
+        }
+    }
+
+    void UpdateMusicVolume(float value)
+    {
+        if (musicVolumeText != null) musicVolumeText.text = $"{value * 100:F0}";
+    }
+
+    void UpdateSoundVolume(float value)
+    {
+        if (soundVolumeText != null) soundVolumeText.text = $"{value * 100:F0}";
+    }
+
     void OnSubmit()
     {
-        SoundManager.Instance?.PlaySound(interactSound);
+        GameManager.Instance?.PlaySound(interactSound);
         
         if (menuActions != null && currentIndex < menuActions.Length)
             menuActions[currentIndex].action?.Invoke();

@@ -1,7 +1,6 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
-using Core.Interfaces;
 
 namespace Gameplay.Combat
 {
@@ -48,7 +47,7 @@ namespace Gameplay.Combat
                 if (checkInvisibility && collision.TryGetComponent<Characters.Player.Player>(out var player) && player.IsInvisible)
                     return;
                 
-                if (collision.TryGetComponent<IDamageable>(out var target))
+                if (collision.TryGetComponent<Health>(out var target))
                     target.TakeDamage(damage);
             }
 
@@ -57,7 +56,7 @@ namespace Gameplay.Combat
             
             if (hitEffectPrefab != null)
                 Instantiate(hitEffectPrefab, collision.ClosestPoint(transform.position), Quaternion.identity);
-            SoundManager.Instance?.PlaySound(hitSound);
+            GameManager.Instance?.PlaySound(hitSound);
             
             if (anim != null) anim.SetTrigger(GameConstants.Animation.Explode);
             else Deactivate();

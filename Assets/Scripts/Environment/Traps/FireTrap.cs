@@ -6,8 +6,11 @@ using Core.Constants;
 namespace Environment.Traps
 {
     [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
-    public sealed class FireTrap : TrapBase
+    public sealed class FireTrap : MonoBehaviour
     {
+        [Header("Damage")]
+        [SerializeField] float damage = 10f;
+        
         [Header("Timing")]
         [SerializeField] float activationDelay = 0.5f;
         [SerializeField] float activeTime = 2f;
@@ -29,7 +32,7 @@ namespace Environment.Traps
             sprite = GetComponent<SpriteRenderer>();
         }
 
-        protected override void OnTriggerEnter2D(Collider2D collision)
+        void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
             var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
@@ -50,7 +53,7 @@ namespace Environment.Traps
             sprite.color = warningColor;
             yield return new WaitForSeconds(activationDelay);
             
-            SoundManager.Instance?.PlaySound(firetrapSound);
+            GameManager.Instance?.PlaySound(firetrapSound);
             sprite.color = activeColor;
             active = true;
             anim.SetBool(GameConstants.Animation.Activated, true);

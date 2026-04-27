@@ -6,7 +6,7 @@ using Gameplay.Combat;
 
 namespace Environment.Traps
 {
-    public sealed class ArrowTrap : TrapBase
+    public sealed class ArrowTrap : MonoBehaviour
     {
         [Header("Combat")]
         [SerializeField] float attackCooldown = 1f;
@@ -38,12 +38,10 @@ namespace Environment.Traps
             if (cooldownTimer >= attackCooldown && (player == null || !player.IsInvisible)) Attack();
         }
 
-        protected override void OnTriggerEnter2D(Collider2D collision) { }
-
-    void Attack()
+        void Attack()
     {
         cooldownTimer = 0;
-        SoundManager.Instance?.PlaySound(arrowSound);
+        GameManager.Instance?.PlaySound(arrowSound);
         
         if (arrows is not { Length: > 0 }) return;
         var arrow = arrows[arrowIndex];
