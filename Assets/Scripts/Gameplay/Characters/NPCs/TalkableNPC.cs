@@ -35,12 +35,12 @@ public sealed class TalkableNPC : MonoBehaviour
         }
     }
 
-    void OnEnable() { if (inputReader != null) inputReader.InteractEvent += OnInteractInput; }
-    void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= OnInteractInput; }
+    void OnEnable() => inputReader.InteractEvent += OnInteractInput;
+    void OnDisable() => inputReader.InteractEvent -= OnInteractInput;
     
     void Update()
     {
-        if (!GameStateManager.IsCurrentlyPlaying || interactSprite == null) return;
+        if (!GameStateManager.IsCurrentlyPlaying) return;
         bool shouldShow = IsWithinRange();
         if (interactSprite.gameObject.activeSelf != shouldShow)
             interactSprite.gameObject.SetActive(shouldShow);
@@ -48,11 +48,7 @@ public sealed class TalkableNPC : MonoBehaviour
 
     void OnInteractInput() { if (IsWithinRange()) Interact(); }
     
-    void Interact()
-    {
-        if (dialogueController != null && dialogueText != null)
-            dialogueController.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
-    }
+    void Interact() => dialogueController.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
     
     bool IsWithinRange() => playerTransform != null && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
 }

@@ -58,7 +58,7 @@ public sealed class DialogueController : MonoBehaviour
 
     void StartConversation(DialogueData dialogue, AudioClip sound)
     {
-        EventBus.DialogueStateChanged(true);
+        EventBus.OnDialogueStateChanged?.Invoke(true);
         GameManager.Instance?.PlaySound(sound);
         gameObject.SetActive(true);
         nameText.text = dialogue.speakerName;

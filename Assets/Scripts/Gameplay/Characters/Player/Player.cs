@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.Collections;
-using Core.Interfaces;
 using Core.Input;
 using Core.Events;
 using Core.Constants;
@@ -126,10 +124,10 @@ public sealed class Player : MonoBehaviour
             rb.linearVelocity = new(rb.linearVelocity.x, rb.linearVelocity.y * config.jumpCancelMultiplier);
     }
 
-    void OnDash()
+    async void OnDash()
     {
         if (interacting || dashing || Mathf.Abs(horizontalInput) < config.movementThreshold) return;
-        StartCoroutine(DashRoutine());
+        await DashRoutine();
     }
 
     void OnAttack()
@@ -160,14 +158,14 @@ public sealed class Player : MonoBehaviour
         SpawnVfx(jumpVfx);
     }
 
-    IEnumerator DashRoutine()
+    async Awaitable DashRoutine()
     {
         dashing = true;
         float gravity = rb.gravityScale;
         rb.gravityScale = 0;
         rb.linearVelocity = new(transform.localScale.x * config.dashSpeed, 0);
         SpawnVfx(dashVfx);
-        yield return new WaitForSeconds(config.dashDuration);
+        await Awaitable.WaitForSecondsAsync(config.dashDuration);
         rb.gravityScale = gravity;
         dashing = false;
     }

@@ -6,18 +6,28 @@ using Core.Managers;
 
 namespace Core.State
 {
-    public sealed class GameStateManager : SingletonManager<GameStateManager>
+    public sealed class GameStateManager : MonoBehaviour
     {
+        public static GameStateManager Instance { get; private set; }
         [SerializeField] GameConfig gameConfig;
         
         public GameState CurrentState { get; private set; } = GameState.MainMenu;
         public bool IsPlaying => CurrentState == GameState.Gameplay;
         public static bool IsCurrentlyPlaying => Instance is { IsPlaying: true };
 
-        protected override void OnInit()
+        void Awake()
         {
-            if (gameConfig == null) gameConfig = Resources.Load<GameConfig>("GameConfig");
-                
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+                Initialize();
+            }
+            else Destroy(gameObject);
+        }
+
+        void Initialize()
+        {
             SceneManager.sceneLoaded += OnSceneLoaded;
             EventBus.OnGamePaused += paused => ChangeState(paused ? GameState.Paused : GameState.Gameplay);
             EventBus.OnDialogueStateChanged += open => { if (CurrentState is GameState.Gameplay or GameState.Dialogue) ChangeState(open ? GameState.Dialogue : GameState.Gameplay); };
@@ -28,10 +38,13 @@ namespace Core.State
             ApplyState();
         }
 
-        protected override void OnDestroy()
+        void OnDestroy()
         {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-            base.OnDestroy();
+            if (Instance == this)
+            {
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+                Instance = null;
+            }
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)

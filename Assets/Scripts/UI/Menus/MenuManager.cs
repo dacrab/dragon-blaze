@@ -41,7 +41,6 @@ public sealed class MenuManager : MonoBehaviour
 
     void Awake()
     {
-        gameConfig ??= Resources.Load<GameConfig>("GameConfig");
         UpdateArrow();
         UpdateVolumeDisplays();
         Cursor.visible = true;
@@ -50,34 +49,26 @@ public sealed class MenuManager : MonoBehaviour
 
     void OnEnable()
     {
-        if (inputReader == null) return;
         inputReader.NavigateEvent += OnNavigate;
         inputReader.SubmitEvent += OnSubmit;
         inputReader.EnableUIInput();
         
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnMusicVolumeChanged += UpdateMusicVolume;
-            GameManager.Instance.OnSoundVolumeChanged += UpdateSoundVolume;
-        }
+        GameManager.Instance.OnMusicVolumeChanged += UpdateMusicVolume;
+        GameManager.Instance.OnSoundVolumeChanged += UpdateSoundVolume;
     }
 
     void OnDisable()
     {
-        if (inputReader == null) return;
         inputReader.NavigateEvent -= OnNavigate;
         inputReader.SubmitEvent -= OnSubmit;
         
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnMusicVolumeChanged -= UpdateMusicVolume;
-            GameManager.Instance.OnSoundVolumeChanged -= UpdateSoundVolume;
-        }
+        GameManager.Instance.OnMusicVolumeChanged -= UpdateMusicVolume;
+        GameManager.Instance.OnSoundVolumeChanged -= UpdateSoundVolume;
     }
 
     void OnNavigate(Vector2 dir)
     {
-        float threshold = gameConfig != null ? gameConfig.navigationThreshold : 0.5f;
+        float threshold = gameConfig.navigationThreshold;
         if (dir.y > threshold) ChangeIndex(-1);
         else if (dir.y < -threshold) ChangeIndex(1);
     }
@@ -93,47 +84,24 @@ public sealed class MenuManager : MonoBehaviour
 
     void UpdateVolumeDisplays()
     {
-        if (GameManager.Instance != null)
-        {
-            UpdateMusicVolume(GameManager.Instance.MusicVolume);
-            UpdateSoundVolume(GameManager.Instance.SoundVolume);
-        }
+        UpdateMusicVolume(GameManager.Instance.MusicVolume);
+        UpdateSoundVolume(GameManager.Instance.SoundVolume);
     }
 
-    void UpdateMusicVolume(float value)
-    {
-        if (musicVolumeText != null) musicVolumeText.text = $"{value * 100:F0}";
-    }
-
-    void UpdateSoundVolume(float value)
-    {
-        if (soundVolumeText != null) soundVolumeText.text = $"{value * 100:F0}";
-    }
+    void UpdateMusicVolume(float value) => musicVolumeText.text = $"{value * 100:F0}";
+    void UpdateSoundVolume(float value) => soundVolumeText.text = $"{value * 100:F0}";
 
     void OnSubmit()
     {
         GameManager.Instance?.PlaySound(interactSound);
-        
-        if (menuActions != null && currentIndex < menuActions.Length)
-            menuActions[currentIndex].action?.Invoke();
-        else
-            ExecuteLegacyAction();
-    }
-
-    void ExecuteLegacyAction()
-    {
-        switch (currentIndex)
-        {
-            case 0: StartNewGame(); break;
-            case 1: QuitGame(); break;
-        }
+        menuActions[currentIndex].action?.Invoke();
     }
 
     public void StartNewGame()
     {
         GameManager.Instance?.ResetCoins();
         GameManager.Instance?.SaveGame(true);
-        LoadingManager.LoadSpecificLevel(gameConfig != null ? gameConfig.firstLevelSceneIndex : 1);
+        LoadingManager.LoadSpecificLevel(gameConfig.firstLevelSceneIndex);
     }
 
     public void QuitGame() => Application.Quit();

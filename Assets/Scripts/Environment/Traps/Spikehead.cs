@@ -26,6 +26,8 @@ public sealed class Spikehead : MonoBehaviour
     Vector3 moveDir;
     float checkTimer;
     bool attacking;
+    Gameplay.Characters.Player.Player cachedPlayer;
+    Gameplay.Combat.Health cachedHealth;
 
     void Update()
     {
@@ -40,9 +42,13 @@ public sealed class Spikehead : MonoBehaviour
     void OnTriggerEnter2D(Collider2D collision)
     {
         GameManager.Instance?.PlaySound(impactSound);
-        if (collision.CompareTag(GameConstants.Tags.Player) && 
-            collision.GetComponent<Gameplay.Characters.Player.Player>() is not { IsInvisible: true })
-            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
+        if (collision.CompareTag(GameConstants.Tags.Player))
+        {
+            cachedPlayer = collision.GetComponent<Gameplay.Characters.Player.Player>();
+            cachedHealth = collision.GetComponent<Gameplay.Combat.Health>();
+            if (cachedPlayer is not { IsInvisible: true })
+                cachedHealth?.TakeDamage(damage);
+        }
         
         attacking = false;
         moveDir = Vector3.zero;
@@ -54,12 +60,16 @@ public sealed class Spikehead : MonoBehaviour
         foreach (var dir in checkDirections)
         {
             var worldDir = GetWorldDirection(dir);
-            if (Physics2D.Raycast(transform.position, worldDir, range, playerLayer).collider
-                ?.GetComponent<Gameplay.Characters.Player.Player>() is { IsInvisible: false })
+            var hit = Physics2D.Raycast(transform.position, worldDir, range, playerLayer);
+            if (hit.collider != null)
             {
-                attacking = true;
-                moveDir = worldDir;
-                return;
+                cachedPlayer = hit.collider.GetComponent<Gameplay.Characters.Player.Player>();
+                if (cachedPlayer is { IsInvisible: false })
+                {
+                    attacking = true;
+                    moveDir = worldDir;
+                    return;
+                }
             }
         }
     }

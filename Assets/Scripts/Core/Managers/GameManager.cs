@@ -14,8 +14,9 @@ namespace Core.Managers
         public int currentLevel;
     }
 
-    public sealed class GameManager : SingletonManager<GameManager>
+    public sealed class GameManager : MonoBehaviour
     {
+        public static GameManager Instance { get; private set; }
         public event Action<float> OnSoundVolumeChanged, OnMusicVolumeChanged;
 
         [SerializeField] GameConfig gameConfig;
@@ -23,18 +24,22 @@ namespace Core.Managers
         string SavePath => Application.persistentDataPath + "/" + (gameConfig?.saveFileName ?? "savefile.json");
 
         public int TotalCoins { get; private set; }
-        public float SoundVolume => soundSource?.volume ?? gameConfig.defaultSoundVolume;
-        public float MusicVolume => musicSource?.volume ?? gameConfig.defaultMusicVolume;
+        public float SoundVolume => soundSource.volume;
+        public float MusicVolume => musicSource.volume;
 
-        protected override void OnInit()
+        void Awake()
         {
-            if (gameConfig == null) gameConfig = Resources.Load<GameConfig>("GameConfig");
-            if (gameConfig == null)
+            if (Instance == null)
             {
-                Debug.LogWarning("GameConfig not found. Creating default settings.");
-                gameConfig = ScriptableObject.CreateInstance<GameConfig>();
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+                Initialize();
             }
-            
+            else Destroy(gameObject);
+        }
+
+        void Initialize()
+        {
             if (soundSource == null || musicSource == null)
             {
                 Debug.LogError("GameManager requires AudioSource components assigned in inspector");
@@ -49,10 +54,13 @@ namespace Core.Managers
             EventBus.OnLevelCompleted += SaveGame;
         }
 
-        protected override void OnDestroy()
+        void OnDestroy()
         {
-            EventBus.OnLevelCompleted -= SaveGame;
-            base.OnDestroy();
+            if (Instance == this)
+            {
+                EventBus.OnLevelCompleted -= SaveGame;
+                Instance = null;
+            }
         }
 
         public void AddCoins(int value)

@@ -53,9 +53,7 @@ namespace Gameplay.Combat
 
             hit = true;
             if (col != null) col.enabled = false;
-            
-            if (hitEffectPrefab != null)
-                Instantiate(hitEffectPrefab, collision.ClosestPoint(transform.position), Quaternion.identity);
+            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, collision.ClosestPoint(transform.position), Quaternion.identity);
             GameManager.Instance?.PlaySound(hitSound);
             
             if (anim != null) anim.SetTrigger(GameConstants.Animation.Explode);

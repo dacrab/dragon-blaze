@@ -1,5 +1,6 @@
 using System;
 using Core.Constants;
+using UnityEngine;
 
 namespace Core.Events
 {
@@ -14,19 +15,6 @@ namespace Core.Events
         public static event Action<GameState> OnGameStateChanged;
         public static event Action<bool> OnDialogueStateChanged;
         public static event Action<float, float> OnHealthChanged;
-
-        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset()
-        {
-            OnScoreChanged = null;
-            OnPlayerDied = null;
-            OnPlayerRespawn = null;
-            OnLevelLoaded = null;
-            OnGamePaused = null;
-            OnLevelCompleted = null;
-            OnGameStateChanged = null;
-            OnDialogueStateChanged = null;
-            OnHealthChanged = null;
-        }
+        public static event Action<string, Sprite, float> OnPowerUpActivated;
     }
 }

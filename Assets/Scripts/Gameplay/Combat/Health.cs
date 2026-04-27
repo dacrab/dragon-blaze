@@ -42,14 +42,14 @@ namespace Gameplay.Combat
             sprite = GetComponent<SpriteRenderer>();
             currentHealth = maxHealth;
             isPlayer = CompareTag(GameConstants.Tags.Player);
-            UpdateHealthUI();
+            NotifyHealthChanged();
         }
 
         public void TakeDamage(float damage)
         {
             if (invulnerable || dead) return;
             currentHealth = Mathf.Max(0, currentHealth - damage);
-            UpdateHealthUI();
+            NotifyHealthChanged();
 
             if (currentHealth > 0)
             {
@@ -64,20 +64,20 @@ namespace Gameplay.Combat
         public void Heal(float value)
         {
             currentHealth = Mathf.Min(maxHealth, currentHealth + value);
-            UpdateHealthUI();
+            NotifyHealthChanged();
         }
 
         public void Respawn()
         {
             currentHealth = maxHealth;
-            UpdateHealthUI();
+            NotifyHealthChanged();
             anim.ResetTrigger(GameConstants.Animation.Die);
             anim.Play(GameConstants.Animation.Idle);
             StartCoroutine(IFrames());
             dead = false;
             SetComponentsEnabled(true);
             GetComponent<Collider2D>().enabled = true;
-            if (isPlayer) EventBus.OnPlayerRespawn?.Invoke();
+            NotifyPlayerEvent(EventBus.OnPlayerRespawn);
         }
 
         void Die()
@@ -88,7 +88,7 @@ namespace Gameplay.Combat
             dead = true;
             GameManager.Instance?.PlaySound(deathSound);
             if (deathParticles != null) Instantiate(deathParticles, transform.position, Quaternion.identity);
-            if (isPlayer) EventBus.OnPlayerDied?.Invoke();
+            NotifyPlayerEvent(EventBus.OnPlayerDied);
         }
 
         IEnumerator IFrames()
@@ -111,7 +111,8 @@ namespace Gameplay.Combat
             invulnerable = false;
         }
 
-        void UpdateHealthUI() { if (isPlayer) EventBus.OnHealthChanged?.Invoke(currentHealth, maxHealth); }
+        void NotifyHealthChanged() { if (isPlayer) EventBus.OnHealthChanged?.Invoke(currentHealth, maxHealth); }
+        void NotifyPlayerEvent(System.Action evt) { if (isPlayer) evt?.Invoke(); }
         void SetComponentsEnabled(bool enabled) { foreach (var c in disableOnDeath) if (c != null) c.enabled = enabled; }
     }
 }

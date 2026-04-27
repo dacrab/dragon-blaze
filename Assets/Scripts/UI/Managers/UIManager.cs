@@ -13,8 +13,10 @@ using Core.State;
 namespace UI.Managers
 {
 
-public sealed class UIManager : SingletonManager<UIManager>
+public sealed class UIManager : MonoBehaviour
 {
+    public static UIManager Instance { get; private set; }
+    
     [Header("UI Screens")]
     [SerializeField] GameObject gameOverScreen, pauseScreen, loadingScreen;
     [SerializeField] Image loadingImage;
@@ -37,10 +39,15 @@ public sealed class UIManager : SingletonManager<UIManager>
     Gameplay.Characters.Player.Player player;
     readonly Dictionary<string, (GameObject obj, Coroutine routine)> indicators = new();
 
-    protected override void OnInit()
+    void Awake()
     {
-        gameConfig ??= Resources.Load<GameConfig>("GameConfig");
-        CheckSaveData();
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            CheckSaveData();
+        }
+        else Destroy(gameObject);
     }
 
     void OnEnable()
@@ -48,7 +55,7 @@ public sealed class UIManager : SingletonManager<UIManager>
         EventBus.OnScoreChanged += UpdateCoinDisplay;
         EventBus.OnPlayerDied += GameOver;
         EventBus.OnPowerUpActivated += ActivateIndicator;
-        if (inputReader != null) inputReader.PauseEvent += TogglePause;
+        inputReader.PauseEvent += TogglePause;
     }
 
     void OnDisable()
@@ -56,7 +63,7 @@ public sealed class UIManager : SingletonManager<UIManager>
         EventBus.OnScoreChanged -= UpdateCoinDisplay;
         EventBus.OnPlayerDied -= GameOver;
         EventBus.OnPowerUpActivated -= ActivateIndicator;
-        if (inputReader != null) inputReader.PauseEvent -= TogglePause;
+        inputReader.PauseEvent -= TogglePause;
     }
 
     void Start() => player = FindFirstObjectByType<Gameplay.Characters.Player.Player>();
@@ -64,21 +71,21 @@ public sealed class UIManager : SingletonManager<UIManager>
     void CheckSaveData()
     {
         if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
-        if (continueButton != null) continueButton.gameObject.SetActive(GameManager.Instance?.SaveDataExists() ?? false);
+        continueButton.gameObject.SetActive(GameManager.Instance?.SaveDataExists() ?? false);
     }
 
     public void NewGame()
     {
         GameManager.Instance?.ResetCoins();
         GameManager.Instance?.SaveGame(true);
-        Menus.LoadingManager.LoadSpecificLevel(gameConfig != null ? gameConfig.firstLevelSceneIndex : 1);
+        Menus.LoadingManager.LoadSpecificLevel(gameConfig.firstLevelSceneIndex);
     }
 
-    public void ContinueGame() => Menus.LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? (gameConfig != null ? gameConfig.firstLevelSceneIndex : 1));
+    public void ContinueGame() => Menus.LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? gameConfig.firstLevelSceneIndex);
 
     public void GameOver()
     {
-        if (gameOverScreen == null || gameOverScreen.activeInHierarchy) return;
+        if (gameOverScreen.activeInHierarchy) return;
         gameOverScreen.SetActive(true);
         SetCursor(true);
         GameStateManager.Instance?.ChangeState(GameState.GameOver);
@@ -105,23 +112,21 @@ public sealed class UIManager : SingletonManager<UIManager>
 
     public void TogglePause()
     {
-        if (gameOverScreen != null && gameOverScreen.activeInHierarchy) return;
-        bool pause = pauseScreen != null && !pauseScreen.activeInHierarchy;
-        pauseScreen?.SetActive(pause);
+        if (gameOverScreen.activeInHierarchy) return;
+        bool pause = !pauseScreen.activeInHierarchy;
+        pauseScreen.SetActive(pause);
         SetCursor(pause);
         if (player != null) player.enabled = !pause;
-        EventBus.GamePaused(pause);
+        EventBus.OnGamePaused?.Invoke(pause);
     }
 
-    public void ShowLoadingScreen(bool show) => loadingScreen?.SetActive(show);
-    public void UpdateLoadingImage(float progress) { if (loadingImage != null) loadingImage.fillAmount = progress; }
-    void UpdateCoinDisplay(int coins) => coinText?.SetText(string.Format(gameConfig != null ? gameConfig.coinDisplayFormat : ": {0}", coins));
+    public void ShowLoadingScreen(bool show) => loadingScreen.SetActive(show);
+    public void UpdateLoadingImage(float progress) => loadingImage.fillAmount = progress;
+    void UpdateCoinDisplay(int coins) => coinText.SetText(string.Format(gameConfig.coinDisplayFormat, coins));
     void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
 
     void ActivateIndicator(string name, Sprite icon, float duration)
     {
-        if (indicatorPrefab == null || indicatorPanel == null) return;
-
         if (indicators.TryGetValue(name, out var existing))
         {
             if (existing.routine != null) StopCoroutine(existing.routine);

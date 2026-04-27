@@ -1,6 +1,5 @@
 using UnityEngine;
 using Core.Managers;
-using System.Collections;
 using Core.Constants;
 
 namespace Environment.Traps
@@ -25,6 +24,8 @@ namespace Environment.Traps
         Animator anim;
         SpriteRenderer sprite;
         bool active;
+        Gameplay.Characters.Player.Player cachedPlayer;
+        Gameplay.Combat.Health cachedHealth;
 
         void Awake()
         {
@@ -35,17 +36,17 @@ namespace Environment.Traps
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
-            if (player is { IsInvisible: true }) return;
+            cachedPlayer = collision.GetComponent<Gameplay.Characters.Player.Player>();
+            cachedHealth = collision.GetComponent<Gameplay.Combat.Health>();
+            if (cachedPlayer is { IsInvisible: true }) return;
             if (!active) StartCoroutine(Activate());
         }
 
         void OnTriggerStay2D(Collider2D collision)
         {
             if (!active || !collision.CompareTag(GameConstants.Tags.Player)) return;
-            var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
-            if (player is { IsInvisible: true }) return;
-            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage * Time.deltaTime);
+            if (cachedPlayer is { IsInvisible: true }) return;
+            cachedHealth?.TakeDamage(damage * Time.deltaTime);
         }
 
         IEnumerator Activate()

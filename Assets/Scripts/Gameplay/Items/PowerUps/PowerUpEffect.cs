@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using Core.Constants;
 
 namespace Gameplay.Items.PowerUps
@@ -24,7 +23,7 @@ namespace Gameplay.Items.PowerUps
             col = GetComponent<Collider2D>();
         }
 
-        void OnTriggerEnter2D(Collider2D other)
+        async void OnTriggerEnter2D(Collider2D other)
         {
             if (!other.CompareTag(GameConstants.Tags.Player)) return;
             var player = other.GetComponent<Characters.Player.Player>();
@@ -47,14 +46,14 @@ namespace Gameplay.Items.PowerUps
                     break;
             }
 
-            StartCoroutine(PowerUpRoutine(player));
+            await PowerUpRoutine(player);
         }
 
-        IEnumerator PowerUpRoutine(Characters.Player.Player player)
+        async Awaitable PowerUpRoutine(Characters.Player.Player player)
         {
             col.enabled = false;
             sprite.enabled = false;
-            yield return new WaitForSeconds(duration);
+            await Awaitable.WaitForSecondsAsync(duration);
 
             switch (type)
             {

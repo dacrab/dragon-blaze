@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Core.Constants;
 
@@ -19,7 +18,6 @@ namespace Gameplay.Combat
         [SerializeField] AudioClip hitSound;
 
         Collider2D hitbox;
-        HashSet<string> targetTagSet;
         bool hasHit;
 
         void Awake()
@@ -27,7 +25,6 @@ namespace Gameplay.Combat
             hitbox = GetComponent<Collider2D>();
             hitbox.isTrigger = true;
             hitbox.enabled = false;
-            targetTagSet = new HashSet<string>(targetTags);
         }
 
         public void EnableHitbox() { hasHit = false; hitbox.enabled = true; }
@@ -36,12 +33,12 @@ namespace Gameplay.Combat
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (hasHit || !targetTagSet.Contains(other.tag)) return;
+            if (hasHit || System.Array.IndexOf(targetTags, other.tag) < 0) return;
             hasHit = true;
 
             other.TryGetComponent<Health>(out var target)?.TakeDamage(damage);
             ApplyKnockback(other);
-            SpawnHitEffect(other);
+            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, other.ClosestPoint(transform.position), Quaternion.identity);
             Core.Managers.GameManager.Instance?.PlaySound(hitSound);
         }
 
@@ -50,8 +47,5 @@ namespace Gameplay.Combat
             if (knockbackForce > 0 && target.TryGetComponent<Rigidbody2D>(out var rb))
                 rb.AddForce((target.transform.position - transform.position).normalized * knockbackForce, ForceMode2D.Impulse);
         }
-
-        void SpawnHitEffect(Collider2D target) => 
-            Instantiate(hitEffectPrefab, target.ClosestPoint(transform.position), Quaternion.identity);
     }
 }

@@ -40,34 +40,34 @@ namespace Gameplay.Characters.Enemies
 
             if ((player == null || !player.IsInvisible) && InPatrolBounds())
             {
-                if (patrol != null) patrol.enabled = false;
+                patrol.enabled = false;
                 ChasePlayer();
-            if (cooldownTimer >= attackCooldown && InAttackRange()) Attack();
+                if (cooldownTimer >= attackCooldown && InAttackRange()) Attack();
+            }
+            else patrol.enabled = true;
         }
-        else if (patrol != null) patrol.enabled = true;
-    }
 
-    void Attack()
-    {
-        cooldownTimer = 0f;
-        anim.SetTrigger(GameConstants.Animation.MeleeAttack);
-        playerHealth?.TakeDamage(damage);
-    }
-
-    void ChasePlayer()
-    {
-        float dir = Mathf.Sign(playerTransform.position.x - transform.position.x);
-        float newX = transform.position.x + dir * chaseSpeed * Time.deltaTime;
-        
-        if (patrol == null || (newX >= patrol.LeftEdge.position.x && newX <= patrol.RightEdge.position.x))
+        void Attack()
         {
-            transform.position = new(newX, transform.position.y, transform.position.z);
-            transform.localScale = new(dir * Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-            anim.SetBool(GameConstants.Animation.Moving, true);
+            cooldownTimer = 0f;
+            anim.SetTrigger(GameConstants.Animation.MeleeAttack);
+            playerHealth?.TakeDamage(damage);
         }
-    }
 
-    bool InPatrolBounds() => patrol == null || (playerTransform.position.x >= patrol.LeftEdge.position.x && playerTransform.position.x <= patrol.RightEdge.position.x);
-    bool InAttackRange() => Vector2.Distance(transform.position, playerTransform.position) <= attackRange;
-}
+        void ChasePlayer()
+        {
+            float dir = Mathf.Sign(playerTransform.position.x - transform.position.x);
+            float newX = transform.position.x + dir * chaseSpeed * Time.deltaTime;
+            
+            if (patrol == null || (newX >= patrol.LeftEdge.position.x && newX <= patrol.RightEdge.position.x))
+            {
+                transform.position = new(newX, transform.position.y, transform.position.z);
+                transform.localScale = new(dir * Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+                anim.SetBool(GameConstants.Animation.Moving, true);
+            }
+        }
+
+        bool InPatrolBounds() => patrol == null || (playerTransform.position.x >= patrol.LeftEdge.position.x && playerTransform.position.x <= patrol.RightEdge.position.x);
+        bool InAttackRange() => Vector2.Distance(transform.position, playerTransform.position) <= attackRange;
+    }
 }
