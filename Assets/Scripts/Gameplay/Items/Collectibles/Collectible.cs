@@ -1,9 +1,9 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Events;
 using Core.Input;
 using Core.Managers;
 using Gameplay.Combat;
-using UI.Menus;
 
 namespace Gameplay.Items.Collectibles
 {
@@ -22,10 +22,7 @@ namespace Gameplay.Items.Collectibles
         int storedCoinValue;
         bool playerInTrigger;
 
-        void Start()
-        {
-            if (type == CollectibleType.MagicStone) SetIndicator(false);
-        }
+        void Start() { if (type == CollectibleType.MagicStone) SetIndicator(false); }
 
         void OnEnable()
         {
@@ -52,7 +49,7 @@ namespace Gameplay.Items.Collectibles
             {
                 case CollectibleType.Coin:
                     Collect();
-                    if (GameManager.Instance != null) GameManager.Instance.AddCoins(coinValue);
+                    GameManager.Instance?.AddCoins(coinValue);
                     Destroy(gameObject);
                     break;
                 case CollectibleType.Health:
@@ -80,7 +77,7 @@ namespace Gameplay.Items.Collectibles
         {
             if (!playerInTrigger) return;
             GameManager.Instance?.SaveGame();
-            LoadingManager.LoadNextLevel();
+            EventBus.RaiseRequestNextLevel();
         }
 
         void Collect()
@@ -94,11 +91,7 @@ namespace Gameplay.Items.Collectibles
             }
         }
 
-        void SetIndicator(bool enabled)
-        {
-            if (indicator != null) indicator.enabled = enabled;
-        }
-
+        void SetIndicator(bool enabled) { if (indicator != null) indicator.enabled = enabled; }
         public void ResetValue() => coinValue = storedCoinValue;
     }
 }

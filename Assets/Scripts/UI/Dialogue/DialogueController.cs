@@ -1,88 +1,83 @@
 using UnityEngine;
-using Core.Managers;
 using TMPro;
-using System.Collections;
 using System.Collections.Generic;
 using Core.Events;
-using System;
+using Core.Managers;
+using Core.Services;
 
 namespace UI.Dialogue
 {
-
-[Serializable]
-public sealed class DialogueData
-{
-    public string speakerName;
-    public AudioClip dialogueSound;
-    
-    [TextArea(5, 10)]
-    public string[] paragraphs;
-}
-
-public sealed class DialogueController : MonoBehaviour
-{
-    [Header("UI Elements")]
-    [SerializeField] TextMeshProUGUI nameText, dialogueText;
-    
-    [Header("Typing Settings")]
-    [SerializeField] float typeSpeed = 10f;
-    [SerializeField] float baseTypeDelay = 0.1f;
-
-    readonly Queue<string> paragraphs = new();
-    Coroutine typeRoutine;
-    string currentText;
-    bool conversationEnded;
-
-    float TypeDelay => baseTypeDelay / typeSpeed;
-
-    public void DisplayNextParagraph(DialogueData dialogue, AudioClip sound = null)
+    public sealed class DialogueController : MonoBehaviour, IDialogueService
     {
-        if (paragraphs.Count == 0)
+        [SerializeField] TextMeshProUGUI nameText, dialogueText;
+        [SerializeField] float typeSpeed = 10f;
+        [SerializeField] float baseTypeDelay = 0.1f;
+
+        readonly Queue<string> paragraphs = new();
+        bool typing, conversationEnded;
+        string currentText;
+        System.Threading.CancellationTokenSource typeCts;
+
+        float TypeDelay => baseTypeDelay / typeSpeed;
+
+        void Awake() => ServiceLocator.Dialogue = this;
+        void OnDestroy() { if (ServiceLocator.Dialogue == (IDialogueService)this) ServiceLocator.Dialogue = null; }
+
+        public void DisplayNextParagraph(DialogueData dialogue, AudioClip sound = null)
         {
-            if (!conversationEnded) StartConversation(dialogue, sound);
-            else { EndConversation(); return; }
+            if (paragraphs.Count == 0)
+            {
+                if (!conversationEnded) StartConversation(dialogue, sound);
+                else { EndConversation(); return; }
+            }
+
+            if (typing)
+            {
+                typeCts?.Cancel();
+                dialogueText.maxVisibleCharacters = currentText.Length;
+                typing = false;
+                return;
+            }
+
+            currentText = paragraphs.Dequeue();
+            _ = TypeTextAsync(currentText);
+            if (paragraphs.Count == 0) conversationEnded = true;
         }
 
-        if (typeRoutine != null)
+        void StartConversation(DialogueData dialogue, AudioClip sound)
         {
-            StopCoroutine(typeRoutine);
-            dialogueText.maxVisibleCharacters = currentText.Length;
-            typeRoutine = null;
-            return;
+            EventBus.RaiseDialogueStateChanged(true);
+            GameManager.Instance?.PlaySound(sound);
+            gameObject.SetActive(true);
+            nameText.text = dialogue.speakerName;
+            foreach (var p in dialogue.paragraphs) paragraphs.Enqueue(p);
         }
 
-        currentText = paragraphs.Dequeue();
-        typeRoutine = StartCoroutine(TypeText(currentText));
-        if (paragraphs.Count == 0) conversationEnded = true;
-    }
-
-    void StartConversation(DialogueData dialogue, AudioClip sound)
-    {
-        EventBus.OnDialogueStateChanged?.Invoke(true);
-        GameManager.Instance?.PlaySound(sound);
-        gameObject.SetActive(true);
-        nameText.text = dialogue.speakerName;
-        foreach (var p in dialogue.paragraphs) paragraphs.Enqueue(p);
-    }
-
-    void EndConversation()
-    {
-        EventBus.DialogueStateChanged(false);
-        paragraphs.Clear();
-        conversationEnded = false;
-        gameObject.SetActive(false);
-    }
-
-    IEnumerator TypeText(string text)
-    {
-        dialogueText.text = text;
-        dialogueText.maxVisibleCharacters = 0;
-        for (int i = 1; i <= text.Length; i++)
+        void EndConversation()
         {
-            dialogueText.maxVisibleCharacters = i;
-            yield return new WaitForSeconds(TypeDelay);
+            EventBus.RaiseDialogueStateChanged(false);
+            paragraphs.Clear();
+            conversationEnded = false;
+            gameObject.SetActive(false);
         }
-        typeRoutine = null;
+
+        async Awaitable TypeTextAsync(string text)
+        {
+            typeCts?.Cancel();
+            typeCts = new();
+            typing = true;
+            dialogueText.text = text;
+            dialogueText.maxVisibleCharacters = 0;
+
+            for (int i = 1; i <= text.Length; i++)
+            {
+                if (typeCts.Token.IsCancellationRequested) break;
+                dialogueText.maxVisibleCharacters = i;
+                await Awaitable.WaitForSecondsAsync(TypeDelay);
+            }
+            typing = false;
+        }
+
+        void OnDisable() => typeCts?.Cancel();
     }
-}
 }

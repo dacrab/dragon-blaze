@@ -3,20 +3,19 @@ using Core.Constants;
 
 namespace Environment.Platforms
 {
-
-[RequireComponent(typeof(Collider2D))]
-public sealed class StickyPlatform : MonoBehaviour
-{
-    void OnTriggerEnter2D(Collider2D collision)
+    [RequireComponent(typeof(Collider2D))]
+    public sealed class StickyPlatform : MonoBehaviour
     {
-        if (collision.CompareTag(GameConstants.Tags.Player))
-            collision.transform.SetParent(transform);
-    }
+        void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (collision.CompareTag(GameConstants.Tags.Player))
+                collision.transform.SetParent(transform);
+        }
 
-    void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.CompareTag(GameConstants.Tags.Player))
-            collision.transform.SetParent(null);
+        void OnTriggerExit2D(Collider2D collision)
+        {
+            if (collision.CompareTag(GameConstants.Tags.Player))
+                collision.transform.SetParent(null);
+        }
     }
-}
 }

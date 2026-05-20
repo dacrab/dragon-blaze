@@ -5,66 +5,52 @@ using Core.State;
 
 namespace Environment.Traps
 {
-
-public sealed class Spikehead : MonoBehaviour
-{
-    [Header("Damage")]
-    [SerializeField] float damage = 10f;
-    
-    [Header("Movement")]
-    [SerializeField] float speed = 5f;
-    [SerializeField] float range = 5f;
-    [SerializeField] float checkDelay = 0.5f;
-    
-    [Header("Detection")]
-    [SerializeField] LayerMask playerLayer;
-    [SerializeField] Vector3[] checkDirections = { Vector3.right, Vector3.left, Vector3.up, Vector3.down };
-    
-    [Header("Audio")]
-    [SerializeField] AudioClip impactSound;
-
-    Vector3 moveDir;
-    float checkTimer;
-    bool attacking;
-    Gameplay.Characters.Player.Player cachedPlayer;
-    Gameplay.Combat.Health cachedHealth;
-
-    void Update()
+    public sealed class Spikehead : MonoBehaviour
     {
-        if (!GameStateManager.IsCurrentlyPlaying) return;
+        [SerializeField] float damage = 10f;
+        [SerializeField] float speed = 5f;
+        [SerializeField] float range = 5f;
+        [SerializeField] float checkDelay = 0.5f;
+        [SerializeField] LayerMask playerLayer;
+        [SerializeField] Vector3[] checkDirections = { Vector3.right, Vector3.left, Vector3.up, Vector3.down };
+        [SerializeField] AudioClip impactSound;
 
-        if (attacking)
-            transform.Translate(moveDir * speed * Time.deltaTime);
-        else if ((checkTimer += Time.deltaTime) >= checkDelay)
-            CheckForPlayer();
-    }
+        Vector3 moveDir;
+        float checkTimer;
+        bool attacking;
 
-    void OnTriggerEnter2D(Collider2D collision)
-    {
-        GameManager.Instance?.PlaySound(impactSound);
-        if (collision.CompareTag(GameConstants.Tags.Player))
+        void Update()
         {
-            cachedPlayer = collision.GetComponent<Gameplay.Characters.Player.Player>();
-            cachedHealth = collision.GetComponent<Gameplay.Combat.Health>();
-            if (cachedPlayer is not { IsInvisible: true })
-                cachedHealth?.TakeDamage(damage);
+            if (!GameStateManager.IsCurrentlyPlaying) return;
+            if (attacking)
+                transform.Translate(moveDir * speed * Time.deltaTime);
+            else if ((checkTimer += Time.deltaTime) >= checkDelay)
+                CheckForPlayer();
         }
-        
-        attacking = false;
-        moveDir = Vector3.zero;
-    }
 
-    void CheckForPlayer()
-    {
-        checkTimer = 0;
-        foreach (var dir in checkDirections)
+        void OnTriggerEnter2D(Collider2D collision)
         {
-            var worldDir = GetWorldDirection(dir);
-            var hit = Physics2D.Raycast(transform.position, worldDir, range, playerLayer);
-            if (hit.collider != null)
+            GameManager.Instance?.PlaySound(impactSound);
+            if (collision.CompareTag(GameConstants.Tags.Player))
             {
-                cachedPlayer = hit.collider.GetComponent<Gameplay.Characters.Player.Player>();
-                if (cachedPlayer is { IsInvisible: false })
+                var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
+                if (player is not { IsInvisible: true })
+                    collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
+            }
+            attacking = false;
+            moveDir = Vector3.zero;
+        }
+
+        void CheckForPlayer()
+        {
+            checkTimer = 0;
+            foreach (var dir in checkDirections)
+            {
+                var worldDir = transform.TransformDirection(dir);
+                var hit = Physics2D.Raycast(transform.position, worldDir, range, playerLayer);
+                if (hit.collider == null) continue;
+                var player = hit.collider.GetComponent<Gameplay.Characters.Player.Player>();
+                if (player is { IsInvisible: false })
                 {
                     attacking = true;
                     moveDir = worldDir;
@@ -72,15 +58,12 @@ public sealed class Spikehead : MonoBehaviour
                 }
             }
         }
-    }
 
-    Vector3 GetWorldDirection(Vector3 localDir) => transform.TransformDirection(localDir);
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        foreach (var dir in checkDirections)
-            Gizmos.DrawRay(transform.position, GetWorldDirection(dir) * range);
+        void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.red;
+            foreach (var dir in checkDirections)
+                Gizmos.DrawRay(transform.position, transform.TransformDirection(dir) * range);
+        }
     }
-}
 }

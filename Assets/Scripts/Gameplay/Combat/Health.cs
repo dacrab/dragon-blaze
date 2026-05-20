@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using Core.Constants;
 using Core.Events;
 using Core.Managers;
@@ -11,19 +10,19 @@ namespace Gameplay.Combat
     {
         [Header("Health")]
         [SerializeField] float maxHealth = 100f;
-        
+
         [Header("Invulnerability")]
         [SerializeField] float iFramesDuration = 1f;
         [SerializeField] int flashCount = 5;
         [SerializeField] Color hurtColor = new(1, 0, 0, 0.5f);
         [SerializeField] Color normalColor = Color.white;
-        
+
         [Header("Components")]
         [SerializeField] Behaviour[] disableOnDeath;
-        
+
         [Header("Audio")]
         [SerializeField] AudioClip deathSound, hurtSound;
-        
+
         [Header("Effects")]
         [SerializeField] GameObject hitParticles, deathParticles;
 
@@ -53,8 +52,8 @@ namespace Gameplay.Combat
 
             if (currentHealth > 0)
             {
-                anim.SetTrigger(GameConstants.Animation.Hurt);
-                StartCoroutine(IFrames());
+                anim.SetTrigger(GameConstants.Anim.Hurt);
+                _ = IFramesAsync();
                 GameManager.Instance?.PlaySound(hurtSound);
                 if (hitParticles != null) Instantiate(hitParticles, transform.position, Quaternion.identity);
             }
@@ -71,27 +70,27 @@ namespace Gameplay.Combat
         {
             currentHealth = maxHealth;
             NotifyHealthChanged();
-            anim.ResetTrigger(GameConstants.Animation.Die);
-            anim.Play(GameConstants.Animation.Idle);
-            StartCoroutine(IFrames());
+            anim.ResetTrigger(GameConstants.Anim.Die);
+            anim.Play(GameConstants.Anim.Idle);
+            _ = IFramesAsync();
             dead = false;
             SetComponentsEnabled(true);
             GetComponent<Collider2D>().enabled = true;
-            NotifyPlayerEvent(EventBus.OnPlayerRespawn);
+            if (isPlayer) EventBus.RaisePlayerRespawn();
         }
 
         void Die()
         {
             SetComponentsEnabled(false);
-            anim.SetBool(GameConstants.Animation.Grounded, true);
-            anim.SetTrigger(GameConstants.Animation.Die);
+            anim.SetBool(GameConstants.Anim.Grounded, true);
+            anim.SetTrigger(GameConstants.Anim.Die);
             dead = true;
             GameManager.Instance?.PlaySound(deathSound);
             if (deathParticles != null) Instantiate(deathParticles, transform.position, Quaternion.identity);
-            NotifyPlayerEvent(EventBus.OnPlayerDied);
+            if (isPlayer) EventBus.RaisePlayerDied();
         }
 
-        IEnumerator IFrames()
+        async Awaitable IFramesAsync()
         {
             invulnerable = true;
             int playerLayer = LayerMask.NameToLayer(GameConstants.Layers.Player);
@@ -102,18 +101,16 @@ namespace Gameplay.Combat
             for (int i = 0; i < flashCount; i++)
             {
                 sprite.color = hurtColor;
-                yield return new WaitForSeconds(interval);
+                await Awaitable.WaitForSecondsAsync(interval);
                 sprite.color = normalColor;
-                yield return new WaitForSeconds(interval);
+                await Awaitable.WaitForSecondsAsync(interval);
             }
 
             Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
             invulnerable = false;
         }
 
-        void NotifyHealthChanged() { if (isPlayer) EventBus.OnHealthChanged?.Invoke(currentHealth, maxHealth); }
-        void NotifyPlayerEvent(System.Action evt) { if (isPlayer) evt?.Invoke(); }
+        void NotifyHealthChanged() { if (isPlayer) EventBus.RaiseHealthChanged(currentHealth, maxHealth); }
         void SetComponentsEnabled(bool enabled) { foreach (var c in disableOnDeath) if (c != null) c.enabled = enabled; }
     }
-}
 }

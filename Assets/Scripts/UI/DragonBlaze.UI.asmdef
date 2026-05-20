@@ -1,0 +1,19 @@
+{
+    "name": "DragonBlaze.UI",
+    "rootNamespace": "UI",
+    "references": [
+        "DragonBlaze.Core",
+        "DragonBlaze.Gameplay",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

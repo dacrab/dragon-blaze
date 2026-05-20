@@ -7,29 +7,30 @@ namespace Gameplay.Characters.Enemies
     [RequireComponent(typeof(Animator), typeof(Health))]
     public abstract class EnemyBase : MonoBehaviour
     {
-        [Header("Stats")]
-        [SerializeField] protected float damage = 10f;
-        [SerializeField] protected float speed = 3f;
-        
-        [Header("Death")]
-        [SerializeField] protected float deathDelay = 2f;
+        [SerializeField] protected EnemyConfigSO config;
 
         protected Animator anim;
         protected Collider2D col;
         protected Health health;
+        protected bool IsDead => !health.IsAlive;
+
+        protected float Damage => config.damage;
+        protected float Speed => config.speed;
 
         protected virtual void Awake()
         {
             anim = GetComponent<Animator>();
             col = GetComponent<Collider2D>();
             health = GetComponent<Health>();
+            if (config != null && config.animatorController != null)
+                anim.runtimeAnimatorController = config.animatorController;
         }
 
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
             if (collision.GetComponent<Player.Player>() is { IsInvisible: true }) return;
-            collision.GetComponent<Health>()?.TakeDamage(damage);
+            collision.GetComponent<Health>()?.TakeDamage(Damage);
         }
     }
 }

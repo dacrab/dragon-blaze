@@ -1,6 +1,5 @@
 using UnityEngine;
 using Core.Constants;
-using System.Linq;
 
 namespace Environment.Rooms
 {
@@ -11,9 +10,9 @@ namespace Environment.Rooms
 
         void Awake()
         {
-            enemies = enemies.Where(e => e != null).ToArray();
-            initialPositions = enemies.Select(e => e.transform.position).ToArray();
-            
+            initialPositions = new Vector3[enemies.Length];
+            for (int i = 0; i < enemies.Length; i++)
+                initialPositions[i] = enemies[i] != null ? enemies[i].transform.position : Vector3.zero;
             if (transform.GetSiblingIndex() != 0) ActivateRoom(false);
         }
 
@@ -26,10 +25,10 @@ namespace Environment.Rooms
         {
             for (int i = 0; i < enemies.Length; i++)
             {
+                if (enemies[i] == null) continue;
                 enemies[i].SetActive(status);
                 if (status) enemies[i].transform.position = initialPositions[i];
             }
         }
     }
-}
 }

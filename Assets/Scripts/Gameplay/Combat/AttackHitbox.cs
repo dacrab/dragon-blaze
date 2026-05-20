@@ -1,19 +1,15 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Managers;
 
 namespace Gameplay.Combat
 {
     [RequireComponent(typeof(Collider2D))]
     public sealed class AttackHitbox : MonoBehaviour
     {
-        [Header("Damage")]
         [SerializeField] float damage = 10f;
         [SerializeField] float knockbackForce = 5f;
-        
-        [Header("Targeting")]
-        [SerializeField] string[] targetTags = new[] { GameConstants.Tags.Enemy };
-        
-        [Header("Effects")]
+        [SerializeField] string[] targetTags = { GameConstants.Tags.Enemy };
         [SerializeField] GameObject hitEffectPrefab;
         [SerializeField] AudioClip hitSound;
 
@@ -35,11 +31,10 @@ namespace Gameplay.Combat
         {
             if (hasHit || System.Array.IndexOf(targetTags, other.tag) < 0) return;
             hasHit = true;
-
-            other.TryGetComponent<Health>(out var target)?.TakeDamage(damage);
+            if (other.TryGetComponent<Health>(out var target)) target.TakeDamage(damage);
             ApplyKnockback(other);
             if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, other.ClosestPoint(transform.position), Quaternion.identity);
-            Core.Managers.GameManager.Instance?.PlaySound(hitSound);
+            GameManager.Instance?.PlaySound(hitSound);
         }
 
         void ApplyKnockback(Collider2D target)

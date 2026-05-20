@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using UnityEngine.SceneManagement;
 using Core.Input;
 
@@ -18,7 +17,7 @@ namespace UI.Menus
         {
             foreach (var bg in backgrounds) bg.color = new(bg.color.r, bg.color.g, bg.color.b, 0);
             if (backgrounds.Length > 0) backgrounds[0].color = Color.white;
-            StartCoroutine(Transition());
+            _ = TransitionLoop();
         }
 
         void OnEnable() { if (inputReader != null) inputReader.InteractEvent += LoadMainMenu; }
@@ -26,9 +25,9 @@ namespace UI.Menus
 
         void LoadMainMenu() => SceneManager.LoadScene(0);
 
-        IEnumerator Transition()
+        async Awaitable TransitionLoop()
         {
-            while (true)
+            while (this != null && gameObject.activeInHierarchy)
             {
                 var current = backgrounds[currentIndex];
                 var next = backgrounds[(currentIndex + 1) % backgrounds.Length];
@@ -38,12 +37,11 @@ namespace UI.Menus
                     float a = t / transitionTime;
                     current.color = new(1, 1, 1, 1 - a);
                     next.color = new(1, 1, 1, a);
-                    yield return null;
+                    await Awaitable.NextFrameAsync();
                 }
 
                 currentIndex = (currentIndex + 1) % backgrounds.Length;
             }
         }
     }
-}
 }

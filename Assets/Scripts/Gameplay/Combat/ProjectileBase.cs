@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Pooling;
 
 namespace Gameplay.Combat
 {
@@ -11,11 +12,14 @@ namespace Gameplay.Combat
         [SerializeField] protected AudioClip hitSound;
         [SerializeField] protected string targetTag = GameConstants.Tags.Enemy;
         [SerializeField] protected bool checkInvisibility;
+        [SerializeField] protected string poolKey;
 
         protected float lifetime, direction;
         protected bool hit;
         protected Animator anim;
         protected Collider2D col;
+
+        public bool IsPooled => !string.IsNullOrEmpty(poolKey);
 
         protected virtual void Awake()
         {
@@ -46,7 +50,6 @@ namespace Gameplay.Combat
             {
                 if (checkInvisibility && collision.TryGetComponent<Characters.Player.Player>(out var player) && player.IsInvisible)
                     return;
-                
                 if (collision.TryGetComponent<Health>(out var target))
                     target.TakeDamage(damage);
             }
@@ -55,8 +58,7 @@ namespace Gameplay.Combat
             if (col != null) col.enabled = false;
             if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, collision.ClosestPoint(transform.position), Quaternion.identity);
             GameManager.Instance?.PlaySound(hitSound);
-            
-            if (anim != null) anim.SetTrigger(GameConstants.Animation.Explode);
+            if (anim != null) anim.SetTrigger(GameConstants.Anim.Explode);
             else Deactivate();
         }
 
@@ -72,7 +74,11 @@ namespace Gameplay.Combat
 
         public void ActivateProjectile() => SetDirection(transform.lossyScale.x > 0 ? 1 : -1);
         public void OnExplosionComplete() => Deactivate();
-        protected void Deactivate() => gameObject.SetActive(false);
+
+        protected void Deactivate()
+        {
+            if (IsPooled) PoolRegistry.Release(poolKey, gameObject);
+            else gameObject.SetActive(false);
+        }
     }
-}
 }

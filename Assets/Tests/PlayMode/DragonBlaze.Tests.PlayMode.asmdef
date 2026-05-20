@@ -1,0 +1,21 @@
+{
+    "name": "DragonBlaze.Tests.PlayMode",
+    "rootNamespace": "DragonBlaze.Tests",
+    "references": [
+        "DragonBlaze.Core",
+        "DragonBlaze.Gameplay",
+        "DragonBlaze.Environment",
+        "DragonBlaze.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

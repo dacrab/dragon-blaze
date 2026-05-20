@@ -4,18 +4,17 @@ using Core.Events;
 
 namespace UI.HUD
 {
-
-public sealed class HealthBar : MonoBehaviour
-{
-    [SerializeField] Image currentHealthBar;
-
-    void OnEnable() => EventBus.OnHealthChanged += UpdateHealthUI;
-    void OnDisable() => EventBus.OnHealthChanged -= UpdateHealthUI;
-
-    void UpdateHealthUI(float current, float max)
+    public sealed class HealthBar : MonoBehaviour
     {
-        if (max > 0 && currentHealthBar != null)
-            currentHealthBar.fillAmount = current / max;
+        [SerializeField] Image currentHealthBar;
+
+        void OnEnable() => EventBus.OnHealthChanged += UpdateHealthUI;
+        void OnDisable() => EventBus.OnHealthChanged -= UpdateHealthUI;
+
+        void UpdateHealthUI(float current, float max)
+        {
+            if (max > 0 && currentHealthBar != null)
+                currentHealthBar.fillAmount = current / max;
+        }
     }
-}
 }

@@ -1,0 +1,19 @@
+{
+    "name": "DragonBlaze.Editor",
+    "rootNamespace": "DragonBlaze.Editor",
+    "references": [
+        "DragonBlaze.Core",
+        "DragonBlaze.Gameplay",
+        "DragonBlaze.Environment",
+        "DragonBlaze.UI"
+    ],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

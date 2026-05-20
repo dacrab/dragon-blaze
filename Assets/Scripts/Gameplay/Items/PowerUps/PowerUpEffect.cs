@@ -29,49 +29,37 @@ namespace Gameplay.Items.PowerUps
             var player = other.GetComponent<Characters.Player.Player>();
             if (player == null) return;
 
+            ApplyEffect(player);
+            col.enabled = false;
+            sprite.enabled = false;
+            await Awaitable.WaitForSecondsAsync(duration);
+            RevertEffect(player);
+            Destroy(gameObject);
+        }
+
+        void ApplyEffect(Characters.Player.Player player)
+        {
             switch (type)
             {
-                case PowerUpType.Speed:
-                    player.ModifySpeed(multiplier);
-                    break;
-                case PowerUpType.Jump:
-                    player.ModifyJump(multiplier);
-                    break;
-                case PowerUpType.Invisibility:
-                    player.SetInvisibility(true);
-                    break;
+                case PowerUpType.Speed: player.ModifySpeed(multiplier); break;
+                case PowerUpType.Jump: player.ModifyJump(multiplier); break;
+                case PowerUpType.Invisibility: player.SetInvisibility(true); break;
                 case PowerUpType.Damage:
                     originalValue = player.Damage;
                     player.SetDamage(originalValue * multiplier);
                     break;
             }
-
-            await PowerUpRoutine(player);
         }
 
-        async Awaitable PowerUpRoutine(Characters.Player.Player player)
+        void RevertEffect(Characters.Player.Player player)
         {
-            col.enabled = false;
-            sprite.enabled = false;
-            await Awaitable.WaitForSecondsAsync(duration);
-
             switch (type)
             {
-                case PowerUpType.Speed:
-                    player.ModifySpeed(1f / multiplier);
-                    break;
-                case PowerUpType.Jump:
-                    player.ModifyJump(1f / multiplier);
-                    break;
-                case PowerUpType.Invisibility:
-                    player.SetInvisibility(false);
-                    break;
-                case PowerUpType.Damage:
-                    player.SetDamage(originalValue);
-                    break;
+                case PowerUpType.Speed: player.ModifySpeed(1f / multiplier); break;
+                case PowerUpType.Jump: player.ModifyJump(1f / multiplier); break;
+                case PowerUpType.Invisibility: player.SetInvisibility(false); break;
+                case PowerUpType.Damage: player.SetDamage(originalValue); break;
             }
-
-            Destroy(gameObject);
         }
     }
 }

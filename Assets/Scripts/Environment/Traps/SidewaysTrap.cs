@@ -10,8 +10,6 @@ namespace Environment.Traps
         [SerializeField] float movementDistance = 3f, speed = 2f;
 
         float startX;
-        Gameplay.Characters.Player.Player cachedPlayer;
-        Gameplay.Combat.Health cachedHealth;
 
         void Awake() => startX = transform.position.x;
 
@@ -25,11 +23,9 @@ namespace Environment.Traps
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            cachedPlayer = collision.GetComponent<Gameplay.Characters.Player.Player>();
-            cachedHealth = collision.GetComponent<Gameplay.Combat.Health>();
-            if (cachedPlayer is { IsInvisible: true }) return;
-            cachedHealth?.TakeDamage(damage);
+            var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
+            if (player is { IsInvisible: true }) return;
+            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
         }
     }
-}
 }

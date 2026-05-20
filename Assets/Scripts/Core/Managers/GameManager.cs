@@ -7,7 +7,7 @@ using Core.Constants;
 
 namespace Core.Managers
 {
-    [System.Serializable]
+    [Serializable]
     public sealed class SaveData
     {
         public int totalCoins;
@@ -21,7 +21,8 @@ namespace Core.Managers
 
         [SerializeField] GameConfig gameConfig;
         [SerializeField] AudioSource soundSource, musicSource;
-        string SavePath => Application.persistentDataPath + "/" + (gameConfig?.saveFileName ?? "savefile.json");
+
+        string SavePath => Path.Combine(Application.persistentDataPath, gameConfig?.saveFileName ?? "savefile.json");
 
         public int TotalCoins { get; private set; }
         public float SoundVolume => soundSource.volume;
@@ -29,51 +30,38 @@ namespace Core.Managers
 
         void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-                Initialize();
-            }
-            else Destroy(gameObject);
+            if (Instance != null) { Destroy(gameObject); return; }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            Initialize();
         }
 
         void Initialize()
         {
             if (soundSource == null || musicSource == null)
             {
-                Debug.LogError("GameManager requires AudioSource components assigned in inspector");
+                Debug.LogError("[GameManager] AudioSource components not assigned.");
+                return;
             }
-            else
-            {
-                musicSource.volume = PlayerPrefs.GetFloat(gameConfig.musicVolumeKey, gameConfig.defaultMusicVolume);
-                soundSource.volume = PlayerPrefs.GetFloat(gameConfig.soundVolumeKey, gameConfig.defaultSoundVolume);
-            }
-            
+            musicSource.volume = PlayerPrefs.GetFloat(gameConfig.musicVolumeKey, gameConfig.defaultMusicVolume);
+            soundSource.volume = PlayerPrefs.GetFloat(gameConfig.soundVolumeKey, gameConfig.defaultSoundVolume);
             LoadGame();
-            EventBus.OnLevelCompleted += SaveGame;
+            EventBus.OnLevelCompleted += () => SaveGame(false);
         }
 
-        void OnDestroy()
-        {
-            if (Instance == this)
-            {
-                EventBus.OnLevelCompleted -= SaveGame;
-                Instance = null;
-            }
-        }
+        void OnDestroy() { if (Instance == this) Instance = null; }
 
         public void AddCoins(int value)
         {
             if (value <= 0) return;
             TotalCoins += value;
-            EventBus.OnScoreChanged?.Invoke(TotalCoins);
+            EventBus.RaiseScoreChanged(TotalCoins);
         }
 
         public void ResetCoins()
         {
             TotalCoins = 0;
-            EventBus.OnScoreChanged?.Invoke(TotalCoins);
+            EventBus.RaiseScoreChanged(TotalCoins);
         }
 
         public void SaveGame(bool isNewGame = false)
@@ -84,10 +72,9 @@ namespace Core.Managers
                 currentLevel = isNewGame ? gameConfig.firstLevelSceneIndex : SceneManager.GetActiveScene().buildIndex
             };
             try { File.WriteAllText(SavePath, JsonUtility.ToJson(data)); }
-            catch (System.Exception e) { Debug.LogError($"Failed to save: {e.Message}"); }
+            catch (Exception e) { Debug.LogError($"[GameManager] Save failed: {e.Message}"); }
         }
 
-        void SaveGame() => SaveGame(false);
         public bool SaveDataExists() => File.Exists(SavePath);
 
         public SaveData LoadGame()
@@ -96,18 +83,10 @@ namespace Core.Managers
             try
             {
                 var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
-                if (data != null)
-                {
-                    TotalCoins = data.totalCoins;
-                    EventBus.OnScoreChanged?.Invoke(TotalCoins);
-                }
+                if (data != null) { TotalCoins = data.totalCoins; EventBus.RaiseScoreChanged(TotalCoins); }
                 return data;
             }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to load: {e.Message}");
-                return null;
-            }
+            catch (Exception e) { Debug.LogError($"[GameManager] Load failed: {e.Message}"); return null; }
         }
 
         public int GetLastSavedLevelIndex()
@@ -118,11 +97,7 @@ namespace Core.Managers
                 var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
                 return data?.currentLevel ?? gameConfig.firstLevelSceneIndex;
             }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to load: {e.Message}");
-                return gameConfig.firstLevelSceneIndex;
-            }
+            catch { return gameConfig.firstLevelSceneIndex; }
         }
 
         public void DeleteSave()
@@ -131,20 +106,7 @@ namespace Core.Managers
             ResetCoins();
         }
 
-        public void PlaySound(AudioClip sound) 
-        { 
-            if (sound != null) soundSource.PlayOneShot(sound); 
-        }
-
-        public void PlayMusic(AudioClip music, bool loop = true)
-        {
-            if (music == null) return;
-            musicSource.clip = music;
-            musicSource.loop = loop;
-            musicSource.Play();
-        }
-
-        public void StopMusic() => musicSource.Stop();
+        public void PlaySound(AudioClip clip) { if (clip != null) soundSource.PlayOneShot(clip); }
 
         public void SetSoundVolume(float volume)
         {

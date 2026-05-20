@@ -1,0 +1,17 @@
+{
+    "name": "DragonBlaze.Debug",
+    "rootNamespace": "DragonBlaze.Debug",
+    "references": [
+        "DragonBlaze.Core",
+        "DragonBlaze.Gameplay"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": ["UNITY_EDITOR || DEVELOPMENT_BUILD"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

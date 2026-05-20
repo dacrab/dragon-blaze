@@ -1,55 +1,39 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Input;
+using Core.Services;
 using Core.State;
-using UI.Dialogue;
 
 namespace Gameplay.Characters.NPCs
 {
-
-public sealed class TalkableNPC : MonoBehaviour
-{
-    [Header("Interaction")]
-    [SerializeField] float interactDistance = 5f;
-    [SerializeField] SpriteRenderer interactSprite;
-    
-    [Header("Input")]
-    [SerializeField] InputReader inputReader;
-    
-    [Header("Target (auto-finds if empty)")]
-    [SerializeField] Transform playerTransform;
-
-    [Header("Dialogue")]
-    [SerializeField] DialogueData dialogueText;
-    [SerializeField] DialogueController dialogueController;
-    [SerializeField] AudioClip dialogueSound;
-
-    void Awake() => dialogueController ??= FindFirstObjectByType<DialogueController>();
-
-    void Start()
+    public sealed class TalkableNPC : MonoBehaviour
     {
-        if (playerTransform == null)
+        [SerializeField] float interactDistance = 5f;
+        [SerializeField] SpriteRenderer interactSprite;
+        [SerializeField] InputReader inputReader;
+        [SerializeField] Transform playerTransform;
+        [SerializeField] DialogueData dialogueText;
+        [SerializeField] AudioClip dialogueSound;
+
+        void Start() { if (playerTransform == null) playerTransform = GameConstants.FindPlayer(); }
+        void OnEnable() => inputReader.InteractEvent += OnInteract;
+        void OnDisable() => inputReader.InteractEvent -= OnInteract;
+
+        void Update()
         {
-            var go = GameObject.FindGameObjectWithTag(GameConstants.Tags.Player);
-            if (go != null) playerTransform = go.transform;
+            if (!GameStateManager.IsCurrentlyPlaying) return;
+            bool show = IsWithinRange();
+            if (interactSprite.gameObject.activeSelf != show)
+                interactSprite.gameObject.SetActive(show);
         }
-    }
 
-    void OnEnable() => inputReader.InteractEvent += OnInteractInput;
-    void OnDisable() => inputReader.InteractEvent -= OnInteractInput;
-    
-    void Update()
-    {
-        if (!GameStateManager.IsCurrentlyPlaying) return;
-        bool shouldShow = IsWithinRange();
-        if (interactSprite.gameObject.activeSelf != shouldShow)
-            interactSprite.gameObject.SetActive(shouldShow);
-    }
+        void OnInteract()
+        {
+            if (IsWithinRange())
+                ServiceLocator.Dialogue?.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
+        }
 
-    void OnInteractInput() { if (IsWithinRange()) Interact(); }
-    
-    void Interact() => dialogueController.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
-    
-    bool IsWithinRange() => playerTransform != null && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
-}
+        bool IsWithinRange() =>
+            playerTransform != null && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
+    }
 }

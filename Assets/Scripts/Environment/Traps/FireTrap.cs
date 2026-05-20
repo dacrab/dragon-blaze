@@ -7,18 +7,11 @@ namespace Environment.Traps
     [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
     public sealed class FireTrap : MonoBehaviour
     {
-        [Header("Damage")]
         [SerializeField] float damage = 10f;
-        
-        [Header("Timing")]
         [SerializeField] float activationDelay = 0.5f;
         [SerializeField] float activeTime = 2f;
-        
-        [Header("Colors")]
         [SerializeField] Color warningColor = Color.red;
         [SerializeField] Color activeColor = Color.white;
-        
-        [Header("Audio")]
         [SerializeField] AudioClip firetrapSound;
 
         Animator anim;
@@ -39,7 +32,7 @@ namespace Environment.Traps
             cachedPlayer = collision.GetComponent<Gameplay.Characters.Player.Player>();
             cachedHealth = collision.GetComponent<Gameplay.Combat.Health>();
             if (cachedPlayer is { IsInvisible: true }) return;
-            if (!active) StartCoroutine(Activate());
+            if (!active) _ = ActivateAsync();
         }
 
         void OnTriggerStay2D(Collider2D collision)
@@ -49,21 +42,17 @@ namespace Environment.Traps
             cachedHealth?.TakeDamage(damage * Time.deltaTime);
         }
 
-        IEnumerator Activate()
+        async Awaitable ActivateAsync()
         {
             sprite.color = warningColor;
-            yield return new WaitForSeconds(activationDelay);
-            
+            await Awaitable.WaitForSecondsAsync(activationDelay);
             GameManager.Instance?.PlaySound(firetrapSound);
             sprite.color = activeColor;
             active = true;
-            anim.SetBool(GameConstants.Animation.Activated, true);
-            
-            yield return new WaitForSeconds(activeTime);
-            
+            anim.SetBool(GameConstants.Anim.Activated, true);
+            await Awaitable.WaitForSecondsAsync(activeTime);
             active = false;
-            anim.SetBool(GameConstants.Animation.Activated, false);
+            anim.SetBool(GameConstants.Anim.Activated, false);
         }
     }
-}
 }
