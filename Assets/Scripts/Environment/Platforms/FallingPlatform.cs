@@ -3,6 +3,7 @@ using Core.Constants;
 
 namespace Environment.Platforms
 {
+    [RequireComponent(typeof(Rigidbody2D))]
     public sealed class FallingPlatform : MonoBehaviour
     {
         [SerializeField] float fallDelay = 1f, destroyDelay = 2f;
@@ -34,14 +35,5 @@ namespace Environment.Platforms
                 falling = true;
         }
 
-        public void ResetPlatform()
-        {
-            gameObject.SetActive(true);
-            transform.position = initialPosition;
-            rb.bodyType = RigidbodyType2D.Static;
-            rb.linearVelocity = Vector2.zero;
-            falling = false;
-            timer = 0;
-        }
     }
 }

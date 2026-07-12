@@ -5,6 +5,7 @@ using Core.Pooling;
 
 namespace Gameplay.Combat
 {
+    [RequireComponent(typeof(Animator), typeof(Collider2D))]
     public class ProjectileBase : MonoBehaviour
     {
         [SerializeField] protected float speed = 10f, damage = 1f, maxLifetime = 5f;
@@ -19,7 +20,7 @@ namespace Gameplay.Combat
         protected Animator anim;
         protected Collider2D col;
 
-        public bool IsPooled => !string.IsNullOrEmpty(poolKey);
+        bool IsPooled => !string.IsNullOrEmpty(poolKey);
 
         protected virtual void Awake()
         {

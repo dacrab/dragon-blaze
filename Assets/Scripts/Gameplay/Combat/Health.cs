@@ -34,6 +34,7 @@ namespace Gameplay.Combat
         Animator anim;
         SpriteRenderer sprite;
         bool dead, invulnerable, isPlayer;
+        int playerLayerIndex, enemyLayerIndex;
 
         void Awake()
         {
@@ -41,6 +42,8 @@ namespace Gameplay.Combat
             sprite = GetComponent<SpriteRenderer>();
             currentHealth = maxHealth;
             isPlayer = CompareTag(GameConstants.Tags.Player);
+            playerLayerIndex = LayerMask.NameToLayer(GameConstants.Layers.Player);
+            enemyLayerIndex = LayerMask.NameToLayer(GameConstants.Layers.Enemy);
             NotifyHealthChanged();
         }
 
@@ -66,19 +69,6 @@ namespace Gameplay.Combat
             NotifyHealthChanged();
         }
 
-        public void Respawn()
-        {
-            currentHealth = maxHealth;
-            NotifyHealthChanged();
-            anim.ResetTrigger(GameConstants.Anim.Die);
-            anim.Play(GameConstants.Anim.Idle);
-            _ = IFramesAsync();
-            dead = false;
-            SetComponentsEnabled(true);
-            GetComponent<Collider2D>().enabled = true;
-            if (isPlayer) EventBus.RaisePlayerRespawn();
-        }
-
         void Die()
         {
             SetComponentsEnabled(false);
@@ -93,8 +83,8 @@ namespace Gameplay.Combat
         async Awaitable IFramesAsync()
         {
             invulnerable = true;
-            int playerLayer = LayerMask.NameToLayer(GameConstants.Layers.Player);
-            int enemyLayer = LayerMask.NameToLayer(GameConstants.Layers.Enemy);
+            int playerLayer = playerLayerIndex;
+            int enemyLayer = enemyLayerIndex;
             Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
 
             float interval = iFramesDuration / (flashCount * 2);

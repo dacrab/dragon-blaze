@@ -3,12 +3,21 @@ using TMPro;
 using System.Collections.Generic;
 using Core.Events;
 using Core.Managers;
-using Core.Services;
 
 namespace UI.Dialogue
 {
-    public sealed class DialogueController : MonoBehaviour, IDialogueService
+    [CreateAssetMenu(fileName = "DialogueData", menuName = "DragonBlaze/Dialogue Data")]
+    public class DialogueData : ScriptableObject
     {
+        public string speakerName;
+        public AudioClip dialogueSound;
+        [TextArea(5, 10)] public string[] paragraphs;
+    }
+
+    public sealed class DialogueController : MonoBehaviour
+    {
+        public static DialogueController Instance { get; private set; }
+
         [SerializeField] TextMeshProUGUI nameText, dialogueText;
         [SerializeField] float typeSpeed = 10f;
         [SerializeField] float baseTypeDelay = 0.1f;
@@ -20,8 +29,8 @@ namespace UI.Dialogue
 
         float TypeDelay => baseTypeDelay / typeSpeed;
 
-        void Awake() => ServiceLocator.Dialogue = this;
-        void OnDestroy() { if (ServiceLocator.Dialogue == (IDialogueService)this) ServiceLocator.Dialogue = null; }
+        void Awake() => Instance = this;
+        void OnDestroy() { if (Instance == this) Instance = null; }
 
         public void DisplayNextParagraph(DialogueData dialogue, AudioClip sound = null)
         {

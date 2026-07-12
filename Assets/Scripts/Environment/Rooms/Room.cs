@@ -21,7 +21,7 @@ namespace Environment.Rooms
             if (collision.CompareTag(GameConstants.Tags.Player)) ActivateRoom(true);
         }
 
-        public void ActivateRoom(bool status)
+        void ActivateRoom(bool status)
         {
             for (int i = 0; i < enemies.Length; i++)
             {

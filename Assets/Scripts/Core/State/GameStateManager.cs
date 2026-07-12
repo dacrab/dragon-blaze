@@ -22,8 +22,8 @@ namespace Core.State
             SceneManager.sceneLoaded += OnSceneLoaded;
             EventBus.OnGamePaused += OnPaused;
             EventBus.OnDialogueStateChanged += OnDialogue;
-            EventBus.OnPlayerDied += () => ChangeState(GameState.GameOver);
-            EventBus.OnPlayerRespawn += () => ChangeState(GameState.Gameplay);
+            EventBus.OnPlayerDied += OnPlayerDied;
+            EventBus.OnPlayerRespawn += OnPlayerRespawn;
             CurrentState = GetStateForScene(SceneManager.GetActiveScene().buildIndex);
             ApplyState();
         }
@@ -34,9 +34,13 @@ namespace Core.State
             SceneManager.sceneLoaded -= OnSceneLoaded;
             EventBus.OnGamePaused -= OnPaused;
             EventBus.OnDialogueStateChanged -= OnDialogue;
+            EventBus.OnPlayerDied -= OnPlayerDied;
+            EventBus.OnPlayerRespawn -= OnPlayerRespawn;
             Instance = null;
         }
 
+        void OnPlayerDied() => ChangeState(GameState.GameOver);
+        void OnPlayerRespawn() => ChangeState(GameState.Gameplay);
         void OnPaused(bool paused) => ChangeState(paused ? GameState.Paused : GameState.Gameplay);
 
         void OnDialogue(bool open)
@@ -48,7 +52,6 @@ namespace Core.State
         void OnSceneLoaded(Scene scene, LoadSceneMode _)
         {
             ChangeState(GetStateForScene(scene.buildIndex));
-            EventBus.RaiseLevelLoaded(scene.buildIndex);
         }
 
         public void ChangeState(GameState newState)
@@ -56,7 +59,6 @@ namespace Core.State
             if (CurrentState == newState) return;
             CurrentState = newState;
             ApplyState();
-            EventBus.RaiseGameStateChanged(CurrentState);
         }
 
         void ApplyState()

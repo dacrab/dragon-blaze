@@ -23,7 +23,7 @@ namespace UI.Menus
         void OnEnable() { if (inputReader != null) inputReader.InteractEvent += LoadMainMenu; }
         void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= LoadMainMenu; }
 
-        void LoadMainMenu() => SceneManager.LoadScene(0);
+		void LoadMainMenu() => SceneManager.LoadScene(GameConstants.Scenes.MainMenu);
 
         async Awaitable TransitionLoop()
         {

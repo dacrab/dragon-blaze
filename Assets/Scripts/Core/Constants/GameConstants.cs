@@ -46,7 +46,7 @@ namespace Core.Constants
             public const string Grounded = "grounded";
             public const string Run = "run";
             public const string Die = "die";
-            public const string Idle = "Idle";
+            public const string Idle = "idle";
             public const string Respawn = "respawn";
             public const string MeleeAttack = "meleeAttack";
             public const string RangedAttack = "rangedAttack";

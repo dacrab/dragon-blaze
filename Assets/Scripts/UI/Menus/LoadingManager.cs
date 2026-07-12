@@ -34,7 +34,7 @@ namespace UI.Menus
             instance.LoadAsync(level);
         }
 
-        async void LoadAsync(int level)
+		async Awaitable LoadAsync(int level)
         {
             var ui = FindFirstObjectByType<UIManager>();
             ui?.ShowLoadingScreen(true);

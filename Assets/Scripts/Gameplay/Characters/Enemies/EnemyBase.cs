@@ -29,8 +29,8 @@ namespace Gameplay.Characters.Enemies
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            if (collision.GetComponent<Player.Player>() is { IsInvisible: true }) return;
-            collision.GetComponent<Health>()?.TakeDamage(Damage);
+            if (collision.TryGetComponent<Player.Player>(out var player) && player.IsInvisible) return;
+            if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(Damage);
         }
     }
 }

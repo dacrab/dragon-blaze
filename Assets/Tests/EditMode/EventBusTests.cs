@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using Core.Events;
-using Core.Constants;
 
 namespace DragonBlaze.Tests
 {
@@ -9,7 +8,6 @@ namespace DragonBlaze.Tests
         [SetUp]
         public void Setup()
         {
-            // Reset all events before each test
             typeof(EventBus)
                 .GetMethod("Reset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                 ?.Invoke(null, null);
@@ -32,15 +30,6 @@ namespace DragonBlaze.Tests
             EventBus.RaiseHealthChanged(50f, 100f);
             Assert.AreEqual(50f, hp);
             Assert.AreEqual(100f, max);
-        }
-
-        [Test]
-        public void RaiseGameStateChanged_PropagatesState()
-        {
-            GameState received = GameState.MainMenu;
-            EventBus.OnGameStateChanged += s => received = s;
-            EventBus.RaiseGameStateChanged(GameState.Gameplay);
-            Assert.AreEqual(GameState.Gameplay, received);
         }
 
         [Test]

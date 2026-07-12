@@ -1,6 +1,8 @@
 using UnityEngine;
 using Core.Managers;
 using Core.Constants;
+using Gameplay.Characters.Player;
+using Gameplay.Combat;
 
 namespace Environment.Traps
 {
@@ -17,8 +19,8 @@ namespace Environment.Traps
         Animator anim;
         SpriteRenderer sprite;
         bool active;
-        Gameplay.Characters.Player.Player cachedPlayer;
-        Gameplay.Combat.Health cachedHealth;
+        Player cachedPlayer;
+        Health cachedHealth;
 
         void Awake()
         {
@@ -29,8 +31,8 @@ namespace Environment.Traps
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            cachedPlayer = collision.GetComponent<Gameplay.Characters.Player.Player>();
-            cachedHealth = collision.GetComponent<Gameplay.Combat.Health>();
+            collision.TryGetComponent(out cachedPlayer);
+            collision.TryGetComponent(out cachedHealth);
             if (cachedPlayer is { IsInvisible: true }) return;
             if (!active) _ = ActivateAsync();
         }

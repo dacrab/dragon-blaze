@@ -14,6 +14,7 @@ namespace Gameplay.Characters.Enemies
         Player.Player player;
         Health playerHealth;
         PatrolMovement patrol;
+        float attackRangeSqr;
 
         protected override void Awake()
         {
@@ -25,6 +26,7 @@ namespace Gameplay.Characters.Enemies
                 player = playerTransform.GetComponent<Player.Player>();
                 playerTransform.TryGetComponent(out playerHealth);
             }
+            attackRangeSqr = config.attackRange * config.attackRange;
         }
 
         void Update()
@@ -65,6 +67,6 @@ namespace Gameplay.Characters.Enemies
                               playerTransform.position.x <= patrol.RightEdge.position.x);
 
         bool InAttackRange() =>
-            Vector2.Distance(transform.position, playerTransform.position) <= config.attackRange;
+            (transform.position - playerTransform.position).sqrMagnitude <= attackRangeSqr;
     }
 }

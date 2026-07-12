@@ -1,10 +1,12 @@
 using UnityEngine;
-using Core.Managers;
 using Core.Constants;
-using Core.State;
+using Core.Managers;
+using Gameplay.Characters.Player;
+using Gameplay.Combat;
 
 namespace Environment.Traps
 {
+    [RequireComponent(typeof(Collider2D))]
     public sealed class Spikehead : MonoBehaviour
     {
         [SerializeField] float damage = 10f;
@@ -21,7 +23,6 @@ namespace Environment.Traps
 
         void Update()
         {
-            if (!GameStateManager.IsCurrentlyPlaying) return;
             if (attacking)
                 transform.Translate(moveDir * speed * Time.deltaTime);
             else if ((checkTimer += Time.deltaTime) >= checkDelay)
@@ -33,9 +34,8 @@ namespace Environment.Traps
             GameManager.Instance?.PlaySound(impactSound);
             if (collision.CompareTag(GameConstants.Tags.Player))
             {
-                var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
-                if (player is not { IsInvisible: true })
-                    collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
+                if (!collision.TryGetComponent<Player>(out var player) || !player.IsInvisible)
+                    if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(damage);
             }
             attacking = false;
             moveDir = Vector3.zero;
@@ -49,8 +49,7 @@ namespace Environment.Traps
                 var worldDir = transform.TransformDirection(dir);
                 var hit = Physics2D.Raycast(transform.position, worldDir, range, playerLayer);
                 if (hit.collider == null) continue;
-                var player = hit.collider.GetComponent<Gameplay.Characters.Player.Player>();
-                if (player is { IsInvisible: false })
+                if (hit.collider.TryGetComponent<Player>(out var player) && !player.IsInvisible)
                 {
                     attacking = true;
                     moveDir = worldDir;

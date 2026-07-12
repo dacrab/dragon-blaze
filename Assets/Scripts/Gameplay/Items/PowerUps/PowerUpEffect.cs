@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Events;
 
 namespace Gameplay.Items.PowerUps
 {
@@ -16,26 +17,32 @@ namespace Gameplay.Items.PowerUps
         SpriteRenderer sprite;
         Collider2D col;
         float originalValue;
+        string typeName;
 
         void Awake()
         {
             sprite = GetComponent<SpriteRenderer>();
             col = GetComponent<Collider2D>();
+            typeName = type.ToString();
         }
 
-        async void OnTriggerEnter2D(Collider2D other)
-        {
-            if (!other.CompareTag(GameConstants.Tags.Player)) return;
-            var player = other.GetComponent<Characters.Player.Player>();
-            if (player == null) return;
+		void OnTriggerEnter2D(Collider2D other)
+		{
+			if (!other.CompareTag(GameConstants.Tags.Player)) return;
+			if (!other.TryGetComponent<Characters.Player.Player>(out var player)) return;
 
-            ApplyEffect(player);
-            col.enabled = false;
-            sprite.enabled = false;
-            await Awaitable.WaitForSecondsAsync(duration);
-            RevertEffect(player);
-            Destroy(gameObject);
-        }
+			ApplyEffect(player);
+			col.enabled = false;
+			sprite.enabled = false;
+			_ = RevertAfterDelayAsync(player);
+		}
+
+		async Awaitable RevertAfterDelayAsync(Characters.Player.Player player)
+		{
+			await Awaitable.WaitForSecondsAsync(duration);
+			RevertEffect(player);
+			Destroy(gameObject);
+		}
 
         void ApplyEffect(Characters.Player.Player player)
         {
@@ -49,6 +56,8 @@ namespace Gameplay.Items.PowerUps
                     player.SetDamage(originalValue * multiplier);
                     break;
             }
+
+            EventBus.RaisePowerUpActivated(typeName, icon, duration);
         }
 
         void RevertEffect(Characters.Player.Player player)

@@ -1,11 +1,13 @@
 using UnityEngine;
-using Core.Managers;
 using Core.Constants;
+using Core.Managers;
 using Core.State;
 using Gameplay.Combat;
+using Gameplay.Characters.Player;
 
 namespace Environment.Traps
 {
+    [RequireComponent(typeof(Collider2D))]
     public sealed class ArrowTrap : MonoBehaviour
     {
         [SerializeField] float attackCooldown = 1f;
@@ -15,13 +17,13 @@ namespace Environment.Traps
         [SerializeField] Transform playerTransform;
 
         float cooldownTimer;
-        Gameplay.Characters.Player.Player player;
+        Player player;
         int arrowIndex;
 
         void Awake()
         {
             if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
-            player = playerTransform?.GetComponent<Gameplay.Characters.Player.Player>();
+            player = playerTransform?.GetComponent<Player>();
         }
 
         void Update()

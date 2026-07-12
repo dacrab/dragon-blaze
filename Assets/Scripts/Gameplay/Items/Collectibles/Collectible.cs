@@ -19,7 +19,6 @@ namespace Gameplay.Items.Collectibles
         [SerializeField] ParticleSystem pickupEffect;
         [SerializeField] InputReader inputReader;
 
-        int storedCoinValue;
         bool playerInTrigger;
 
         void Start() { if (type == CollectibleType.MagicStone) SetIndicator(false); }
@@ -38,19 +37,14 @@ namespace Gameplay.Items.Collectibles
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (!other.CompareTag(GameConstants.Tags.Player))
-            {
-                if (type == CollectibleType.Coin && other.CompareTag(GameConstants.Tags.Checkpoint))
-                    storedCoinValue = coinValue;
-                return;
-            }
+            if (!other.CompareTag(GameConstants.Tags.Player)) return;
 
             switch (type)
             {
                 case CollectibleType.Coin:
                     Collect();
                     GameManager.Instance?.AddCoins(coinValue);
-                    Destroy(gameObject);
+                    gameObject.SetActive(false);
                     break;
                 case CollectibleType.Health:
                     other.GetComponent<Health>()?.Heal(healthValue);
@@ -78,6 +72,7 @@ namespace Gameplay.Items.Collectibles
             if (!playerInTrigger) return;
             GameManager.Instance?.SaveGame();
             EventBus.RaiseRequestNextLevel();
+            EventBus.RaiseLevelCompleted();
         }
 
         void Collect()
@@ -92,6 +87,5 @@ namespace Gameplay.Items.Collectibles
         }
 
         void SetIndicator(bool enabled) { if (indicator != null) indicator.enabled = enabled; }
-        public void ResetValue() => coinValue = storedCoinValue;
     }
 }

@@ -25,11 +25,13 @@ namespace Gameplay.Combat
 
         public void EnableHitbox() { hasHit = false; hitbox.enabled = true; }
         public void DisableHitbox() => hitbox.enabled = false;
-        public void SetDamage(float d) => damage = d;
-
-        void OnTriggerEnter2D(Collider2D other)
-        {
-            if (hasHit || System.Array.IndexOf(targetTags, other.tag) < 0) return;
+		void OnTriggerEnter2D(Collider2D other)
+		{
+			if (hasHit) return;
+			bool validTarget = false;
+			foreach (var t in targetTags)
+				if (other.CompareTag(t)) { validTarget = true; break; }
+			if (!validTarget) return;
             hasHit = true;
             if (other.TryGetComponent<Health>(out var target)) target.TakeDamage(damage);
             ApplyKnockback(other);
@@ -40,7 +42,7 @@ namespace Gameplay.Combat
         void ApplyKnockback(Collider2D target)
         {
             if (knockbackForce > 0 && target.TryGetComponent<Rigidbody2D>(out var rb))
-                rb.AddForce((target.transform.position - transform.position).normalized * knockbackForce, ForceMode2D.Impulse);
+                rb.AddForce(((Vector2)(target.transform.position - transform.position)).normalized * knockbackForce, ForceMode2D.Impulse);
         }
     }
 }

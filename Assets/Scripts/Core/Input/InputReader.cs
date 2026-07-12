@@ -24,26 +24,56 @@ namespace Core.Input
             if (gameplayMap != null)
             {
                 gameplayMap.Enable();
-                gameplayMap["Move"].performed += ctx => MoveEvent?.Invoke(ctx.ReadValue<float>());
-                gameplayMap["Move"].canceled += _ => MoveEvent?.Invoke(0);
-                gameplayMap["Jump"].performed += _ => JumpEvent?.Invoke();
-                gameplayMap["Jump"].canceled += _ => JumpCanceledEvent?.Invoke();
-                gameplayMap["Dash"].performed += _ => DashEvent?.Invoke();
-                gameplayMap["Attack"].performed += _ => AttackEvent?.Invoke();
-                gameplayMap["Interact"].performed += _ => InteractEvent?.Invoke();
-                gameplayMap["Pause"].performed += _ => PauseEvent?.Invoke();
+                gameplayMap["Move"].performed += OnMove;
+                gameplayMap["Move"].canceled += OnMoveCanceled;
+                gameplayMap["Jump"].performed += OnJump;
+                gameplayMap["Jump"].canceled += OnJumpCanceled;
+                gameplayMap["Dash"].performed += OnDash;
+                gameplayMap["Attack"].performed += OnAttack;
+                gameplayMap["Interact"].performed += OnInteract;
+                gameplayMap["Pause"].performed += OnPause;
             }
 
             if (uiMap != null)
             {
-                uiMap["Navigate"].performed += ctx => NavigateEvent?.Invoke(ctx.ReadValue<Vector2>());
-                uiMap["Submit"].performed += _ => SubmitEvent?.Invoke();
+                uiMap["Navigate"].performed += OnNavigate;
+                uiMap["Submit"].performed += OnSubmit;
             }
         }
 
-        void OnDisable() => inputActions?.Disable();
+        void OnDisable()
+        {
+            if (inputActions == null) return;
+            inputActions.Disable();
+            if (gameplayMap != null)
+            {
+                gameplayMap["Move"].performed -= OnMove;
+                gameplayMap["Move"].canceled -= OnMoveCanceled;
+                gameplayMap["Jump"].performed -= OnJump;
+                gameplayMap["Jump"].canceled -= OnJumpCanceled;
+                gameplayMap["Dash"].performed -= OnDash;
+                gameplayMap["Attack"].performed -= OnAttack;
+                gameplayMap["Interact"].performed -= OnInteract;
+                gameplayMap["Pause"].performed -= OnPause;
+            }
+            if (uiMap != null)
+            {
+                uiMap["Navigate"].performed -= OnNavigate;
+                uiMap["Submit"].performed -= OnSubmit;
+            }
+        }
 
-        public void EnableGameplayInput() { uiMap?.Disable(); gameplayMap?.Enable(); }
+        void OnMove(InputAction.CallbackContext ctx) => MoveEvent?.Invoke(ctx.ReadValue<float>());
+        void OnMoveCanceled(InputAction.CallbackContext _) => MoveEvent?.Invoke(0);
+        void OnJump(InputAction.CallbackContext _) => JumpEvent?.Invoke();
+        void OnJumpCanceled(InputAction.CallbackContext _) => JumpCanceledEvent?.Invoke();
+        void OnDash(InputAction.CallbackContext _) => DashEvent?.Invoke();
+        void OnAttack(InputAction.CallbackContext _) => AttackEvent?.Invoke();
+        void OnInteract(InputAction.CallbackContext _) => InteractEvent?.Invoke();
+        void OnPause(InputAction.CallbackContext _) => PauseEvent?.Invoke();
+        void OnNavigate(InputAction.CallbackContext ctx) => NavigateEvent?.Invoke(ctx.ReadValue<Vector2>());
+        void OnSubmit(InputAction.CallbackContext _) => SubmitEvent?.Invoke();
+
         public void EnableUIInput() { gameplayMap?.Disable(); uiMap?.Enable(); }
     }
 }

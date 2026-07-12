@@ -1,8 +1,8 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Input;
-using Core.Services;
 using Core.State;
+using UI.Dialogue;
 
 namespace Gameplay.Characters.NPCs
 {
@@ -30,7 +30,7 @@ namespace Gameplay.Characters.NPCs
         void OnInteract()
         {
             if (IsWithinRange())
-                ServiceLocator.Dialogue?.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
+                DialogueController.Instance?.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
         }
 
         bool IsWithinRange() =>

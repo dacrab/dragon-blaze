@@ -1,9 +1,11 @@
 using UnityEngine;
-using Core.State;
 using Core.Constants;
+using Gameplay.Characters.Player;
+using Gameplay.Combat;
 
 namespace Environment.Traps
 {
+    [RequireComponent(typeof(Collider2D))]
     public sealed class SidewaysTrap : MonoBehaviour
     {
         [SerializeField] float damage = 10f;
@@ -15,7 +17,6 @@ namespace Environment.Traps
 
         void Update()
         {
-            if (!GameStateManager.IsCurrentlyPlaying) return;
             float offset = Mathf.PingPong(Time.time * speed, movementDistance * 2) - movementDistance;
             transform.position = new(startX + offset, transform.position.y, transform.position.z);
         }
@@ -23,9 +24,8 @@ namespace Environment.Traps
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            var player = collision.GetComponent<Gameplay.Characters.Player.Player>();
-            if (player is { IsInvisible: true }) return;
-            collision.GetComponent<Gameplay.Combat.Health>()?.TakeDamage(damage);
+            if (collision.TryGetComponent<Player>(out var p) && p.IsInvisible) return;
+            if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(damage);
         }
     }
 }

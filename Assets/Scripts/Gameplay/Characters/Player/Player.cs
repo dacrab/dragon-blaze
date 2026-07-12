@@ -30,7 +30,6 @@ namespace Gameplay.Characters.Player
         BoxCollider2D box;
         Animator anim;
         SpriteRenderer sprite;
-        Health health;
 
         float horizontalInput, coyoteTimer, attackTimer, wallJumpTimer;
         int jumpCount, fireballIndex;
@@ -48,7 +47,6 @@ namespace Gameplay.Characters.Player
             box = GetComponent<BoxCollider2D>();
             anim = GetComponent<Animator>();
             sprite = GetComponent<SpriteRenderer>();
-            health = GetComponent<Health>();
             currentDamage = config.baseDamage;
             currentSpeed = config.speed;
             currentJumpPower = config.jumpPower;
@@ -86,8 +84,9 @@ namespace Gameplay.Characters.Player
             if (wallJumpTimer > 0) wallJumpTimer -= Time.deltaTime;
             UpdateGroundCheck();
             UpdateWallSlide();
+            float vx = Mathf.Abs(rb.linearVelocity.x);
             anim.SetBool(GameConstants.Anim.Grounded, IsGrounded);
-            anim.SetBool(GameConstants.Anim.Run, Mathf.Abs(rb.linearVelocity.x) > config.velocityThreshold);
+            anim.SetBool(GameConstants.Anim.Run, vx > config.velocityThreshold);
             if (IsGrounded) { coyoteTimer = config.coyoteTime; jumpCount = config.extraJumps; }
             else coyoteTimer -= Time.deltaTime;
         }
@@ -121,7 +120,7 @@ namespace Gameplay.Characters.Player
                 rb.linearVelocity = new(rb.linearVelocity.x, rb.linearVelocity.y * config.jumpCancelMultiplier);
         }
 
-        async void OnDash()
+        void OnDash()
         {
             if (interacting || dashing || Mathf.Abs(horizontalInput) < config.movementThreshold) return;
             dashing = true;
@@ -129,6 +128,11 @@ namespace Gameplay.Characters.Player
             rb.gravityScale = 0;
             rb.linearVelocity = new(transform.localScale.x * config.dashSpeed, 0);
             SpawnVfx(dashVfx);
+            _ = EndDashAsync(gravity);
+        }
+
+        async Awaitable EndDashAsync(float gravity)
+        {
             await Awaitable.WaitForSecondsAsync(config.dashDuration);
             rb.gravityScale = gravity;
             dashing = false;

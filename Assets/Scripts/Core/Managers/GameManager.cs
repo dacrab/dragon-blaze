@@ -46,10 +46,17 @@ namespace Core.Managers
             musicSource.volume = PlayerPrefs.GetFloat(gameConfig.musicVolumeKey, gameConfig.defaultMusicVolume);
             soundSource.volume = PlayerPrefs.GetFloat(gameConfig.soundVolumeKey, gameConfig.defaultSoundVolume);
             LoadGame();
-            EventBus.OnLevelCompleted += () => SaveGame(false);
+            EventBus.OnLevelCompleted += OnLevelCompleted;
         }
 
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        void OnDestroy()
+        {
+            if (Instance != this) return;
+            EventBus.OnLevelCompleted -= OnLevelCompleted;
+            Instance = null;
+        }
+
+        void OnLevelCompleted() => SaveGame(false);
 
         public void AddCoins(int value)
         {
@@ -77,34 +84,24 @@ namespace Core.Managers
 
         public bool SaveDataExists() => File.Exists(SavePath);
 
-        public SaveData LoadGame()
+        SaveData ReadSaveFile()
         {
-            if (!File.Exists(SavePath)) return null;
-            try
-            {
-                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
-                if (data != null) { TotalCoins = data.totalCoins; EventBus.RaiseScoreChanged(TotalCoins); }
-                return data;
-            }
+            try { return JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath)); }
             catch (Exception e) { Debug.LogError($"[GameManager] Load failed: {e.Message}"); return null; }
         }
 
-        public int GetLastSavedLevelIndex()
+        public SaveData LoadGame()
         {
-            if (!File.Exists(SavePath)) return gameConfig.firstLevelSceneIndex;
-            try
-            {
-                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
-                return data?.currentLevel ?? gameConfig.firstLevelSceneIndex;
-            }
-            catch { return gameConfig.firstLevelSceneIndex; }
+            if (!File.Exists(SavePath)) return null;
+            var data = ReadSaveFile();
+            if (data == null) return null;
+            TotalCoins = data.totalCoins;
+            EventBus.RaiseScoreChanged(TotalCoins);
+            return data;
         }
 
-        public void DeleteSave()
-        {
-            if (File.Exists(SavePath)) File.Delete(SavePath);
-            ResetCoins();
-        }
+        public int GetLastSavedLevelIndex() =>
+            !File.Exists(SavePath) ? gameConfig.firstLevelSceneIndex : ReadSaveFile()?.currentLevel ?? gameConfig.firstLevelSceneIndex;
 
         public void PlaySound(AudioClip clip) { if (clip != null) soundSource.PlayOneShot(clip); }
 

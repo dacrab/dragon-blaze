@@ -8,6 +8,7 @@ using Core.Constants;
 using Core.Input;
 using Core.Managers;
 using Core.State;
+using Gameplay.Characters.Player;
 
 namespace UI.Managers
 {
@@ -34,7 +35,7 @@ namespace UI.Managers
         [SerializeField] GameObject indicatorPrefab;
         [SerializeField] Transform indicatorPanel;
 
-        Gameplay.Characters.Player.Player player;
+        Player player;
         readonly Dictionary<string, GameObject> indicators = new();
 
         void Awake()
@@ -61,7 +62,7 @@ namespace UI.Managers
             inputReader.PauseEvent -= TogglePause;
         }
 
-        void Start() => player = FindFirstObjectByType<Gameplay.Characters.Player.Player>();
+        void Start() => player = FindFirstObjectByType<Player>();
 
         void CheckSaveData()
         {
@@ -113,10 +114,10 @@ namespace UI.Managers
 
         public void ShowLoadingScreen(bool show) => loadingScreen.SetActive(show);
         public void UpdateLoadingImage(float progress) => loadingImage.fillAmount = progress;
-        void UpdateCoinDisplay(int coins) => coinText.SetText(string.Format(gameConfig.coinDisplayFormat, coins));
+        void UpdateCoinDisplay(int coins) => coinText.SetText("{0}", coins);
         void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
 
-        async void ActivateIndicator(string name, Sprite icon, float duration)
+        void ActivateIndicator(string name, Sprite icon, float duration)
         {
             if (indicators.TryGetValue(name, out var existing)) Destroy(existing);
 
@@ -125,7 +126,7 @@ namespace UI.Managers
             if (indicator.GetComponentInChildren<TMP_Text>() is { } txt) txt.text = name;
             indicators[name] = indicator;
 
-            await FadeOutAsync(name, indicator, duration);
+            _ = FadeOutAsync(name, indicator, duration);
         }
 
         async Awaitable FadeOutAsync(string name, GameObject indicator, float duration)

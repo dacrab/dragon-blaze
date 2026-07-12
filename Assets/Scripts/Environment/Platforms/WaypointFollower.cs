@@ -15,7 +15,7 @@ namespace Environment.Platforms
             if (waypoints is not { Length: > 0 }) return;
             var target = waypoints[currentIndex].position;
             transform.position = Vector2.MoveTowards(transform.position, target, Time.deltaTime * speed);
-            if (Vector2.Distance(transform.position, target) < 0.1f) AdvanceWaypoint();
+            if (((Vector2)transform.position - target).sqrMagnitude < 0.01f) AdvanceWaypoint();
         }
 
         void AdvanceWaypoint()
