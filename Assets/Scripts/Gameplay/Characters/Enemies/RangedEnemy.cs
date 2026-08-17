@@ -61,10 +61,10 @@ namespace Gameplay.Characters.Enemies
         bool PlayerInSight()
         {
             if (player != null && player.IsInvisible) return false;
-            if (col is not BoxCollider2D box) return false;
+            var bounds = col.bounds;
             var hit = Physics2D.BoxCast(
-                box.bounds.center + transform.right * config.detectionRange * 0.5f * transform.localScale.x,
-                new Vector3(config.detectionRange, box.bounds.size.y, 1f), 0, Vector2.zero, 0, playerLayer);
+                bounds.center + transform.right * config.detectionRange * 0.5f * transform.localScale.x,
+                new Vector3(config.detectionRange, bounds.size.y, 1f), 0, Vector2.zero, 0, playerLayer);
             return hit.collider != null;
         }
     }

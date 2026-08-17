@@ -17,6 +17,7 @@ namespace UI.Menus
         {
             foreach (var bg in backgrounds) bg.color = new(bg.color.r, bg.color.g, bg.color.b, 0);
             if (backgrounds.Length > 0) backgrounds[0].color = Color.white;
+            else return;
             _ = TransitionLoop();
         }
 

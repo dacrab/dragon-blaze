@@ -22,7 +22,7 @@ namespace Environment.Platforms
         {
             if (pingPong)
             {
-                currentIndex += direction;
+                currentIndex = Mathf.Clamp(currentIndex + direction, 0, waypoints.Length - 1);
                 if (currentIndex >= waypoints.Length - 1 || currentIndex <= 0) direction *= -1;
             }
             else if (loop) currentIndex = (currentIndex + 1) % waypoints.Length;

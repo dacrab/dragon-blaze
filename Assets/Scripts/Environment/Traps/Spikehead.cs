@@ -31,11 +31,11 @@ namespace Environment.Traps
 
         void OnTriggerEnter2D(Collider2D collision)
         {
-            GameManager.Instance?.PlaySound(impactSound);
             if (collision.CompareTag(GameConstants.Tags.Player))
             {
                 if (!collision.TryGetComponent<Player>(out var player) || !player.IsInvisible)
                     if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(damage);
+                GameManager.Instance?.PlaySound(impactSound);
             }
             attacking = false;
             moveDir = Vector3.zero;

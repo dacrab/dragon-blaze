@@ -18,7 +18,8 @@ namespace Environment.Traps
 
         Animator anim;
         SpriteRenderer sprite;
-        bool active;
+        bool active, cycling;
+        Color originalColor;
         Player cachedPlayer;
         Health cachedHealth;
 
@@ -26,6 +27,7 @@ namespace Environment.Traps
         {
             anim = GetComponent<Animator>();
             sprite = GetComponent<SpriteRenderer>();
+            originalColor = sprite.color;
         }
 
         void OnTriggerEnter2D(Collider2D collision)
@@ -34,18 +36,24 @@ namespace Environment.Traps
             collision.TryGetComponent(out cachedPlayer);
             collision.TryGetComponent(out cachedHealth);
             if (cachedPlayer is { IsInvisible: true }) return;
-            if (!active) _ = ActivateAsync();
+            if (!cycling) _ = ActivateAsync();
         }
 
         void OnTriggerStay2D(Collider2D collision)
         {
-            if (!active || !collision.CompareTag(GameConstants.Tags.Player)) return;
+            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
             if (cachedPlayer is { IsInvisible: true }) return;
-            cachedHealth?.TakeDamage(damage * Time.deltaTime);
+            if (active)
+            {
+                cachedHealth?.TakeDamage(damage * Time.deltaTime);
+                return;
+            }
+            if (!cycling) _ = ActivateAsync();
         }
 
         async Awaitable ActivateAsync()
         {
+            cycling = true;
             sprite.color = warningColor;
             await Awaitable.WaitForSecondsAsync(activationDelay);
             GameManager.Instance?.PlaySound(firetrapSound);
@@ -55,6 +63,8 @@ namespace Environment.Traps
             await Awaitable.WaitForSecondsAsync(activeTime);
             active = false;
             anim.SetBool(GameConstants.Anim.Activated, false);
+            sprite.color = originalColor;
+            cycling = false;
         }
     }
 }

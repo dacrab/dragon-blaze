@@ -23,14 +23,20 @@ namespace Environment.Traps
         void Awake()
         {
             if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
-            player = playerTransform?.GetComponent<Player>();
+            if (playerTransform != null) player = playerTransform.GetComponent<Player>();
         }
 
         void Update()
         {
             if (!GameStateManager.IsCurrentlyPlaying) return;
+            if (player == null || playerTransform == null)
+            {
+                playerTransform = GameConstants.FindPlayer();
+                player = playerTransform?.GetComponent<Player>();
+                if (player == null) return;
+            }
             cooldownTimer += Time.deltaTime;
-            if (cooldownTimer >= attackCooldown && (player == null || !player.IsInvisible)) Attack();
+            if (cooldownTimer >= attackCooldown && !player.IsInvisible) Attack();
         }
 
         void Attack()

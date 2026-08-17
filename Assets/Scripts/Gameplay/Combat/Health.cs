@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 using Core.Constants;
 using Core.Events;
@@ -35,6 +36,7 @@ namespace Gameplay.Combat
         SpriteRenderer sprite;
         bool dead, invulnerable, isPlayer;
         int playerLayerIndex, enemyLayerIndex;
+        CancellationTokenSource iFramesCts;
 
         void Awake()
         {
@@ -44,6 +46,52 @@ namespace Gameplay.Combat
             isPlayer = CompareTag(GameConstants.Tags.Player);
             playerLayerIndex = LayerMask.NameToLayer(GameConstants.Layers.Player);
             enemyLayerIndex = LayerMask.NameToLayer(GameConstants.Layers.Enemy);
+            NotifyHealthChanged();
+        }
+
+        void OnEnable()
+        {
+            if (!isPlayer && (dead || currentHealth <= 0))
+            {
+                currentHealth = maxHealth;
+                dead = false;
+                invulnerable = false;
+                sprite.color = normalColor;
+                SetComponentsEnabled(true);
+                NotifyHealthChanged();
+            }
+            if (isPlayer) EventBus.OnPlayerRespawn += ResetForRespawn;
+        }
+
+        void OnDisable()
+        {
+            if (isPlayer) EventBus.OnPlayerRespawn -= ResetForRespawn;
+            if (iFramesCts != null)
+            {
+                iFramesCts.Cancel();
+                iFramesCts.Dispose();
+                iFramesCts = null;
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (isPlayer) EventBus.OnPlayerRespawn -= ResetForRespawn;
+        }
+
+        void ResetForRespawn()
+        {
+            currentHealth = maxHealth;
+            dead = false;
+            invulnerable = false;
+            if (iFramesCts != null)
+            {
+                iFramesCts.Cancel();
+                iFramesCts.Dispose();
+                iFramesCts = null;
+            }
+            sprite.color = normalColor;
+            SetComponentsEnabled(true);
             NotifyHealthChanged();
         }
 
@@ -82,22 +130,37 @@ namespace Gameplay.Combat
 
         async Awaitable IFramesAsync()
         {
+            iFramesCts?.Cancel();
+            iFramesCts?.Dispose();
+            iFramesCts = new CancellationTokenSource();
+            var token = iFramesCts.Token;
+
             invulnerable = true;
             int playerLayer = playerLayerIndex;
             int enemyLayer = enemyLayerIndex;
             Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
 
             float interval = iFramesDuration / (flashCount * 2);
-            for (int i = 0; i < flashCount; i++)
+            try
             {
-                sprite.color = hurtColor;
-                await Awaitable.WaitForSecondsAsync(interval);
-                sprite.color = normalColor;
-                await Awaitable.WaitForSecondsAsync(interval);
+                for (int i = 0; i < flashCount; i++)
+                {
+                    if (token.IsCancellationRequested) break;
+                    sprite.color = hurtColor;
+                    await Awaitable.WaitForSecondsAsync(interval);
+                    if (token.IsCancellationRequested) break;
+                    sprite.color = normalColor;
+                    await Awaitable.WaitForSecondsAsync(interval);
+                }
             }
-
-            Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
-            invulnerable = false;
+            finally
+            {
+                sprite.color = normalColor;
+                Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
+                invulnerable = false;
+                iFramesCts?.Dispose();
+                iFramesCts = null;
+            }
         }
 
         void NotifyHealthChanged() { if (isPlayer) EventBus.RaiseHealthChanged(currentHealth, maxHealth); }

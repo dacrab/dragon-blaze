@@ -203,6 +203,16 @@ namespace Gameplay.Characters.Player
         {
             if (checkpoint == null) return;
             transform.position = checkpoint.position;
+            currentDamage = config.baseDamage;
+            currentSpeed = config.speed;
+            currentJumpPower = config.jumpPower;
+            IsInvisible = false;
+            sprite.color = Color.white;
+            jumpCount = config.extraJumps;
+            coyoteTimer = 0;
+            dashing = false;
+            wallSliding = false;
+            interacting = false;
             anim.SetTrigger(GameConstants.Anim.Respawn);
         }
 
