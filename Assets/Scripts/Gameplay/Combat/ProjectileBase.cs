@@ -66,10 +66,7 @@ namespace Gameplay.Combat
         public virtual void SetDirection(float dir)
         {
             direction = dir;
-            lifetime = 0;
-            hit = false;
             gameObject.SetActive(true);
-            if (col != null) col.enabled = true;
             transform.localScale = new(Mathf.Abs(transform.localScale.x) * Mathf.Sign(dir), transform.localScale.y, transform.localScale.z);
         }
 

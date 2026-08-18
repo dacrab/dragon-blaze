@@ -51,27 +51,14 @@ namespace Gameplay.Combat
 
         void OnEnable()
         {
-            if (!isPlayer && (dead || currentHealth <= 0))
-            {
-                currentHealth = maxHealth;
-                dead = false;
-                invulnerable = false;
-                sprite.color = normalColor;
-                SetComponentsEnabled(true);
-                NotifyHealthChanged();
-            }
+            if (!isPlayer && (dead || currentHealth <= 0)) ResetState(false);
             if (isPlayer) EventBus.OnPlayerRespawn += ResetForRespawn;
         }
 
         void OnDisable()
         {
             if (isPlayer) EventBus.OnPlayerRespawn -= ResetForRespawn;
-            if (iFramesCts != null)
-            {
-                iFramesCts.Cancel();
-                iFramesCts.Dispose();
-                iFramesCts = null;
-            }
+            CancelIFrames();
         }
 
         void OnDestroy()
@@ -79,20 +66,27 @@ namespace Gameplay.Combat
             if (isPlayer) EventBus.OnPlayerRespawn -= ResetForRespawn;
         }
 
-        void ResetForRespawn()
+        void ResetForRespawn() => ResetState(true);
+
+        void ResetState(bool cancelIFrames)
         {
             currentHealth = maxHealth;
             dead = false;
             invulnerable = false;
+            if (cancelIFrames) CancelIFrames();
+            sprite.color = normalColor;
+            SetComponentsEnabled(true);
+            NotifyHealthChanged();
+        }
+
+        void CancelIFrames()
+        {
             if (iFramesCts != null)
             {
                 iFramesCts.Cancel();
                 iFramesCts.Dispose();
                 iFramesCts = null;
             }
-            sprite.color = normalColor;
-            SetComponentsEnabled(true);
-            NotifyHealthChanged();
         }
 
         public void TakeDamage(float damage)

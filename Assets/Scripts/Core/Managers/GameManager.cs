@@ -22,7 +22,7 @@ namespace Core.Managers
         [SerializeField] GameConfig gameConfig;
         [SerializeField] AudioSource soundSource, musicSource;
 
-        string SavePath => Path.Combine(Application.persistentDataPath, gameConfig?.saveFileName ?? "savefile.json");
+        string SavePath => Path.Combine(Application.persistentDataPath, gameConfig?.saveFileName ?? GameConstants.DefaultSaveFileName);
 
         public int TotalCoins { get; private set; }
         public float SoundVolume => soundSource.volume;

@@ -18,7 +18,7 @@ namespace Core.Constants
         public float normalTimeScale = 1f;
 
         [Header("Save")]
-        public string saveFileName = "savefile.json";
+        public string saveFileName = GameConstants.DefaultSaveFileName;
         public string musicVolumeKey = "musicVolume";
         public string soundVolumeKey = "soundVolume";
 
@@ -29,6 +29,8 @@ namespace Core.Constants
 
     public static class GameConstants
     {
+        public const string DefaultSaveFileName = "savefile.json";
+
         public static class Tags
         {
             public const string Player = "Player";
