@@ -1,74 +1,61 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using System;
 using System.IO;
-using Core.Events;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using Core.Constants;
+using Core.Events;
+using Core.Persistence;
+using Core.Services;
 
 namespace Core.Managers
 {
-    [Serializable]
-    public sealed class SaveData
+    public sealed class GameManager : MonoBehaviour, IGameManager
     {
-        public int totalCoins;
-        public int currentLevel;
-    }
+        static GameManager instance;
 
-    public sealed class GameManager : MonoBehaviour
-    {
-        public static GameManager Instance { get; private set; }
-        public event Action<float> OnSoundVolumeChanged, OnMusicVolumeChanged;
-
-        [SerializeField] GameConfig gameConfig;
-        [SerializeField] AudioSource soundSource, musicSource;
-
-        string SavePath => Path.Combine(Application.persistentDataPath, gameConfig?.saveFileName ?? GameConstants.DefaultSaveFileName);
+        SaveService saveService;
 
         public int TotalCoins { get; private set; }
-        public float SoundVolume => soundSource.volume;
-        public float MusicVolume => musicSource.volume;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Bootstrap()
+        {
+            if (instance != null) return;
+            _ = new GameObject(nameof(GameManager)).AddComponent<GameManager>();
+        }
 
         void Awake()
         {
-            if (Instance != null) { Destroy(gameObject); return; }
-            Instance = this;
+            if (instance != null) { Destroy(gameObject); return; }
+            instance = this;
             DontDestroyOnLoad(gameObject);
-            Initialize();
-        }
-
-        void Initialize()
-        {
-            if (soundSource == null || musicSource == null)
-            {
-                Debug.LogError("[GameManager] AudioSource components not assigned.");
-                return;
-            }
-            musicSource.volume = PlayerPrefs.GetFloat(gameConfig.musicVolumeKey, gameConfig.defaultMusicVolume);
-            soundSource.volume = PlayerPrefs.GetFloat(gameConfig.soundVolumeKey, gameConfig.defaultSoundVolume);
+            saveService = new SaveService(Path.Combine(Application.persistentDataPath, GameConfig.Default.saveFileName));
+            ServiceLocator.Register<IGameManager>(this);
+            EventBus.Subscribe<LevelCompletedEvent>(OnLevelCompleted);
             LoadGame();
-            EventBus.OnLevelCompleted += OnLevelCompleted;
         }
 
         void OnDestroy()
         {
-            if (Instance != this) return;
-            EventBus.OnLevelCompleted -= OnLevelCompleted;
-            Instance = null;
+            if (instance != this) return;
+            EventBus.Unsubscribe<LevelCompletedEvent>(OnLevelCompleted);
+            ServiceLocator.Unregister<IGameManager>();
+            instance = null;
         }
 
-        void OnLevelCompleted() => SaveGame(false);
+        void OnLevelCompleted(LevelCompletedEvent _) => SaveGame(false);
 
         public void AddCoins(int value)
         {
             if (value <= 0) return;
             TotalCoins += value;
-            EventBus.RaiseScoreChanged(TotalCoins);
+            EventBus.Raise(new ScoreChangedEvent(TotalCoins));
         }
 
         public void ResetCoins()
         {
             TotalCoins = 0;
-            EventBus.RaiseScoreChanged(TotalCoins);
+            EventBus.Raise(new ScoreChangedEvent(TotalCoins));
         }
 
         public void SaveGame(bool isNewGame = false)
@@ -76,49 +63,23 @@ namespace Core.Managers
             var data = new SaveData
             {
                 totalCoins = TotalCoins,
-                currentLevel = isNewGame ? gameConfig.firstLevelSceneIndex : SceneManager.GetActiveScene().buildIndex
+                levelName = isNewGame ? GameConfig.Default.FirstLevelSceneName : SceneManager.GetActiveScene().name
             };
-            try { File.WriteAllText(SavePath, JsonUtility.ToJson(data)); }
-            catch (Exception e) { Debug.LogError($"[GameManager] Save failed: {e.Message}"); }
+            saveService.Save(data);
         }
 
-        public bool SaveDataExists() => File.Exists(SavePath);
-
-        SaveData ReadSaveFile()
-        {
-            try { return JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath)); }
-            catch (Exception e) { Debug.LogError($"[GameManager] Load failed: {e.Message}"); return null; }
-        }
+        public bool SaveDataExists() => saveService.SaveDataExists();
 
         public SaveData LoadGame()
         {
-            if (!File.Exists(SavePath)) return null;
-            var data = ReadSaveFile();
+            var data = saveService.Load();
             if (data == null) return null;
             TotalCoins = data.totalCoins;
-            EventBus.RaiseScoreChanged(TotalCoins);
+            EventBus.Raise(new ScoreChangedEvent(TotalCoins));
             return data;
         }
 
-        public int GetLastSavedLevelIndex() =>
-            !File.Exists(SavePath) ? gameConfig.firstLevelSceneIndex : ReadSaveFile()?.currentLevel ?? gameConfig.firstLevelSceneIndex;
-
-        public void PlaySound(AudioClip clip) { if (clip != null) soundSource.PlayOneShot(clip); }
-
-        public void SetSoundVolume(float volume)
-        {
-            volume = Mathf.Clamp01(volume);
-            soundSource.volume = volume;
-            PlayerPrefs.SetFloat(gameConfig.soundVolumeKey, volume);
-            OnSoundVolumeChanged?.Invoke(volume);
-        }
-
-        public void SetMusicVolume(float volume)
-        {
-            volume = Mathf.Clamp01(volume);
-            musicSource.volume = volume;
-            PlayerPrefs.SetFloat(gameConfig.musicVolumeKey, volume);
-            OnMusicVolumeChanged?.Invoke(volume);
-        }
+        public string GetLastSavedLevelName() =>
+            saveService.Load()?.levelName ?? GameConfig.Default.FirstLevelSceneName;
     }
 }

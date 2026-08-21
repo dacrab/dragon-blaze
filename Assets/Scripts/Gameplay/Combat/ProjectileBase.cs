@@ -2,9 +2,12 @@ using UnityEngine;
 using Core.Constants;
 using Core.Managers;
 using Core.Pooling;
+using Core.Services;
 
 namespace Gameplay.Combat
 {
+    using Player = Gameplay.Characters.Player.Player;
+
     [RequireComponent(typeof(Animator), typeof(Collider2D))]
     public class ProjectileBase : MonoBehaviour
     {
@@ -49,16 +52,15 @@ namespace Gameplay.Combat
 
             if (collision.CompareTag(targetTag))
             {
-                if (checkInvisibility && collision.TryGetComponent<Characters.Player.Player>(out var player) && player.IsInvisible)
-                    return;
+                if (checkInvisibility && collision.IsInvisiblePlayer()) return;
                 if (collision.TryGetComponent<Health>(out var target))
                     target.TakeDamage(damage);
             }
 
             hit = true;
             if (col != null) col.enabled = false;
-            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, collision.ClosestPoint(transform.position), Quaternion.identity);
-            GameManager.Instance?.PlaySound(hitSound);
+            VfxPool.Spawn(hitEffectPrefab, collision.ClosestPoint(transform.position), Quaternion.identity);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(hitSound);
             if (anim != null) anim.SetTrigger(GameConstants.Anim.Explode);
             else Deactivate();
         }
@@ -72,6 +74,16 @@ namespace Gameplay.Combat
 
         public void ActivateProjectile() => SetDirection(transform.lossyScale.x > 0 ? 1 : -1);
         public void OnExplosionComplete() => Deactivate();
+
+        /// <summary>Cycles a shared projectile pool: takes the next entry, moves it to <paramref name="position"/>, and arms it.</summary>
+        public static ProjectileBase Fire(GameObject[] projectiles, ref int index, Vector3 position)
+        {
+            if (projectiles is not { Length: > 0 }) return null;
+            var next = projectiles[index];
+            index = (index + 1) % projectiles.Length;
+            next.transform.position = position;
+            return next.TryGetComponent<ProjectileBase>(out var proj) ? proj : null;
+        }
 
         protected void Deactivate()
         {

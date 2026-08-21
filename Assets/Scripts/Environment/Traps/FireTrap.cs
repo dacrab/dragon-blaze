@@ -1,7 +1,9 @@
+using System;
+using System.Threading;
 using UnityEngine;
-using Core.Managers;
 using Core.Constants;
-using Gameplay.Characters.Player;
+using Core.Managers;
+using Core.Services;
 using Gameplay.Combat;
 
 namespace Environment.Traps
@@ -18,53 +20,55 @@ namespace Environment.Traps
 
         Animator anim;
         SpriteRenderer sprite;
-        bool active, cycling;
-        Color originalColor;
-        Player cachedPlayer;
-        Health cachedHealth;
+        bool active, activating;
+        CancellationTokenSource cycleCts;
 
         void Awake()
         {
             anim = GetComponent<Animator>();
             sprite = GetComponent<SpriteRenderer>();
-            originalColor = sprite.color;
+        }
+
+        void OnDestroy()
+        {
+            cycleCts?.Cancel();
+            cycleCts?.Dispose();
         }
 
         void OnTriggerEnter2D(Collider2D collision)
         {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            collision.TryGetComponent(out cachedPlayer);
-            collision.TryGetComponent(out cachedHealth);
-            if (cachedPlayer is { IsInvisible: true }) return;
-            if (!cycling) _ = ActivateAsync();
+            if (!collision.CompareTag(GameConstants.Tags.Player) || collision.IsInvisiblePlayer()) return;
+            if (active || activating) return;
+            activating = true;
+            cycleCts?.Cancel();
+            cycleCts = new CancellationTokenSource();
+            _ = ActivateAsync(cycleCts.Token);
         }
 
         void OnTriggerStay2D(Collider2D collision)
         {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            if (cachedPlayer is { IsInvisible: true }) return;
-            if (active)
-            {
-                cachedHealth?.TakeDamage(damage * Time.deltaTime);
-                return;
-            }
-            if (!cycling) _ = ActivateAsync();
+            if (active && collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(damage * Time.deltaTime);
         }
 
-        async Awaitable ActivateAsync()
+        async Awaitable ActivateAsync(CancellationToken ct)
         {
-            cycling = true;
             sprite.color = warningColor;
-            await Awaitable.WaitForSecondsAsync(activationDelay);
-            GameManager.Instance?.PlaySound(firetrapSound);
-            sprite.color = activeColor;
-            active = true;
-            anim.SetBool(GameConstants.Anim.Activated, true);
-            await Awaitable.WaitForSecondsAsync(activeTime);
+            try
+            {
+                await Awaitable.WaitForSecondsAsync(activationDelay, ct);
+                ServiceLocator.Get<IAudioManager>()?.PlaySound(firetrapSound);
+                sprite.color = activeColor;
+                active = true;
+                anim.SetBool(GameConstants.Anim.Activated, true);
+                await Awaitable.WaitForSecondsAsync(activeTime, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
             active = false;
+            activating = false;
             anim.SetBool(GameConstants.Anim.Activated, false);
-            sprite.color = originalColor;
-            cycling = false;
         }
     }
 }

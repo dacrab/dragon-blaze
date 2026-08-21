@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Services;
 using Gameplay.Characters.Player;
 using Gameplay.Combat;
 
@@ -24,19 +25,18 @@ namespace Environment.Traps
         void Update()
         {
             if (attacking)
+            {
                 transform.Translate(moveDir * speed * Time.deltaTime);
-            else if ((checkTimer += Time.deltaTime) >= checkDelay)
-                CheckForPlayer();
+                return;
+            }
+            checkTimer += Time.deltaTime;
+            if (checkTimer >= checkDelay) CheckForPlayer();
         }
 
         void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag(GameConstants.Tags.Player))
-            {
-                if (!collision.TryGetComponent<Player>(out var player) || !player.IsInvisible)
-                    if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(damage);
-                GameManager.Instance?.PlaySound(impactSound);
-            }
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(impactSound);
+            if (collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(damage);
             attacking = false;
             moveDir = Vector3.zero;
         }

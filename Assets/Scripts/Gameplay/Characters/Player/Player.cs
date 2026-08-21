@@ -1,20 +1,23 @@
+using System;
+using System.Threading;
 using UnityEngine;
-using Core.Input;
-using Core.Events;
 using Core.Constants;
+using Core.Events;
+using Core.Input;
 using Core.Managers;
+using Core.Services;
 using Core.State;
+using Core.Pooling;
 using Gameplay.Combat;
 
 namespace Gameplay.Characters.Player
 {
     [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(Animator))]
     [RequireComponent(typeof(SpriteRenderer))]
-    public sealed class Player : MonoBehaviour
+    public sealed class Player : MonoBehaviour, IPlayer
     {
         [Header("Config")]
         [SerializeField] PlayerConfigSO config;
-        [SerializeField] InputReader input;
 
         [Header("Combat")]
         [SerializeField] Transform firePoint;
@@ -32,14 +35,19 @@ namespace Gameplay.Characters.Player
         SpriteRenderer sprite;
 
         float horizontalInput, coyoteTimer, attackTimer, wallJumpTimer;
-        int jumpCount, fireballIndex;
+        int jumpCount, fireballIndex, groundedId, runId;
         bool facingRight = true, dashing, wallSliding, interacting;
         Transform checkpoint;
-        float currentDamage, currentSpeed, currentJumpPower;
+        readonly PlayerStats stats = new();
+        InputReader inputReader;
+        CancellationTokenSource dashCts;
 
         public bool IsInvisible { get; private set; }
         public bool IsGrounded { get; private set; }
-        public float Damage => currentDamage;
+        Transform IPlayer.Transform => transform;
+        public float Damage => config.baseDamage * stats.Factor(PlayerStat.Damage);
+        float Speed => config.speed * stats.Factor(PlayerStat.Speed);
+        float JumpPower => config.jumpPower * stats.Factor(PlayerStat.Jump);
 
         void Awake()
         {
@@ -47,46 +55,57 @@ namespace Gameplay.Characters.Player
             box = GetComponent<BoxCollider2D>();
             anim = GetComponent<Animator>();
             sprite = GetComponent<SpriteRenderer>();
-            currentDamage = config.baseDamage;
-            currentSpeed = config.speed;
-            currentJumpPower = config.jumpPower;
+            groundedId = Animator.StringToHash(GameConstants.Anim.Grounded);
+            runId = Animator.StringToHash(GameConstants.Anim.Run);
+            ServiceLocator.Register<IPlayer>(this);
+        }
+
+        void OnDestroy()
+        {
+            if (ReferenceEquals(ServiceLocator.Get<IPlayer>(), this)) ServiceLocator.Unregister<IPlayer>();
         }
 
         void OnEnable()
         {
-            if (input == null) return;
-            input.MoveEvent += OnMove;
-            input.JumpEvent += OnJump;
-            input.JumpCanceledEvent += OnJumpCanceled;
-            input.DashEvent += OnDash;
-            input.AttackEvent += OnAttack;
-            EventBus.OnDialogueStateChanged += OnDialogueChanged;
-            EventBus.OnPlayerDied += OnDeath;
-            EventBus.OnPlayerRespawn += OnRespawn;
+            inputReader ??= InputReader.Instance;
+            if (inputReader != null)
+            {
+                inputReader.MoveEvent += OnMove;
+                inputReader.JumpEvent += OnJump;
+                inputReader.JumpCanceledEvent += OnJumpCanceled;
+                inputReader.DashEvent += OnDash;
+                inputReader.AttackEvent += OnAttack;
+            }
+            EventBus.Subscribe<DialogueStateChangedEvent>(OnDialogueChanged);
+            EventBus.Subscribe<PlayerDiedEvent>(OnDeath);
+            EventBus.Subscribe<PlayerRespawnEvent>(OnRespawn);
         }
 
         void OnDisable()
         {
-            if (input == null) return;
-            input.MoveEvent -= OnMove;
-            input.JumpEvent -= OnJump;
-            input.JumpCanceledEvent -= OnJumpCanceled;
-            input.DashEvent -= OnDash;
-            input.AttackEvent -= OnAttack;
-            EventBus.OnDialogueStateChanged -= OnDialogueChanged;
-            EventBus.OnPlayerDied -= OnDeath;
-            EventBus.OnPlayerRespawn -= OnRespawn;
+            if (inputReader != null)
+            {
+                inputReader.MoveEvent -= OnMove;
+                inputReader.JumpEvent -= OnJump;
+                inputReader.JumpCanceledEvent -= OnJumpCanceled;
+                inputReader.DashEvent -= OnDash;
+                inputReader.AttackEvent -= OnAttack;
+            }
+            dashCts?.Cancel();
+            EventBus.Unsubscribe<DialogueStateChangedEvent>(OnDialogueChanged);
+            EventBus.Unsubscribe<PlayerDiedEvent>(OnDeath);
+            EventBus.Unsubscribe<PlayerRespawnEvent>(OnRespawn);
         }
 
         void Update()
         {
             attackTimer += Time.deltaTime;
             if (wallJumpTimer > 0) wallJumpTimer -= Time.deltaTime;
+            stats.Tick(Time.deltaTime);
             UpdateGroundCheck();
             UpdateWallSlide();
-            float vx = Mathf.Abs(rb.linearVelocity.x);
-            anim.SetBool(GameConstants.Anim.Grounded, IsGrounded);
-            anim.SetBool(GameConstants.Anim.Run, vx > config.velocityThreshold);
+            SetAnimBool(groundedId, IsGrounded);
+            SetAnimBool(runId, Mathf.Abs(rb.linearVelocity.x) > config.velocityThreshold);
             if (IsGrounded) { coyoteTimer = config.coyoteTime; jumpCount = config.extraJumps; }
             else coyoteTimer -= Time.deltaTime;
         }
@@ -94,13 +113,13 @@ namespace Gameplay.Characters.Player
         void FixedUpdate()
         {
             if (interacting || dashing || wallJumpTimer > 0) return;
-            rb.linearVelocity = new(horizontalInput * currentSpeed, rb.linearVelocity.y);
+            rb.linearVelocity = new(horizontalInput * Speed, rb.linearVelocity.y);
             if ((horizontalInput > config.movementThreshold && !facingRight) ||
                 (horizontalInput < -config.movementThreshold && facingRight)) Flip();
         }
 
         void OnMove(float x) => horizontalInput = interacting ? 0 : x;
-        void OnDialogueChanged(bool open) => interacting = open;
+        void OnDialogueChanged(DialogueStateChangedEvent e) => interacting = e.Open;
 
         void OnJump()
         {
@@ -108,7 +127,7 @@ namespace Gameplay.Characters.Player
             if (wallSliding) { WallJump(); return; }
             bool canCoyote = coyoteTimer > 0;
             if (!IsGrounded && !canCoyote && jumpCount <= 0) return;
-            rb.linearVelocity = new(rb.linearVelocity.x, currentJumpPower);
+            rb.linearVelocity = new(rb.linearVelocity.x, JumpPower);
             SpawnVfx(jumpVfx);
             if (!IsGrounded && !canCoyote) jumpCount--;
             if (canCoyote) coyoteTimer = 0;
@@ -128,14 +147,20 @@ namespace Gameplay.Characters.Player
             rb.gravityScale = 0;
             rb.linearVelocity = new(transform.localScale.x * config.dashSpeed, 0);
             SpawnVfx(dashVfx);
-            _ = EndDashAsync(gravity);
+            dashCts?.Cancel();
+            dashCts = new CancellationTokenSource();
+            _ = EndDashAsync(gravity, dashCts.Token);
         }
 
-        async Awaitable EndDashAsync(float gravity)
+        async Awaitable EndDashAsync(float gravity, CancellationToken ct)
         {
-            await Awaitable.WaitForSecondsAsync(config.dashDuration);
-            rb.gravityScale = gravity;
-            dashing = false;
+            try
+            {
+                await Awaitable.WaitForSecondsAsync(config.dashDuration, ct);
+                rb.gravityScale = gravity;
+                dashing = false;
+            }
+            catch (OperationCanceledException) { }
         }
 
         void OnAttack()
@@ -143,14 +168,12 @@ namespace Gameplay.Characters.Player
             if (attackTimer < config.attackCooldown) return;
             if (Mathf.Abs(rb.linearVelocity.x) > config.velocityThreshold || !IsGrounded) return;
             if (!GameStateManager.IsCurrentlyPlaying) return;
-            GameManager.Instance?.PlaySound(fireballSound);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(fireballSound);
             anim.SetTrigger(GameConstants.Anim.Attack);
             attackTimer = 0;
-            if (firePoint == null || fireballs is not { Length: > 0 }) return;
-            var fb = fireballs[fireballIndex];
-            fireballIndex = (fireballIndex + 1) % fireballs.Length;
-            fb.transform.position = firePoint.position;
-            fb.GetComponent<ProjectileBase>()?.SetDirection(Mathf.Sign(transform.localScale.x));
+            if (firePoint == null) return;
+            ProjectileBase.Fire(fireballs, ref fireballIndex, firePoint.position)?
+                .SetDirection(Mathf.Sign(transform.localScale.x));
         }
 
         void WallJump()
@@ -159,7 +182,7 @@ namespace Gameplay.Characters.Player
             wallJumpTimer = config.wallJumpTime;
             jumpCount = config.extraJumps;
             float dir = -transform.localScale.x;
-            rb.linearVelocity = new(dir * config.wallJumpForce, currentJumpPower);
+            rb.linearVelocity = new(dir * config.wallJumpForce, JumpPower);
             Flip();
             SpawnVfx(jumpVfx);
         }
@@ -180,12 +203,18 @@ namespace Gameplay.Characters.Player
 
         void UpdateWallSlide()
         {
-            float dir = transform.localScale.x;
-            var start = (Vector2)transform.position + new Vector2(dir * config.wallCheckOffsetX, config.wallCheckOffsetY);
-            var hit = Physics2D.Linecast(start, start + Vector2.down * config.wallCheckLength, config.groundLayer);
-            wallSliding = hit.collider != null && !IsGrounded && Mathf.Abs(horizontalInput) > config.velocityThreshold;
-            if (wallSliding)
-                rb.linearVelocity = new(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -config.wallSlideSpeed));
+            bool shouldCheck = !IsGrounded && Mathf.Abs(horizontalInput) > config.velocityThreshold;
+            if (shouldCheck)
+            {
+                float dir = transform.localScale.x;
+                var start = (Vector2)transform.position + new Vector2(dir * config.wallCheckOffsetX, config.wallCheckOffsetY);
+                var hit = Physics2D.Linecast(start, start + Vector2.down * config.wallCheckLength, config.groundLayer);
+                wallSliding = hit.collider != null;
+                if (wallSliding)
+                    rb.linearVelocity = new(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -config.wallSlideSpeed));
+            }
+            else wallSliding = false;
+
             if (wallSlideParticles != null)
             {
                 if (wallSliding && !wallSlideParticles.isPlaying) wallSlideParticles.Play();
@@ -193,13 +222,18 @@ namespace Gameplay.Characters.Player
             }
         }
 
-        void OnDeath()
+        void SetAnimBool(int id, bool value)
+        {
+            if (anim.GetBool(id) != value) anim.SetBool(id, value);
+        }
+
+        void OnDeath(PlayerDiedEvent _)
         {
             SpawnVfx(deathVfx);
             anim.SetTrigger(GameConstants.Anim.Die);
         }
 
-        void OnRespawn()
+        void OnRespawn(PlayerRespawnEvent _)
         {
             if (checkpoint == null) return;
             transform.position = checkpoint.position;
@@ -220,7 +254,7 @@ namespace Gameplay.Characters.Player
         {
             if (!col.CompareTag(GameConstants.Tags.Checkpoint)) return;
             checkpoint = col.transform;
-            GameManager.Instance?.PlaySound(checkpointSound);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(checkpointSound);
             col.enabled = false;
             col.GetComponent<Animator>()?.SetTrigger(GameConstants.Anim.Activate);
         }
@@ -231,9 +265,8 @@ namespace Gameplay.Characters.Player
             sprite.color = invisible ? config.invisibleColor : Color.white;
         }
 
-        public void SetDamage(float d) => currentDamage = d;
-        public void ModifySpeed(float mult) => currentSpeed *= mult;
-        public void ModifyJump(float mult) => currentJumpPower *= mult;
-        void SpawnVfx(GameObject prefab) { if (prefab != null) Instantiate(prefab, transform.position, Quaternion.identity); }
+        public void AddModifier(PlayerStat stat, float factor, float duration) => stats.Add(stat, factor, duration);
+
+        void SpawnVfx(GameObject prefab) => VfxPool.Spawn(prefab, transform.position, Quaternion.identity);
     }
 }

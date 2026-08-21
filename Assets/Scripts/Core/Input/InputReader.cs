@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Events;
@@ -7,6 +8,11 @@ namespace Core.Input
     [CreateAssetMenu(fileName = "InputReader", menuName = "DragonBlaze/Input/Input Reader")]
     public sealed class InputReader : ScriptableObject
     {
+        public const string ResourceKey = nameof(InputReader);
+
+        const string GameplayMap = "Gameplay";
+        const string UIMap = "UI";
+
         [SerializeField] InputActionAsset inputActions;
 
         public event UnityAction<float> MoveEvent;
@@ -14,24 +20,38 @@ namespace Core.Input
         public event UnityAction<Vector2> NavigateEvent;
 
         InputActionMap gameplayMap, uiMap;
+        (string name, Action<InputAction.CallbackContext> performed, Action<InputAction.CallbackContext> canceled)[] gameplayActions;
+
+        static InputReader instance;
+
+        /// <summary>Resolves the shared reader from Resources so no scene wiring is required.</summary>
+        public static InputReader Instance => instance != null ? instance : instance = Resources.Load<InputReader>(ResourceKey);
+
+        internal bool HasActionMaps => gameplayMap != null && uiMap != null;
 
         void OnEnable()
         {
             if (inputActions == null) return;
-            gameplayMap = inputActions.FindActionMap("Gameplay");
-            uiMap = inputActions.FindActionMap("UI");
+            gameplayMap = inputActions.FindActionMap(GameplayMap);
+            uiMap = inputActions.FindActionMap(UIMap);
+            gameplayActions ??= new[]
+            {
+                ("Move", (Action<InputAction.CallbackContext>)OnMove, (Action<InputAction.CallbackContext>)OnMoveCanceled),
+                ("Jump", (Action<InputAction.CallbackContext>)OnJump, (Action<InputAction.CallbackContext>)OnJumpCanceled),
+                ("Dash", (Action<InputAction.CallbackContext>)OnDash, null),
+                ("Attack", (Action<InputAction.CallbackContext>)OnAttack, null),
+                ("Interact", (Action<InputAction.CallbackContext>)OnInteract, null),
+                ("Pause", (Action<InputAction.CallbackContext>)OnPause, null),
+            };
 
             if (gameplayMap != null)
             {
                 gameplayMap.Enable();
-                gameplayMap["Move"].performed += OnMove;
-                gameplayMap["Move"].canceled += OnMoveCanceled;
-                gameplayMap["Jump"].performed += OnJump;
-                gameplayMap["Jump"].canceled += OnJumpCanceled;
-                gameplayMap["Dash"].performed += OnDash;
-                gameplayMap["Attack"].performed += OnAttack;
-                gameplayMap["Interact"].performed += OnInteract;
-                gameplayMap["Pause"].performed += OnPause;
+                foreach (var (name, performed, canceled) in gameplayActions)
+                {
+                    gameplayMap[name].performed += performed;
+                    if (canceled != null) gameplayMap[name].canceled += canceled;
+                }
             }
 
             if (uiMap != null)
@@ -46,16 +66,11 @@ namespace Core.Input
             if (inputActions == null) return;
             inputActions.Disable();
             if (gameplayMap != null)
-            {
-                gameplayMap["Move"].performed -= OnMove;
-                gameplayMap["Move"].canceled -= OnMoveCanceled;
-                gameplayMap["Jump"].performed -= OnJump;
-                gameplayMap["Jump"].canceled -= OnJumpCanceled;
-                gameplayMap["Dash"].performed -= OnDash;
-                gameplayMap["Attack"].performed -= OnAttack;
-                gameplayMap["Interact"].performed -= OnInteract;
-                gameplayMap["Pause"].performed -= OnPause;
-            }
+                foreach (var (name, performed, canceled) in gameplayActions)
+                {
+                    gameplayMap[name].performed -= performed;
+                    if (canceled != null) gameplayMap[name].canceled -= canceled;
+                }
             if (uiMap != null)
             {
                 uiMap["Navigate"].performed -= OnNavigate;
@@ -75,5 +90,6 @@ namespace Core.Input
         void OnSubmit(InputAction.CallbackContext _) => SubmitEvent?.Invoke();
 
         public void EnableUIInput() { gameplayMap?.Disable(); uiMap?.Enable(); }
+        public void EnableGameplayInput() { gameplayMap?.Enable(); uiMap?.Enable(); }
     }
 }

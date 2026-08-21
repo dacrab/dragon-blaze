@@ -1,9 +1,10 @@
 {
     "name": "DragonBlaze.Debug",
-    "rootNamespace": "DragonBlaze.Debug",
+    "rootNamespace": "Core.Debug",
     "references": [
         "DragonBlaze.Core",
-        "DragonBlaze.Gameplay"
+        "DragonBlaze.Gameplay",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

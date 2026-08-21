@@ -6,28 +6,23 @@ namespace DragonBlaze.Tests
     public class EventBusTests
     {
         [SetUp]
-        public void Setup()
-        {
-            typeof(EventBus)
-                .GetMethod("Reset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                ?.Invoke(null, null);
-        }
+        public void Setup() => EventBus.Clear();
 
         [Test]
-        public void RaiseScoreChanged_InvokesSubscribers()
+        public void Raise_InvokesSubscribers()
         {
             int received = -1;
-            EventBus.OnScoreChanged += v => received = v;
-            EventBus.RaiseScoreChanged(42);
+            EventBus.Subscribe<ScoreChangedEvent>(e => received = e.Score);
+            EventBus.Raise(new ScoreChangedEvent(42));
             Assert.AreEqual(42, received);
         }
 
         [Test]
-        public void RaiseHealthChanged_InvokesWithCorrectValues()
+        public void Raise_InvokesWithCorrectValues()
         {
             float hp = 0, max = 0;
-            EventBus.OnHealthChanged += (c, m) => { hp = c; max = m; };
-            EventBus.RaiseHealthChanged(50f, 100f);
+            EventBus.Subscribe<HealthChangedEvent>(e => { hp = e.Current; max = e.Max; });
+            EventBus.Raise(new HealthChangedEvent(50f, 100f));
             Assert.AreEqual(50f, hp);
             Assert.AreEqual(100f, max);
         }
@@ -36,20 +31,20 @@ namespace DragonBlaze.Tests
         public void UnsubscribedHandler_DoesNotReceive()
         {
             int count = 0;
-            void Handler(int _) => count++;
-            EventBus.OnScoreChanged += Handler;
-            EventBus.OnScoreChanged -= Handler;
-            EventBus.RaiseScoreChanged(1);
+            void Handler(ScoreChangedEvent _) => count++;
+            EventBus.Subscribe<ScoreChangedEvent>(Handler);
+            EventBus.Unsubscribe<ScoreChangedEvent>(Handler);
+            EventBus.Raise(new ScoreChangedEvent(1));
             Assert.AreEqual(0, count);
         }
 
         [Test]
-        public void RaisePlayerDied_InvokesOnce()
+        public void RaiseEmptyPayload_InvokesOncePerRaise()
         {
             int count = 0;
-            EventBus.OnPlayerDied += () => count++;
-            EventBus.RaisePlayerDied();
-            EventBus.RaisePlayerDied();
+            EventBus.Subscribe<PlayerDiedEvent>(_ => count++);
+            EventBus.Raise(new PlayerDiedEvent());
+            EventBus.Raise(new PlayerDiedEvent());
             Assert.AreEqual(2, count);
         }
     }

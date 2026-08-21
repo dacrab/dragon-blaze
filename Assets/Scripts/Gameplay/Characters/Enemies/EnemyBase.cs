@@ -4,6 +4,8 @@ using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies
 {
+    using Player = Gameplay.Characters.Player.Player;
+
     [RequireComponent(typeof(Animator), typeof(Health))]
     public abstract class EnemyBase : MonoBehaviour
     {
@@ -28,9 +30,7 @@ namespace Gameplay.Characters.Enemies
 
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            if (collision.TryGetComponent<Player.Player>(out var player) && player.IsInvisible) return;
-            if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(Damage);
+            if (collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(Damage);
         }
     }
 }

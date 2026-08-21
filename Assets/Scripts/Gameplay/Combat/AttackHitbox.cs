@@ -1,6 +1,9 @@
+using System;
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Pooling;
+using Core.Services;
 
 namespace Gameplay.Combat
 {
@@ -25,18 +28,15 @@ namespace Gameplay.Combat
 
         public void EnableHitbox() { hasHit = false; hitbox.enabled = true; }
         public void DisableHitbox() => hitbox.enabled = false;
-		void OnTriggerEnter2D(Collider2D other)
-		{
-			if (hasHit) return;
-			bool validTarget = false;
-			foreach (var t in targetTags)
-				if (other.CompareTag(t)) { validTarget = true; break; }
-			if (!validTarget) return;
+
+        void OnTriggerEnter2D(Collider2D other)
+        {
+            if (hasHit || Array.IndexOf(targetTags, other.tag) < 0) return;
             hasHit = true;
             if (other.TryGetComponent<Health>(out var target)) target.TakeDamage(damage);
             ApplyKnockback(other);
-            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, other.ClosestPoint(transform.position), Quaternion.identity);
-            GameManager.Instance?.PlaySound(hitSound);
+            VfxPool.Spawn(hitEffectPrefab, other.ClosestPoint(transform.position), Quaternion.identity);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(hitSound);
         }
 
         void ApplyKnockback(Collider2D target)

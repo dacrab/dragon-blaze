@@ -1,17 +1,19 @@
 using UnityEngine;
-using Core.State;
 using Core.Constants;
+using Core.State;
 using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies
 {
+    using Player = Gameplay.Characters.Player.Player;
+
     public sealed class MeleeEnemy : EnemyBase
     {
         [Header("Target")]
         [SerializeField] Transform playerTransform;
 
         float cooldownTimer;
-        Player.Player player;
+        Player player;
         Health playerHealth;
         PatrolMovement patrol;
         float attackRangeSqr;
@@ -20,27 +22,36 @@ namespace Gameplay.Characters.Enemies
         {
             base.Awake();
             patrol = GetComponentInParent<PatrolMovement>();
-            if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
-            if (playerTransform != null)
-            {
-                player = playerTransform.GetComponent<Player.Player>();
-                playerTransform.TryGetComponent(out playerHealth);
-            }
-            attackRangeSqr = config.attackRange * config.attackRange;
+            if (config != null) attackRangeSqr = config.attackRange * config.attackRange;
         }
 
         void Update()
         {
-            if (IsDead || !GameStateManager.IsCurrentlyPlaying || playerTransform == null) return;
+            if (IsDead || !GameStateManager.IsCurrentlyPlaying) return;
+            if (playerTransform == null)
+            {
+                playerTransform = GameConstants.FindPlayer();
+                if (playerTransform == null) return;
+                player = playerTransform.GetComponent<Player>();
+                playerTransform.TryGetComponent(out playerHealth);
+            }
             cooldownTimer += Time.deltaTime;
 
-            if ((player == null || !player.IsInvisible) && InPatrolBounds())
+            bool playerVisible = player == null || !player.IsInvisible;
+            if (!playerVisible || !InPatrolBounds())
             {
-                patrol.enabled = false;
-                ChasePlayer();
-                if (cooldownTimer >= config.attackCooldown && InAttackRange()) Attack();
+                SetPatrol(true);
+                return;
             }
-            else patrol.enabled = true;
+
+            SetPatrol(false);
+            ChasePlayer();
+            if (cooldownTimer >= config.attackCooldown && InAttackRange()) Attack();
+        }
+
+        void SetPatrol(bool enabled)
+        {
+            if (patrol != null) patrol.enabled = enabled;
         }
 
         void Attack()

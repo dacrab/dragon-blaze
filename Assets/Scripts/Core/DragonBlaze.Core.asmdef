@@ -2,9 +2,7 @@
     "name": "DragonBlaze.Core",
     "rootNamespace": "Core",
     "references": [
-        "Unity.InputSystem",
-        "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

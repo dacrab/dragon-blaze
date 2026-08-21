@@ -2,56 +2,66 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Core.Constants;
 using Core.Events;
+using Core.Services;
 
 namespace Core.State
 {
-    public sealed class GameStateManager : MonoBehaviour
+    public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     {
-        public static GameStateManager Instance { get; private set; }
-        [SerializeField] GameConfig gameConfig;
+        static GameStateManager instance;
 
         public GameState CurrentState { get; private set; } = GameState.MainMenu;
         public bool IsPlaying => CurrentState == GameState.Gameplay;
-        public static bool IsCurrentlyPlaying => Instance is { IsPlaying: true };
+        public static bool IsCurrentlyPlaying => instance is { IsPlaying: true };
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Bootstrap()
+        {
+            if (instance != null) return;
+            _ = new GameObject(nameof(GameStateManager)).AddComponent<GameStateManager>();
+        }
 
         void Awake()
         {
-            if (Instance != null) { Destroy(gameObject); return; }
-            Instance = this;
+            if (instance != null) { Destroy(gameObject); return; }
+            instance = this;
             DontDestroyOnLoad(gameObject);
+            ServiceLocator.Register<IGameStateManager>(this);
             SceneManager.sceneLoaded += OnSceneLoaded;
-            EventBus.OnGamePaused += OnPaused;
-            EventBus.OnDialogueStateChanged += OnDialogue;
-            EventBus.OnPlayerDied += OnPlayerDied;
-            EventBus.OnPlayerRespawn += OnPlayerRespawn;
-            CurrentState = GetStateForScene(SceneManager.GetActiveScene().buildIndex);
+            EventBus.Subscribe<GamePausedEvent>(OnPaused);
+            EventBus.Subscribe<DialogueStateChangedEvent>(OnDialogue);
+            EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
+            EventBus.Subscribe<PlayerRespawnEvent>(OnPlayerRespawn);
+            CurrentState = GetStateForScene(SceneManager.GetActiveScene().name);
             ApplyState();
         }
 
         void OnDestroy()
         {
-            if (Instance != this) return;
+            if (instance != this) return;
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            EventBus.OnGamePaused -= OnPaused;
-            EventBus.OnDialogueStateChanged -= OnDialogue;
-            EventBus.OnPlayerDied -= OnPlayerDied;
-            EventBus.OnPlayerRespawn -= OnPlayerRespawn;
-            Instance = null;
+            EventBus.Unsubscribe<GamePausedEvent>(OnPaused);
+            EventBus.Unsubscribe<DialogueStateChangedEvent>(OnDialogue);
+            EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
+            EventBus.Unsubscribe<PlayerRespawnEvent>(OnPlayerRespawn);
+            ServiceLocator.Unregister<IGameStateManager>();
+            instance = null;
         }
 
-        void OnPlayerDied() => ChangeState(GameState.GameOver);
-        void OnPlayerRespawn() => ChangeState(GameState.Gameplay);
-        void OnPaused(bool paused) => ChangeState(paused ? GameState.Paused : GameState.Gameplay);
+        void OnPlayerDied(PlayerDiedEvent _) => ChangeState(GameState.GameOver);
+        void OnPlayerRespawn(PlayerRespawnEvent _) => ChangeState(GameState.Gameplay);
+        void OnPaused(GamePausedEvent e) => ChangeState(e.Paused ? GameState.Paused : GameState.Gameplay);
 
-        void OnDialogue(bool open)
+        void OnDialogue(DialogueStateChangedEvent e)
         {
             if (CurrentState is GameState.Gameplay or GameState.Dialogue)
-                ChangeState(open ? GameState.Dialogue : GameState.Gameplay);
+                ChangeState(e.Open ? GameState.Dialogue : GameState.Gameplay);
         }
 
-        void OnSceneLoaded(Scene scene, LoadSceneMode _)
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            ChangeState(GetStateForScene(scene.buildIndex));
+            if (mode != LoadSceneMode.Single) return;
+            ChangeState(GetStateForScene(scene.name));
         }
 
         public void ChangeState(GameState newState)
@@ -63,14 +73,13 @@ namespace Core.State
 
         void ApplyState()
         {
-            bool showCursor = CurrentState is not (GameState.Gameplay or GameState.Loading);
-            Time.timeScale = CurrentState is GameState.Paused or GameState.Dialogue or GameState.GameOver
-                ? gameConfig.pausedTimeScale : gameConfig.normalTimeScale;
-            Cursor.visible = showCursor;
-            Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
+            var settings = GameConfig.Default.GetStateSettings(CurrentState);
+            Time.timeScale = settings.timeScale;
+            Cursor.visible = settings.cursorVisible;
+            Cursor.lockState = settings.cursorLocked ? CursorLockMode.Locked : CursorLockMode.None;
         }
 
-        GameState GetStateForScene(int buildIndex) =>
-            buildIndex == gameConfig.mainMenuSceneIndex ? GameState.MainMenu : GameState.Gameplay;
+        GameState GetStateForScene(string sceneName) =>
+            sceneName == GameConfig.Default.MainMenuSceneName ? GameState.MainMenu : GameState.Gameplay;
     }
 }

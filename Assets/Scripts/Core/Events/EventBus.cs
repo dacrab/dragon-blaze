@@ -1,42 +1,29 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Core.Events
 {
+    /// <summary>
+    /// Type-keyed event bus. Raise or subscribe with a payload struct from GameEvents.
+    /// Adding a new event only requires a new payload struct, never editing this class.
+    /// </summary>
     public static class EventBus
     {
-        public static event Action<int> OnScoreChanged;
-        public static event Action OnPlayerDied;
-        public static event Action OnPlayerRespawn;
-        public static event Action<bool> OnGamePaused;
-        public static event Action OnLevelCompleted;
-        public static event Action<bool> OnDialogueStateChanged;
-        public static event Action<float, float> OnHealthChanged;
-        public static event Action<string, Sprite, float> OnPowerUpActivated;
-        public static event Action OnRequestNextLevel;
+        static readonly Dictionary<Type, Delegate> handlers = new();
 
-        public static void RaiseScoreChanged(int score) => OnScoreChanged?.Invoke(score);
-        public static void RaisePlayerDied() => OnPlayerDied?.Invoke();
-        public static void RaisePlayerRespawn() => OnPlayerRespawn?.Invoke();
-        public static void RaiseGamePaused(bool paused) => OnGamePaused?.Invoke(paused);
-        public static void RaiseLevelCompleted() => OnLevelCompleted?.Invoke();
-        public static void RaiseDialogueStateChanged(bool open) => OnDialogueStateChanged?.Invoke(open);
-        public static void RaiseHealthChanged(float current, float max) => OnHealthChanged?.Invoke(current, max);
-        public static void RaisePowerUpActivated(string name, Sprite icon, float duration) => OnPowerUpActivated?.Invoke(name, icon, duration);
-        public static void RaiseRequestNextLevel() => OnRequestNextLevel?.Invoke();
+        public static void Subscribe<T>(Action<T> handler) where T : struct =>
+            handlers[typeof(T)] = (Action<T>)handlers.GetValueOrDefault(typeof(T)) + handler;
+
+        public static void Unsubscribe<T>(Action<T> handler) where T : struct =>
+            handlers[typeof(T)] = (Action<T>)handlers.GetValueOrDefault(typeof(T)) - handler;
+
+        public static void Raise<T>(T payload) where T : struct =>
+            ((Action<T>)handlers.GetValueOrDefault(typeof(T)))?.Invoke(payload);
+
+        internal static void Clear() => handlers.Clear();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset()
-        {
-            OnScoreChanged = null;
-            OnPlayerDied = null;
-            OnPlayerRespawn = null;
-            OnGamePaused = null;
-            OnLevelCompleted = null;
-            OnDialogueStateChanged = null;
-            OnHealthChanged = null;
-            OnPowerUpActivated = null;
-            OnRequestNextLevel = null;
-        }
+        static void Reset() => handlers.Clear();
     }
 }

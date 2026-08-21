@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using Core.Constants;
 using Core.Events;
 using Core.Managers;
+using Core.Pooling;
+using Core.Services;
 
 namespace Gameplay.Combat
 {
@@ -35,8 +39,12 @@ namespace Gameplay.Combat
         Animator anim;
         SpriteRenderer sprite;
         bool dead, invulnerable, isPlayer;
-        int playerLayerIndex, enemyLayerIndex;
-        CancellationTokenSource iFramesCts;
+        int opponentLayerMask;
+        Collider2D[] ownColliders;
+        ContactFilter2D contactFilter;
+        readonly List<Collider2D> ignoredColliders = new();
+        readonly Collider2D[] overlapBuffer = new Collider2D[8];
+        CancellationTokenSource iframesCts;
 
         void Awake()
         {
@@ -44,49 +52,11 @@ namespace Gameplay.Combat
             sprite = GetComponent<SpriteRenderer>();
             currentHealth = maxHealth;
             isPlayer = CompareTag(GameConstants.Tags.Player);
-            playerLayerIndex = LayerMask.NameToLayer(GameConstants.Layers.Player);
-            enemyLayerIndex = LayerMask.NameToLayer(GameConstants.Layers.Enemy);
+            opponentLayerMask = 1 << LayerMask.NameToLayer(isPlayer ? GameConstants.Layers.Enemy : GameConstants.Layers.Player);
+            contactFilter.SetLayerMask(opponentLayerMask);
+            contactFilter.useLayerMask = true;
+            ownColliders = GetComponents<Collider2D>();
             NotifyHealthChanged();
-        }
-
-        void OnEnable()
-        {
-            if (!isPlayer && (dead || currentHealth <= 0)) ResetState(false);
-            if (isPlayer) EventBus.OnPlayerRespawn += ResetForRespawn;
-        }
-
-        void OnDisable()
-        {
-            if (isPlayer) EventBus.OnPlayerRespawn -= ResetForRespawn;
-            CancelIFrames();
-        }
-
-        void OnDestroy()
-        {
-            if (isPlayer) EventBus.OnPlayerRespawn -= ResetForRespawn;
-        }
-
-        void ResetForRespawn() => ResetState(true);
-
-        void ResetState(bool cancelIFrames)
-        {
-            currentHealth = maxHealth;
-            dead = false;
-            invulnerable = false;
-            if (cancelIFrames) CancelIFrames();
-            sprite.color = normalColor;
-            SetComponentsEnabled(true);
-            NotifyHealthChanged();
-        }
-
-        void CancelIFrames()
-        {
-            if (iFramesCts != null)
-            {
-                iFramesCts.Cancel();
-                iFramesCts.Dispose();
-                iFramesCts = null;
-            }
         }
 
         public void TakeDamage(float damage)
@@ -94,15 +64,19 @@ namespace Gameplay.Combat
             if (invulnerable || dead) return;
             currentHealth = Mathf.Max(0, currentHealth - damage);
             NotifyHealthChanged();
-
-            if (currentHealth > 0)
+            if (currentHealth <= 0)
             {
-                anim.SetTrigger(GameConstants.Anim.Hurt);
-                _ = IFramesAsync();
-                GameManager.Instance?.PlaySound(hurtSound);
-                if (hitParticles != null) Instantiate(hitParticles, transform.position, Quaternion.identity);
+                Die();
+                return;
             }
-            else Die();
+
+            anim.SetTrigger(GameConstants.Anim.Hurt);
+            EventBus.Raise(new DamagedEvent(currentHealth, maxHealth));
+            iframesCts?.Cancel();
+            iframesCts = new CancellationTokenSource();
+            _ = IFramesAsync(iframesCts.Token);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(hurtSound);
+            VfxPool.Spawn(hitParticles, transform.position, Quaternion.identity);
         }
 
         public void Heal(float value)
@@ -117,47 +91,84 @@ namespace Gameplay.Combat
             anim.SetBool(GameConstants.Anim.Grounded, true);
             anim.SetTrigger(GameConstants.Anim.Die);
             dead = true;
-            GameManager.Instance?.PlaySound(deathSound);
-            if (deathParticles != null) Instantiate(deathParticles, transform.position, Quaternion.identity);
-            if (isPlayer) EventBus.RaisePlayerDied();
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(deathSound);
+            VfxPool.Spawn(deathParticles, transform.position, Quaternion.identity);
+            EventBus.Raise(new DiedEvent(gameObject));
+            if (isPlayer) EventBus.Raise(new PlayerDiedEvent());
         }
 
-        async Awaitable IFramesAsync()
+        async Awaitable IFramesAsync(CancellationToken ct)
         {
-            iFramesCts?.Cancel();
-            iFramesCts?.Dispose();
-            iFramesCts = new CancellationTokenSource();
-            var token = iFramesCts.Token;
-
             invulnerable = true;
-            int playerLayer = playerLayerIndex;
-            int enemyLayer = enemyLayerIndex;
-            Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
+            IgnoreOverlappingColliders(true);
 
-            float interval = iFramesDuration / (flashCount * 2);
             try
             {
+                float interval = iFramesDuration / (flashCount * 2);
                 for (int i = 0; i < flashCount; i++)
                 {
-                    if (token.IsCancellationRequested) break;
                     sprite.color = hurtColor;
-                    await Awaitable.WaitForSecondsAsync(interval);
-                    if (token.IsCancellationRequested) break;
+                    await Awaitable.WaitForSecondsAsync(interval, ct);
                     sprite.color = normalColor;
-                    await Awaitable.WaitForSecondsAsync(interval);
+                    await Awaitable.WaitForSecondsAsync(interval, ct);
                 }
             }
-            finally
+            catch (OperationCanceledException)
             {
-                sprite.color = normalColor;
-                Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
-                invulnerable = false;
-                iFramesCts?.Dispose();
-                iFramesCts = null;
+                return;
+            }
+
+            IgnoreOverlappingColliders(false);
+            invulnerable = false;
+        }
+
+        void OnTriggerEnter2D(Collider2D other) => EnterCollision(other);
+        void OnCollisionEnter2D(Collision2D collision) => EnterCollision(collision.collider);
+
+        void EnterCollision(Collider2D other)
+        {
+            if (!invulnerable || other == null) return;
+            if (other.transform.IsChildOf(transform)) return;
+            if ((opponentLayerMask & (1 << other.gameObject.layer)) == 0) return;
+            AddIgnoredCollider(other);
+        }
+
+        void IgnoreOverlappingColliders(bool ignore)
+        {
+            if (ignore)
+            {
+                foreach (var col in ownColliders)
+                {
+                    if (col == null) continue;
+                    int count = Physics2D.OverlapCollider(col, contactFilter, overlapBuffer);
+                    for (int i = 0; i < count; i++)
+                        AddIgnoredCollider(overlapBuffer[i]);
+                }
+            }
+            else
+            {
+                foreach (var other in ignoredColliders)
+                    foreach (var col in ownColliders)
+                        if (col != null && other != null) Physics2D.IgnoreCollision(col, other, false);
+                ignoredColliders.Clear();
             }
         }
 
-        void NotifyHealthChanged() { if (isPlayer) EventBus.RaiseHealthChanged(currentHealth, maxHealth); }
-        void SetComponentsEnabled(bool enabled) { foreach (var c in disableOnDeath) if (c != null) c.enabled = enabled; }
+        void AddIgnoredCollider(Collider2D other)
+        {
+            if (ignoredColliders.Contains(other)) return;
+            ignoredColliders.Add(other);
+            foreach (var col in ownColliders)
+                if (col != null) Physics2D.IgnoreCollision(col, other, true);
+        }
+
+        void OnDestroy()
+        {
+            iframesCts?.Cancel();
+            IgnoreOverlappingColliders(false);
+        }
+
+        void NotifyHealthChanged() { if (isPlayer) EventBus.Raise(new HealthChangedEvent(currentHealth, maxHealth)); }
+        void SetComponentsEnabled(bool enabled) { if (disableOnDeath == null) return; foreach (var c in disableOnDeath) if (c != null) c.enabled = enabled; }
     }
 }

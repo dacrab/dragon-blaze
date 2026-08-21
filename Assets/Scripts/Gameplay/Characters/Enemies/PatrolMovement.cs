@@ -29,7 +29,7 @@ namespace Gameplay.Characters.Enemies
         {
             float dir = movingLeft ? -1f : 1f;
             Transform target = movingLeft ? leftEdge : rightEdge;
-            bool reached = movingLeft ? enemy.position.x <= target.position.x : enemy.position.x >= target.position.x;
+            bool reached = Mathf.Sign(target.position.x - enemy.position.x) != dir;
 
             if (reached)
             {

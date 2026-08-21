@@ -3,6 +3,8 @@ using Core.Constants;
 using Core.Events;
 using Core.Input;
 using Core.Managers;
+using Core.Pooling;
+using Core.Services;
 using Gameplay.Combat;
 
 namespace Gameplay.Items.Collectibles
@@ -17,14 +19,15 @@ namespace Gameplay.Items.Collectibles
         [SerializeField] SpriteRenderer indicator;
         [SerializeField] AudioClip pickupSound;
         [SerializeField] ParticleSystem pickupEffect;
-        [SerializeField] InputReader inputReader;
 
+        InputReader inputReader;
         bool playerInTrigger;
 
         void Start() { if (type == CollectibleType.MagicStone) SetIndicator(false); }
 
         void OnEnable()
         {
+            inputReader = InputReader.Instance;
             if (type == CollectibleType.MagicStone && inputReader != null)
                 inputReader.InteractEvent += OnInteract;
         }
@@ -37,23 +40,22 @@ namespace Gameplay.Items.Collectibles
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (!other.CompareTag(GameConstants.Tags.Player)) return;
-
             switch (type)
             {
                 case CollectibleType.Coin:
-                    Collect();
-                    GameManager.Instance?.AddCoins(coinValue);
-                    gameObject.SetActive(false);
+                    ServiceLocator.Get<IGameManager>()?.AddCoins(coinValue);
+                    Despawn();
                     break;
                 case CollectibleType.Health:
                     other.GetComponent<Health>()?.Heal(healthValue);
-                    Collect();
-                    gameObject.SetActive(false);
+                    Despawn();
                     break;
                 case CollectibleType.MagicStone:
-                    playerInTrigger = true;
-                    SetIndicator(true);
+                    if (other.CompareTag(GameConstants.Tags.Player))
+                    {
+                        playerInTrigger = true;
+                        SetIndicator(true);
+                    }
                     break;
             }
         }
@@ -70,20 +72,16 @@ namespace Gameplay.Items.Collectibles
         void OnInteract()
         {
             if (!playerInTrigger) return;
-            GameManager.Instance?.SaveGame();
-            EventBus.RaiseRequestNextLevel();
-            EventBus.RaiseLevelCompleted();
+            ServiceLocator.Get<IGameManager>()?.SaveGame();
+            EventBus.Raise(new RequestNextLevelEvent());
+            EventBus.Raise(new LevelCompletedEvent());
         }
 
-        void Collect()
+        void Despawn()
         {
-            GameManager.Instance?.PlaySound(pickupSound);
-            if (pickupEffect != null)
-            {
-                var effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
-                effect.Play();
-                Destroy(effect.gameObject, effect.main.duration);
-            }
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(pickupSound);
+            VfxPool.Spawn(pickupEffect?.gameObject, transform.position, Quaternion.identity);
+            gameObject.SetActive(false);
         }
 
         void SetIndicator(bool enabled) { if (indicator != null) indicator.enabled = enabled; }

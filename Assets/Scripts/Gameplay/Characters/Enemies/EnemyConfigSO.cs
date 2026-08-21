@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Gameplay.Characters.Enemies
 {
     [CreateAssetMenu(fileName = "EnemyConfig", menuName = "DragonBlaze/Enemies/Enemy Config")]
-    public class EnemyConfigSO : ScriptableObject
+    public sealed class EnemyConfigSO : ScriptableObject
     {
         [Header("Combat")]
         public float damage = 10f;

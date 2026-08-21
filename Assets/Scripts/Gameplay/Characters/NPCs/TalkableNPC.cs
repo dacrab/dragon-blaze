@@ -2,7 +2,8 @@ using UnityEngine;
 using Core.Constants;
 using Core.Input;
 using Core.State;
-using UI.Dialogue;
+using Gameplay.Dialogue;
+using Core.Services;
 
 namespace Gameplay.Characters.NPCs
 {
@@ -10,14 +11,19 @@ namespace Gameplay.Characters.NPCs
     {
         [SerializeField] float interactDistance = 5f;
         [SerializeField] SpriteRenderer interactSprite;
-        [SerializeField] InputReader inputReader;
         [SerializeField] Transform playerTransform;
         [SerializeField] DialogueData dialogueText;
         [SerializeField] AudioClip dialogueSound;
 
+        InputReader inputReader;
+
         void Start() { if (playerTransform == null) playerTransform = GameConstants.FindPlayer(); }
-        void OnEnable() => inputReader.InteractEvent += OnInteract;
-        void OnDisable() => inputReader.InteractEvent -= OnInteract;
+        void OnEnable()
+        {
+            inputReader = InputReader.Instance;
+            if (inputReader != null) inputReader.InteractEvent += OnInteract;
+        }
+        void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= OnInteract; }
 
         void Update()
         {
@@ -30,10 +36,10 @@ namespace Gameplay.Characters.NPCs
         void OnInteract()
         {
             if (IsWithinRange())
-                DialogueController.Instance?.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
+                ServiceLocator.Get<IDialogueController>()?.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
         }
 
         bool IsWithinRange() =>
-            playerTransform != null && Vector2.Distance(playerTransform.position, transform.position) < interactDistance;
+            playerTransform != null && (playerTransform.position - transform.position).sqrMagnitude < interactDistance * interactDistance;
     }
 }

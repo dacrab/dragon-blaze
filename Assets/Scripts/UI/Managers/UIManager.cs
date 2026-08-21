@@ -7,14 +7,16 @@ using Core.Events;
 using Core.Constants;
 using Core.Input;
 using Core.Managers;
+using Core.Services;
 using Core.State;
 using Gameplay.Characters.Player;
+using UI.Menus;
 
 namespace UI.Managers
 {
     public sealed class UIManager : MonoBehaviour
     {
-        public static UIManager Instance { get; private set; }
+        static UIManager instance;
 
         [Header("UI Screens")]
         [SerializeField] GameObject gameOverScreen, pauseScreen, loadingScreen;
@@ -25,76 +27,82 @@ namespace UI.Managers
         [Header("Audio")]
         [SerializeField] AudioClip gameOverSound;
 
-        [Header("Input")]
-        [SerializeField] InputReader inputReader;
-
-        [Header("Config")]
-        [SerializeField] GameConfig gameConfig;
-
         [Header("PowerUp Indicators")]
         [SerializeField] GameObject indicatorPrefab;
         [SerializeField] Transform indicatorPanel;
 
         Player player;
+        InputReader inputReader;
         readonly Dictionary<string, GameObject> indicators = new();
 
         void Awake()
         {
-            if (Instance != null) { Destroy(gameObject); return; }
-            Instance = this;
+            if (instance != null) { Destroy(gameObject); return; }
+            instance = this;
             DontDestroyOnLoad(gameObject);
             CheckSaveData();
         }
 
         void OnEnable()
         {
-            EventBus.OnScoreChanged += UpdateCoinDisplay;
-            EventBus.OnPlayerDied += GameOver;
-            EventBus.OnPowerUpActivated += ActivateIndicator;
-            inputReader.PauseEvent += TogglePause;
+            EventBus.Subscribe<ScoreChangedEvent>(UpdateCoinDisplay);
+            EventBus.Subscribe<PlayerDiedEvent>(GameOver);
+            EventBus.Subscribe<PowerUpActivatedEvent>(ActivateIndicator);
+            inputReader = InputReader.Instance;
+            if (inputReader != null) inputReader.PauseEvent += TogglePause;
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         void OnDisable()
         {
-            EventBus.OnScoreChanged -= UpdateCoinDisplay;
-            EventBus.OnPlayerDied -= GameOver;
-            EventBus.OnPowerUpActivated -= ActivateIndicator;
-            inputReader.PauseEvent -= TogglePause;
+            EventBus.Unsubscribe<ScoreChangedEvent>(UpdateCoinDisplay);
+            EventBus.Unsubscribe<PlayerDiedEvent>(GameOver);
+            EventBus.Unsubscribe<PowerUpActivatedEvent>(ActivateIndicator);
+            if (inputReader != null) inputReader.PauseEvent -= TogglePause;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (mode != LoadSceneMode.Single || inputReader == null) return;
+            if (scene.name == GameConfig.Default.MainMenuSceneName) inputReader.EnableUIInput();
+            else inputReader.EnableGameplayInput();
         }
 
         void Start() => player = FindFirstObjectByType<Player>();
 
         void CheckSaveData()
         {
-            if (SceneManager.GetActiveScene().buildIndex != GameConstants.Scenes.MainMenu) return;
-            continueButton.gameObject.SetActive(GameManager.Instance?.SaveDataExists() ?? false);
+            if (SceneManager.GetActiveScene().name != GameConfig.Default.MainMenuSceneName) return;
+            continueButton.gameObject.SetActive(ServiceLocator.Get<IGameManager>()?.SaveDataExists() ?? false);
         }
 
         public void NewGame()
         {
-            GameManager.Instance?.ResetCoins();
-            GameManager.Instance?.SaveGame(true);
-            Menus.LoadingManager.LoadSpecificLevel(gameConfig.firstLevelSceneIndex);
+            ServiceLocator.Get<IGameManager>()?.ResetCoins();
+            ServiceLocator.Get<IGameManager>()?.SaveGame(true);
+            ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.FirstLevelSceneName);
         }
 
         public void ContinueGame() =>
-            Menus.LoadingManager.LoadSpecificLevel(GameManager.Instance?.GetLastSavedLevelIndex() ?? gameConfig.firstLevelSceneIndex);
+            ServiceLocator.Get<ISceneLoader>()?.LoadScene(
+                ServiceLocator.Get<IGameManager>()?.GetLastSavedLevelName() ?? GameConfig.Default.FirstLevelSceneName);
 
-        public void GameOver()
+        public void GameOver(PlayerDiedEvent _)
         {
             if (gameOverScreen.activeInHierarchy) return;
             gameOverScreen.SetActive(true);
             SetCursor(true);
-            GameStateManager.Instance?.ChangeState(GameState.GameOver);
-            GameManager.Instance?.PlaySound(gameOverSound);
+            ServiceLocator.Get<IGameStateManager>()?.ChangeState(GameState.GameOver);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(gameOverSound);
         }
 
-        public void Restart() => Menus.LoadingManager.LoadSpecificLevel(SceneManager.GetActiveScene().buildIndex);
-        public void MainMenu() { SetCursor(true); Menus.LoadingManager.LoadSpecificLevel(GameConstants.Scenes.MainMenu); }
+        public void Restart() => ServiceLocator.Get<ISceneLoader>()?.LoadScene(SceneManager.GetActiveScene().name);
+        public void MainMenu() { SetCursor(true); ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.MainMenuSceneName); }
 
         public void Quit()
         {
-            GameManager.Instance?.SaveGame();
+            ServiceLocator.Get<IGameManager>()?.SaveGame();
             SetCursor(true);
             Application.Quit();
 #if UNITY_EDITOR
@@ -109,24 +117,24 @@ namespace UI.Managers
             pauseScreen.SetActive(pause);
             SetCursor(pause);
             if (player != null) player.enabled = !pause;
-            EventBus.RaiseGamePaused(pause);
+            EventBus.Raise(new GamePausedEvent(pause));
         }
 
         public void ShowLoadingScreen(bool show) => loadingScreen.SetActive(show);
         public void UpdateLoadingImage(float progress) => loadingImage.fillAmount = progress;
-        void UpdateCoinDisplay(int coins) => coinText.SetText("{0}", coins);
+        void UpdateCoinDisplay(ScoreChangedEvent e) => coinText.SetText("{0}", e.Score);
         void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
 
-        void ActivateIndicator(string name, Sprite icon, float duration)
+        void ActivateIndicator(PowerUpActivatedEvent e)
         {
-            if (indicators.TryGetValue(name, out var existing)) Destroy(existing);
+            if (indicators.TryGetValue(e.Name, out var existing)) Destroy(existing);
 
             var indicator = Instantiate(indicatorPrefab, indicatorPanel);
-            if (indicator.GetComponentInChildren<Image>() is { } img) img.sprite = icon;
-            if (indicator.GetComponentInChildren<TMP_Text>() is { } txt) txt.text = name;
-            indicators[name] = indicator;
+            if (indicator.GetComponentInChildren<Image>() is { } img) img.sprite = e.Icon;
+            if (indicator.GetComponentInChildren<TMP_Text>() is { } txt) txt.text = e.Name;
+            indicators[e.Name] = indicator;
 
-            _ = FadeOutAsync(name, indicator, duration);
+            _ = FadeOutAsync(e.Name, indicator, e.Duration);
         }
 
         async Awaitable FadeOutAsync(string name, GameObject indicator, float duration)

@@ -1,6 +1,5 @@
 using UnityEngine;
 using Core.Constants;
-using Gameplay.Characters.Player;
 using Gameplay.Combat;
 
 namespace Environment.Traps
@@ -23,9 +22,7 @@ namespace Environment.Traps
 
         void OnTriggerEnter2D(Collider2D collision)
         {
-            if (!collision.CompareTag(GameConstants.Tags.Player)) return;
-            if (collision.TryGetComponent<Player>(out var p) && p.IsInvisible) return;
-            if (collision.TryGetComponent<Health>(out var health)) health.TakeDamage(damage);
+            if (collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(damage);
         }
     }
 }

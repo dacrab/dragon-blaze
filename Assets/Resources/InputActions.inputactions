@@ -1,0 +1,59 @@
+{
+    "name": "InputActions",
+    "maps": [
+        {
+            "name": "Gameplay",
+            "actions": [
+                {"name": "Move", "type": "Value", "id": "d7b67703a18b4f138631423e5e8080ea", "expectedControlType": "Axis", "processors": "", "interactions": "", "initialStateCheck": true},
+                {"name": "Jump", "type": "Button", "id": "fa91f4acc1114d21bbca8d53ecae98c2", "expectedControlType": "Button", "processors": "", "interactions": "", "initialStateCheck": false},
+                {"name": "Dash", "type": "Button", "id": "4be076904af44d52b9795f1462f57cea", "expectedControlType": "Button", "processors": "", "interactions": "", "initialStateCheck": false},
+                {"name": "Attack", "type": "Button", "id": "8ee9a216bbe848088e50be62c82ba2c7", "expectedControlType": "Button", "processors": "", "interactions": "", "initialStateCheck": false},
+                {"name": "Interact", "type": "Button", "id": "57ed37dc4d1d4947829ad1f0c2b779d2", "expectedControlType": "Button", "processors": "", "interactions": "", "initialStateCheck": false},
+                {"name": "Pause", "type": "Button", "id": "51d4bf61cced41c298b4370f536873f7", "expectedControlType": "Button", "processors": "", "interactions": "", "initialStateCheck": false}
+            ],
+            "bindings": [
+                {"name": "WASD", "id": "6c5fd9957e0641e3b8af98c638070164", "path": "1DAxis", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": true, "isPartOfComposite": false},
+                {"name": "negative", "id": "f7fff8ca3a8349f28f91604f0ff8a7e0", "path": "<Keyboard>/a", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": false, "isPartOfComposite": true},
+                {"name": "positive", "id": "691743aee5784fb5b98bf3677419ad64", "path": "<Keyboard>/d", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": false, "isPartOfComposite": true},
+                {"name": "Arrows", "id": "50ca8b34bb8d4d319e4fa112fb9488ea", "path": "1DAxis", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": true, "isPartOfComposite": false},
+                {"name": "negative", "id": "aafb0093dd784f17a8e17903260a415c", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": false, "isPartOfComposite": true},
+                {"name": "positive", "id": "738f9d12078149079b84b461b3f703e2", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": false, "isPartOfComposite": true},
+                {"name": "Gamepad Stick", "id": "13b96e04509140f09b6f881ebe2cc4f7", "path": "<Gamepad>/leftStick/x", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Space", "id": "54a76b5557f440eb8526024f39015c19", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Jump", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Gamepad A", "id": "a23407b5ae0244608f19d3567a2c5c94", "path": "<Gamepad>/buttonSouth", "interactions": "", "processors": "", "groups": "", "action": "Jump", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Left Shift", "id": "1b64bde978984c4aa599fa91625fab86", "path": "<Keyboard>/leftShift", "interactions": "", "processors": "", "groups": "", "action": "Dash", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Gamepad X", "id": "d129f31964944141acd4e2c66cde0955", "path": "<Gamepad>/buttonWest", "interactions": "", "processors": "", "groups": "", "action": "Dash", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Left Button", "id": "02c76854ba3841b992834f32c63eabcd", "path": "<Mouse>/leftButton", "interactions": "", "processors": "", "groups": "", "action": "Attack", "isComposite": false, "isPartOfComposite": false},
+                {"name": "J", "id": "6a1113b284904f2898b4d1b166e3560b", "path": "<Keyboard>/j", "interactions": "", "processors": "", "groups": "", "action": "Attack", "isComposite": false, "isPartOfComposite": false},
+                {"name": "E", "id": "fee50a2de79640b591bc882af7c5b648", "path": "<Keyboard>/e", "interactions": "", "processors": "", "groups": "", "action": "Interact", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Escape", "id": "86d36902aa5b4aa0ac2ff25a2c96c25c", "path": "<Keyboard>/escape", "interactions": "", "processors": "", "groups": "", "action": "Pause", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Gamepad Start", "id": "8ebb45b38d1946728b034184ba32d422", "path": "<Gamepad>/start", "interactions": "", "processors": "", "groups": "", "action": "Pause", "isComposite": false, "isPartOfComposite": false}
+            ]
+        },
+        {
+            "name": "UI",
+            "actions": [
+                {"name": "Navigate", "type": "Value", "id": "6460c27d3a424fe293ebacc4b314541a", "expectedControlType": "Vector2", "processors": "", "interactions": "", "initialStateCheck": true},
+                {"name": "Submit", "type": "Button", "id": "5ab3674c83c546009a4108f6f5487619", "expectedControlType": "Button", "processors": "", "interactions": "", "initialStateCheck": false}
+            ],
+            "bindings": [
+                {"name": "WASD", "id": "377bb1a9b2ea4a868562cf803c080e0a", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": true, "isPartOfComposite": false},
+                {"name": "up", "id": "0dafd2bca79247409f7253ae9586a9be", "path": "<Keyboard>/w", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "down", "id": "dd290768fad94ab9be5b0fa79ac744a1", "path": "<Keyboard>/s", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "left", "id": "e8a2f40d11734bed976df07629616aa6", "path": "<Keyboard>/a", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "right", "id": "f23a0138ae6640fb82c617a0b6f4baa9", "path": "<Keyboard>/d", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "Arrows", "id": "21c2d6c170e446af86cfe490447b80c8", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": true, "isPartOfComposite": false},
+                {"name": "up", "id": "0112539cd1604ddab85eb7426053149c", "path": "<Keyboard>/upArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "down", "id": "76f8a6e981584073a8ec6d378ee79a5f", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "left", "id": "21eeafb2975a451496ec8a8defb7ebeb", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "right", "id": "30732c7195214aad9d7e7b053b726a88", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true},
+                {"name": "Gamepad Dpad", "id": "6477d621065144e58aa0bc8dfb80cb6e", "path": "<Gamepad>/dpad", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Gamepad Stick", "id": "3a21d95d4ed4450a8ded337a294fb208", "path": "<Gamepad>/leftStick", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Enter", "id": "d7b67703a18b4f138631423e5e8080eb", "path": "<Keyboard>/enter", "interactions": "", "processors": "", "groups": "", "action": "Submit", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Space", "id": "fa91f4acc1114d21bbca8d53ecae98c3", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Submit", "isComposite": false, "isPartOfComposite": false},
+                {"name": "Gamepad A", "id": "4be076904af44d52b9795f1462f57ceb", "path": "<Gamepad>/buttonSouth", "interactions": "", "processors": "", "groups": "", "action": "Submit", "isComposite": false, "isPartOfComposite": false}
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

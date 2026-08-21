@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -39,7 +40,7 @@ namespace Core.Pooling
 
     public static class PoolRegistry
     {
-        static readonly System.Collections.Generic.Dictionary<string, GameObjectPool> pools = new();
+        static readonly Dictionary<string, GameObjectPool> pools = new();
 
         public static void Register(string key, GameObjectPool pool) => pools[key] = pool;
         public static void Unregister(string key) => pools.Remove(key);

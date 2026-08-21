@@ -8,13 +8,13 @@ namespace UI.HUD
     {
         [SerializeField] Image currentHealthBar;
 
-        void OnEnable() => EventBus.OnHealthChanged += UpdateHealthUI;
-        void OnDisable() => EventBus.OnHealthChanged -= UpdateHealthUI;
+        void OnEnable() => EventBus.Subscribe<HealthChangedEvent>(UpdateHealthUI);
+        void OnDisable() => EventBus.Unsubscribe<HealthChangedEvent>(UpdateHealthUI);
 
-        void UpdateHealthUI(float current, float max)
+        void UpdateHealthUI(HealthChangedEvent e)
         {
-            if (max > 0 && currentHealthBar != null)
-                currentHealthBar.fillAmount = current / max;
+            if (e.Max > 0 && currentHealthBar != null)
+                currentHealthBar.fillAmount = e.Current / e.Max;
         }
     }
 }

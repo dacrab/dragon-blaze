@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Services;
 using Core.State;
 using Gameplay.Combat;
 using Gameplay.Characters.Player;
@@ -23,31 +24,24 @@ namespace Environment.Traps
         void Awake()
         {
             if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
-            if (playerTransform != null) player = playerTransform.GetComponent<Player>();
+            player = playerTransform?.GetComponent<Player>();
         }
 
         void Update()
         {
             if (!GameStateManager.IsCurrentlyPlaying) return;
-            if (player == null || playerTransform == null)
-            {
-                playerTransform = GameConstants.FindPlayer();
-                player = playerTransform?.GetComponent<Player>();
-                if (player == null) return;
-            }
             cooldownTimer += Time.deltaTime;
-            if (cooldownTimer >= attackCooldown && !player.IsInvisible) Attack();
+            if (cooldownTimer < attackCooldown) return;
+            if (player == null && playerTransform != null) player = playerTransform.GetComponent<Player>();
+            if (player is not { IsInvisible: false }) return;
+            Attack();
         }
 
         void Attack()
         {
             cooldownTimer = 0;
-            GameManager.Instance?.PlaySound(arrowSound);
-            if (arrows is not { Length: > 0 }) return;
-            var arrow = arrows[arrowIndex];
-            arrowIndex = (arrowIndex + 1) % arrows.Length;
-            arrow.transform.position = firePoint.position;
-            if (arrow.TryGetComponent<ProjectileBase>(out var proj)) proj.ActivateProjectile();
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(arrowSound);
+            ProjectileBase.Fire(arrows, ref arrowIndex, firePoint.position)?.ActivateProjectile();
         }
     }
 }
