@@ -23,6 +23,8 @@ namespace Gameplay.Characters.Player
                     if ((list[i].Remaining -= deltaTime) <= 0) list.RemoveAt(i);
         }
 
+        public void Clear() => modifiers.Clear();
+
         public float Factor(PlayerStat stat)
         {
             if (!modifiers.TryGetValue(stat, out var list) || list.Count == 0) return 1f;

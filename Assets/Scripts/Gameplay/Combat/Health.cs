@@ -59,6 +59,33 @@ namespace Gameplay.Combat
             NotifyHealthChanged();
         }
 
+        void OnEnable()
+        {
+            // Re-enabled dead entities (e.g. room re-entry) come back at full strength.
+            if (!isPlayer && (dead || currentHealth <= 0)) ResetState(true);
+            if (isPlayer) EventBus.Subscribe<PlayerRespawnEvent>(OnRespawn);
+        }
+
+        void OnDisable()
+        {
+            if (isPlayer) EventBus.Unsubscribe<PlayerRespawnEvent>(OnRespawn);
+            iframesCts?.Cancel();
+        }
+
+        void OnRespawn(PlayerRespawnEvent _) => ResetState(true);
+
+        /// <summary>Restores full health and clears death/i-frame state.</summary>
+        void ResetState(bool clearIFrames)
+        {
+            currentHealth = maxHealth;
+            dead = false;
+            invulnerable = false;
+            if (clearIFrames) iframesCts?.Cancel();
+            sprite.color = normalColor;
+            SetComponentsEnabled(true);
+            NotifyHealthChanged();
+        }
+
         public void TakeDamage(float damage)
         {
             if (invulnerable || dead) return;

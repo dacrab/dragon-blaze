@@ -237,11 +237,9 @@ namespace Gameplay.Characters.Player
         {
             if (checkpoint == null) return;
             transform.position = checkpoint.position;
-            currentDamage = config.baseDamage;
-            currentSpeed = config.speed;
-            currentJumpPower = config.jumpPower;
-            IsInvisible = false;
-            sprite.color = Color.white;
+            stats.Clear();
+            dashCts?.Cancel();
+            SetInvisibility(false);
             jumpCount = config.extraJumps;
             coyoteTimer = 0;
             dashing = false;
