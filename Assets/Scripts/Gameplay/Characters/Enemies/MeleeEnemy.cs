@@ -1,57 +1,57 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Physics;
 using Core.State;
 using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies
 {
-    using Player = Gameplay.Characters.Player.Player;
-
     public sealed class MeleeEnemy : EnemyBase
     {
-        [Header("Target")]
-        [SerializeField] Transform playerTransform;
-
         float cooldownTimer;
-        Player player;
         Health playerHealth;
-        PatrolMovement patrol;
         float attackRangeSqr;
+        Rigidbody2D body;
+        bool chasing;
 
         protected override void Awake()
         {
             base.Awake();
-            patrol = GetComponentInParent<PatrolMovement>();
+            body = KinematicBody.Prepare(this);
             if (config != null) attackRangeSqr = config.attackRange * config.attackRange;
         }
 
         void Update()
         {
             if (IsDead || !GameStateManager.IsCurrentlyPlaying) return;
-            if (playerTransform == null)
-            {
-                playerTransform = GameConstants.FindPlayer();
-                if (playerTransform == null) return;
-                player = playerTransform.GetComponent<Player>();
-                playerTransform.TryGetComponent(out playerHealth);
-            }
+            if (!TryResolveTarget()) return;
+            if (playerHealth == null && playerTransform != null) playerTransform.TryGetComponent(out playerHealth);
             cooldownTimer += Time.deltaTime;
 
-            bool playerVisible = player == null || !player.IsInvisible;
-            if (!playerVisible || !InPatrolBounds())
+            if (!PlayerVisible || !InPatrolBounds())
             {
                 SetPatrol(true);
+                chasing = false;
                 return;
             }
 
             SetPatrol(false);
-            ChasePlayer();
+            chasing = true;
             if (cooldownTimer >= config.attackCooldown && InAttackRange()) Attack();
         }
 
-        void SetPatrol(bool enabled)
+        void FixedUpdate()
         {
-            if (patrol != null) patrol.enabled = enabled;
+            if (!chasing || IsDead || !GameStateManager.IsCurrentlyPlaying || playerTransform == null) return;
+            float currentX = body != null ? body.position.x : transform.position.x;
+            float dir = Mathf.Sign(playerTransform.position.x - currentX);
+            float newX = currentX + dir * config.chaseSpeed * Time.fixedDeltaTime;
+            if (patrol == null || (newX >= patrol.LeftEdge.position.x && newX <= patrol.RightEdge.position.x))
+            {
+                KinematicBody.MoveTo(body, transform, new(newX, transform.position.y, transform.position.z));
+                transform.localScale = new(dir * Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+                anim.SetBool(GameConstants.Anim.Moving, true);
+            }
         }
 
         void Attack()
@@ -59,18 +59,6 @@ namespace Gameplay.Characters.Enemies
             cooldownTimer = 0f;
             anim.SetTrigger(GameConstants.Anim.MeleeAttack);
             playerHealth?.TakeDamage(Damage);
-        }
-
-        void ChasePlayer()
-        {
-            float dir = Mathf.Sign(playerTransform.position.x - transform.position.x);
-            float newX = transform.position.x + dir * config.chaseSpeed * Time.deltaTime;
-            if (patrol == null || (newX >= patrol.LeftEdge.position.x && newX <= patrol.RightEdge.position.x))
-            {
-                transform.position = new(newX, transform.position.y, transform.position.z);
-                transform.localScale = new(dir * Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-                anim.SetBool(GameConstants.Anim.Moving, true);
-            }
         }
 
         bool InPatrolBounds() =>

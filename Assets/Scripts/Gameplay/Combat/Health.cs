@@ -43,7 +43,7 @@ namespace Gameplay.Combat
         Collider2D[] ownColliders;
         ContactFilter2D contactFilter;
         readonly List<Collider2D> ignoredColliders = new();
-        readonly Collider2D[] overlapBuffer = new Collider2D[8];
+        readonly List<Collider2D> overlapResults = new();
         CancellationTokenSource iframesCts;
 
         void Awake()
@@ -80,6 +80,7 @@ namespace Gameplay.Combat
             currentHealth = maxHealth;
             dead = false;
             invulnerable = false;
+            IgnoreOverlappingColliders(false);
             if (clearIFrames) iframesCts?.Cancel();
             sprite.color = normalColor;
             SetComponentsEnabled(true);
@@ -98,12 +99,20 @@ namespace Gameplay.Combat
             }
 
             anim.SetTrigger(GameConstants.Anim.Hurt);
-            EventBus.Raise(new DamagedEvent(currentHealth, maxHealth));
             iframesCts?.Cancel();
             iframesCts = new CancellationTokenSource();
             _ = IFramesAsync(iframesCts.Token);
             ServiceLocator.Get<IAudioManager>()?.PlaySound(hurtSound);
             VfxPool.Spawn(hitParticles, transform.position, Quaternion.identity);
+        }
+
+        /// <summary>Applies continuous damage without arming i-frames (DoT surfaces).</summary>
+        public void TakeDamagePerSecond(float amount)
+        {
+            if (invulnerable || dead || amount <= 0f) return;
+            currentHealth = Mathf.Max(0, currentHealth - amount);
+            NotifyHealthChanged();
+            if (currentHealth <= 0) Die();
         }
 
         public void Heal(float value)
@@ -120,7 +129,6 @@ namespace Gameplay.Combat
             dead = true;
             ServiceLocator.Get<IAudioManager>()?.PlaySound(deathSound);
             VfxPool.Spawn(deathParticles, transform.position, Quaternion.identity);
-            EventBus.Raise(new DiedEvent(gameObject));
             if (isPlayer) EventBus.Raise(new PlayerDiedEvent());
         }
 
@@ -142,6 +150,8 @@ namespace Gameplay.Combat
             }
             catch (OperationCanceledException)
             {
+                IgnoreOverlappingColliders(false);
+                invulnerable = false;
                 return;
             }
 
@@ -167,9 +177,9 @@ namespace Gameplay.Combat
                 foreach (var col in ownColliders)
                 {
                     if (col == null) continue;
-                    int count = Physics2D.OverlapCollider(col, contactFilter, overlapBuffer);
+                    int count = Physics2D.OverlapCollider(col, contactFilter, overlapResults);
                     for (int i = 0; i < count; i++)
-                        AddIgnoredCollider(overlapBuffer[i]);
+                        AddIgnoredCollider(overlapResults[i]);
                 }
             }
             else

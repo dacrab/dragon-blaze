@@ -13,6 +13,7 @@ namespace UI.Menus
         [SerializeField] float minimumLoadingTime = 0.3f;
 
         static LoadingManager instance;
+        bool isLoading;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Bootstrap()
@@ -36,45 +37,51 @@ namespace UI.Menus
             ServiceLocator.Unregister<ISceneLoader>();
         }
 
-        void OnEnable() => EventBus.Subscribe<RequestNextLevelEvent>(OnRequestNextLevel);
-        void OnDisable() => EventBus.Unsubscribe<RequestNextLevelEvent>(OnRequestNextLevel);
+        void OnEnable() => EventBus.Subscribe<LevelCompletedEvent>(OnLevelCompleted);
+        void OnDisable() => EventBus.Unsubscribe<LevelCompletedEvent>(OnLevelCompleted);
 
-        void OnRequestNextLevel(RequestNextLevelEvent _) => LoadNextLevel();
+        void OnLevelCompleted(LevelCompletedEvent _) => LoadNextLevel();
 
         void ISceneLoader.LoadNextLevel() => LoadNextLevel();
-        void ISceneLoader.LoadScene(string sceneName) => LoadAsync(sceneName);
+        void ISceneLoader.LoadScene(string sceneName) => _ = LoadAsync(sceneName);
 
         void LoadNextLevel()
         {
             string active = SceneManager.GetActiveScene().name;
-            if (GameConfig.Default.TryGetNextLevel(active, out var next)) LoadAsync(next);
+            if (GameConfig.Default.TryGetNextLevel(active, out var next)) _ = LoadAsync(next);
             else Debug.LogWarning($"[LoadingManager] No next level configured after '{active}'.");
         }
 
         async Awaitable LoadAsync(string sceneName)
         {
-            var ui = FindFirstObjectByType<UIManager>();
-            ui?.ShowLoadingScreen(true);
-
-            var op = SceneManager.LoadSceneAsync(sceneName);
-            if (op == null)
+            if (isLoading) return;
+            isLoading = true;
+            try
             {
-                Debug.LogWarning($"[LoadingManager] Scene '{sceneName}' is not in Build Settings.");
+                var ui = FindFirstObjectByType<UIManager>();
+                ui?.ShowLoadingScreen(true);
+
+                var op = SceneManager.LoadSceneAsync(sceneName);
+                if (op == null)
+                {
+                    Debug.LogWarning($"[LoadingManager] Scene '{sceneName}' is not in Build Settings.");
+                    ui?.ShowLoadingScreen(false);
+                    return;
+                }
+                op.allowSceneActivation = false;
+
+                while (op.progress < loadingProgressThreshold)
+                {
+                    ui?.UpdateLoadingImage(op.progress / loadingProgressThreshold);
+                    await Awaitable.NextFrameAsync();
+                }
+
+                ui?.UpdateLoadingImage(1f);
+                await Awaitable.WaitForSecondsAsync(minimumLoadingTime);
+                op.allowSceneActivation = true;
                 ui?.ShowLoadingScreen(false);
-                return;
             }
-            op.allowSceneActivation = false;
-
-            while (op.progress < loadingProgressThreshold)
-            {
-                ui?.UpdateLoadingImage(op.progress / loadingProgressThreshold);
-                await Awaitable.NextFrameAsync();
-            }
-
-            ui?.UpdateLoadingImage(1f);
-            await Awaitable.WaitForSecondsAsync(minimumLoadingTime);
-            op.allowSceneActivation = true;
-            ui?.ShowLoadingScreen(false);
+            finally { isLoading = false; }
         }
     }
 }

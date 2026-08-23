@@ -1,14 +1,10 @@
-using UnityEngine;
 using Core.Services;
 
 namespace Gameplay.Items.PowerUps
 {
     [CreateAssetMenu(fileName = "DamagePowerUp", menuName = "DragonBlaze/Power Ups/Damage")]
-    public sealed class DamagePowerUp : PowerUpSO
+    public sealed class DamagePowerUp : MultiplierPowerUp
     {
-        public float multiplier = 2f;
-
-        public override void Apply(IPlayer player, float duration) =>
-            player.AddModifier(PlayerStat.Damage, multiplier, duration);
+        protected override PlayerStat Stat => PlayerStat.Damage;
     }
 }

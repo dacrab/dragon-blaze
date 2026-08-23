@@ -39,6 +39,18 @@ namespace DragonBlaze.Tests
             var data = service.Load();
             Assert.AreEqual(42, data.totalCoins);
             Assert.AreEqual("Level3", data.levelName);
+            Assert.AreEqual(SaveService.CurrentVersion, data.version);
+        }
+
+        [Test]
+        public void Load_MigratesLegacySaves_ToCurrentVersion()
+        {
+            File.WriteAllText(path, "{\"totalCoins\":7,\"levelName\":\"Level1\"}");
+            var data = service.Load();
+            Assert.IsNotNull(data);
+            Assert.AreEqual(7, data.totalCoins);
+            Assert.AreEqual("Level1", data.levelName);
+            Assert.AreEqual(SaveService.CurrentVersion, data.version);
         }
 
         [Test]

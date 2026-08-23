@@ -1,14 +1,10 @@
-using UnityEngine;
 using Core.Services;
 
 namespace Gameplay.Items.PowerUps
 {
     [CreateAssetMenu(fileName = "JumpPowerUp", menuName = "DragonBlaze/Power Ups/Jump")]
-    public sealed class JumpPowerUp : PowerUpSO
+    public sealed class JumpPowerUp : MultiplierPowerUp
     {
-        public float multiplier = 2f;
-
-        public override void Apply(IPlayer player, float duration) =>
-            player.AddModifier(PlayerStat.Jump, multiplier, duration);
+        protected override PlayerStat Stat => PlayerStat.Jump;
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Core.Physics;
 
 namespace Environment.Platforms
 {
@@ -9,13 +10,18 @@ namespace Environment.Platforms
         [SerializeField] bool loop = true, pingPong;
 
         int currentIndex, direction = 1;
+        Rigidbody2D body;
 
-        void Update()
+        void Awake() => body = KinematicBody.Prepare(this);
+
+        void FixedUpdate()
         {
             if (waypoints is not { Length: > 0 }) return;
             var target = waypoints[currentIndex].position;
-            transform.position = Vector2.MoveTowards(transform.position, target, Time.deltaTime * speed);
-            if (((Vector2)transform.position - (Vector2)target).sqrMagnitude < 0.01f) AdvanceWaypoint();
+            var current = body != null ? body.position : (Vector2)transform.position;
+            var next = Vector2.MoveTowards(current, target, speed * Time.fixedDeltaTime);
+            KinematicBody.MoveTo(body, transform, new(next.x, next.y, transform.position.z));
+            if ((next - (Vector2)target).sqrMagnitude < 0.01f) AdvanceWaypoint();
         }
 
         void AdvanceWaypoint()

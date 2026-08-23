@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Physics;
 
 namespace Gameplay.Characters.Enemies
 {
@@ -13,6 +14,7 @@ namespace Gameplay.Characters.Enemies
         public Transform RightEdge => rightEdge;
 
         Animator anim;
+        Rigidbody2D enemyBody;
         Vector3 initScale;
         bool movingLeft;
         float idleTimer;
@@ -21,11 +23,12 @@ namespace Gameplay.Characters.Enemies
         {
             anim = enemy.GetComponent<Animator>();
             initScale = enemy.localScale;
+            enemyBody = KinematicBody.Prepare(enemy);
         }
 
         void OnDisable() => anim?.SetBool(GameConstants.Anim.Moving, false);
 
-        void Update()
+        void FixedUpdate()
         {
             float dir = movingLeft ? -1f : 1f;
             Transform target = movingLeft ? leftEdge : rightEdge;
@@ -34,7 +37,7 @@ namespace Gameplay.Characters.Enemies
             if (reached)
             {
                 anim?.SetBool(GameConstants.Anim.Moving, false);
-                if ((idleTimer += Time.deltaTime) >= idleDuration)
+                if ((idleTimer += Time.fixedDeltaTime) >= idleDuration)
                 {
                     movingLeft = !movingLeft;
                     idleTimer = 0;
@@ -44,7 +47,8 @@ namespace Gameplay.Characters.Enemies
             {
                 anim?.SetBool(GameConstants.Anim.Moving, true);
                 enemy.localScale = new(Mathf.Abs(initScale.x) * dir, initScale.y, initScale.z);
-                enemy.position += Vector3.right * (dir * speed * Time.deltaTime);
+                var next = enemy.position + Vector3.right * (dir * speed * Time.fixedDeltaTime);
+                KinematicBody.MoveTo(enemyBody, enemy, next);
             }
         }
     }

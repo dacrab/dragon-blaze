@@ -28,7 +28,9 @@ namespace Gameplay.Dialogue
 
         float TypeDelay => baseTypeDelay / typeSpeed;
 
-        void Awake() => ServiceLocator.Register<IDialogueController>(this);
+        void OnEnable() => ServiceLocator.Register<IDialogueController>(this);
+
+        void OnDisable() => typeCts?.Cancel();
 
         void OnDestroy()
         {
@@ -43,7 +45,15 @@ namespace Gameplay.Dialogue
                 EndConversation();
                 return;
             }
-            if (paragraphs.Count == 0) StartConversation(dialogue, sound);
+            if (paragraphs.Count == 0)
+            {
+                StartConversation(dialogue, sound);
+                if (paragraphs.Count == 0)
+                {
+                    EndConversation();
+                    return;
+                }
+            }
             if (typing)
             {
                 typeCts?.Cancel();
@@ -90,7 +100,5 @@ namespace Gameplay.Dialogue
             }
             typing = false;
         }
-
-        void OnDisable() => typeCts?.Cancel();
     }
 }

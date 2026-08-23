@@ -55,13 +55,15 @@ namespace Core.Managers
             soundSources = new ObjectPool<AudioSource>(
                 createFunc: () =>
                 {
-                    var source = poolRoot.AddComponent<AudioSource>();
+                    var source = new GameObject("OneShotSource").AddComponent<AudioSource>();
+                    source.transform.SetParent(poolRoot.transform);
                     source.playOnAwake = false;
                     if (soundGroup != null) source.outputAudioMixerGroup = soundGroup;
                     return source;
                 },
                 actionOnGet: source => source.gameObject.SetActive(true),
-                actionOnRelease: source => source.gameObject.SetActive(false));
+                actionOnRelease: source => source.gameObject.SetActive(false),
+                actionOnDestroy: source => Destroy(source.gameObject));
 
             var config = GameConfig.Default;
             MusicVolume = PlayerPrefs.GetFloat(config.musicVolumeKey, config.defaultMusicVolume);

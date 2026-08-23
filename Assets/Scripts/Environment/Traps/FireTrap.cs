@@ -47,7 +47,7 @@ namespace Environment.Traps
 
         void OnTriggerStay2D(Collider2D collision)
         {
-            if (active && collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(damage * Time.deltaTime);
+            if (active && collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePerSecond(damage * Time.deltaTime);
         }
 
         async Awaitable ActivateAsync(CancellationToken ct)

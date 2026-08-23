@@ -34,8 +34,9 @@ Rules:
 | `EventBus` | static, typed | `Raise<T>/Subscribe<T>/Unsubscribe<T>` for `struct` events (`Core/Events/GameEvents.cs`). One canonical eventing pattern. |
 | `ServiceLocator` | static | `Register<T>/Unregister<T>/Get<T>`. Services register in `Awake`, unregister in `OnDestroy`. Reset on domain reload. |
 | `GameConfig` | `ScriptableObject` | Singleton loaded from `Resources/GameConfig.asset` via `GameConfig.Default`. Never null at runtime. Holds `levelOrder`, audio keys, save file name, UI thresholds, `StateSettings`. |
-| `SaveService` (`Core/Persistence`) | class | Versioned JSON save file. `CurrentVersion` + `Migrate()` for forward compatibility. Pure logic, EditMode-testable. |
+| `SaveService` (`Core/Persistence`) | class | Versioned JSON save file. `SaveData.version` defaults to `SaveService.CurrentVersion`; `Load()` runs a `Migrate()` scaffold for forward compatibility. Pure logic, EditMode-testable. |
 | `VfxPool` / `GameObjectPool` | static / pools | Built-in `UnityEngine.Pool.ObjectPool` wrappers. |
+| `KinematicBody` (`Core.Physics`) | static helpers | Resolves (and promotes Static→Kinematic) a `Rigidbody2D`, then moves bodies via `MovePosition` on the physics step; falls back to transform writes when no body exists. Used by platforms, traps, melee chase, and projectiles — no transform-driven movement of physics objects in `Update`. |
 | `RuntimeInitializer` | static | Physics config applied `BeforeSceneLoad`. |
 
 ### Persistent managers (DontDestroyOnLoad)
@@ -77,6 +78,12 @@ To add content: add the scene to `levelOrder` + Build Settings; `TryGetNextLevel
   value types. Prefer raising events over direct coupling.
 - **Registration lifecycle**: register in `Awake`, unregister in `OnDestroy` guarded by a
   reference equality check (`ServiceLocator.Get<T>() == this`).
+
+## Gameplay systems notes
+- Damage: single hits go through `CombatExtensions.DamagePlayer` (invisible players are immune); damage-over-time uses `Health.TakeDamagePerSecond`, which bypasses i-frame arming (FireTrap).
+- Player power-ups apply timed stat modifiers (`IPlayer.AddModifier`) or cancellable timed invisibility (`IPlayer.SetInvisibilityFor`); both revert on respawn/scene change.
+- Room activation is data-driven: `Room.startActive` flags initially live rooms; all other rooms spawn enemies on player entry.
+- `Spikehead.maxAttackDistance` bounds each lunge so the trap can never fly off-level.
 
 ## Testing
 - `Assets/Tests/EditMode` — pure logic: `EventBus`, `ServiceLocator`, `PlayerStats`,

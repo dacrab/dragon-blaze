@@ -32,6 +32,7 @@ namespace Environment.Traps
             if (!GameStateManager.IsCurrentlyPlaying) return;
             cooldownTimer += Time.deltaTime;
             if (cooldownTimer < attackCooldown) return;
+            if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
             if (player == null && playerTransform != null) player = playerTransform.GetComponent<Player>();
             if (player is not { IsInvisible: false }) return;
             Attack();

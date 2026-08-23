@@ -29,13 +29,12 @@ A 2D action platformer with fluid movement, dynamic combat, and modular architec
 ## Setup
 
 1. Clone: `git clone https://github.com/dacrab/dragon-blaze.git`
-2. Open in Unity Hub (6000.3.2f1+)
-3. Install Addressables package if prompted
-4. Load `Assets/Scenes/MainMenu.unity` and press Play
+2. Open in Unity Hub (6000.3.22f1 or newer)
+3. Load `Assets/Scenes/MainMenu.unity` and press Play
 
 ## Tech
 
-Unity 6 · New Input System · Addressables · Object Pooling · Assembly Definitions · TextMeshPro
+Unity 6 · New Input System · Object Pooling · Assembly Definitions · TextMeshPro
 
 ## License
 

@@ -40,7 +40,7 @@ namespace Gameplay.Characters.Player
         Transform checkpoint;
         readonly PlayerStats stats = new();
         InputReader inputReader;
-        CancellationTokenSource dashCts;
+        CancellationTokenSource dashCts, invisibilityCts;
 
         public bool IsInvisible { get; private set; }
         public bool IsGrounded { get; private set; }
@@ -92,6 +92,7 @@ namespace Gameplay.Characters.Player
                 inputReader.AttackEvent -= OnAttack;
             }
             dashCts?.Cancel();
+            invisibilityCts?.Cancel();
             EventBus.Unsubscribe<DialogueStateChangedEvent>(OnDialogueChanged);
             EventBus.Unsubscribe<PlayerDiedEvent>(OnDeath);
             EventBus.Unsubscribe<PlayerRespawnEvent>(OnRespawn);
@@ -239,6 +240,7 @@ namespace Gameplay.Characters.Player
             transform.position = checkpoint.position;
             stats.Clear();
             dashCts?.Cancel();
+            invisibilityCts?.Cancel();
             SetInvisibility(false);
             jumpCount = config.extraJumps;
             coyoteTimer = 0;
@@ -261,6 +263,24 @@ namespace Gameplay.Characters.Player
         {
             IsInvisible = invisible;
             sprite.color = invisible ? config.invisibleColor : Color.white;
+        }
+
+        public void SetInvisibilityFor(float duration)
+        {
+            invisibilityCts?.Cancel();
+            invisibilityCts = new CancellationTokenSource();
+            _ = InvisibilityTimeoutAsync(duration, invisibilityCts.Token);
+        }
+
+        async Awaitable InvisibilityTimeoutAsync(float duration, CancellationToken ct)
+        {
+            try
+            {
+                SetInvisibility(true);
+                await Awaitable.WaitForSecondsAsync(duration, ct);
+                SetInvisibility(false);
+            }
+            catch (OperationCanceledException) { }
         }
 
         public void AddModifier(PlayerStat stat, float factor, float duration) => stats.Add(stat, factor, duration);

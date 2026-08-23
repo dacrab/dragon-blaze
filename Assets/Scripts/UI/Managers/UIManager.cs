@@ -9,7 +9,6 @@ using Core.Input;
 using Core.Managers;
 using Core.Services;
 using Core.State;
-using Gameplay.Characters.Player;
 using UI.Menus;
 
 namespace UI.Managers
@@ -31,7 +30,6 @@ namespace UI.Managers
         [SerializeField] GameObject indicatorPrefab;
         [SerializeField] Transform indicatorPanel;
 
-        Player player;
         InputReader inputReader;
         readonly Dictionary<string, GameObject> indicators = new();
 
@@ -69,18 +67,19 @@ namespace UI.Managers
             else inputReader.EnableGameplayInput();
         }
 
-        void Start() => player = FindFirstObjectByType<Player>();
-
         void CheckSaveData()
         {
             if (SceneManager.GetActiveScene().name != GameConfig.Default.MainMenuSceneName) return;
             continueButton.gameObject.SetActive(ServiceLocator.Get<IGameManager>()?.SaveDataExists() ?? false);
         }
 
-        public void NewGame()
+        public void NewGame() => StartNewGame();
+
+        public static void StartNewGame()
         {
-            ServiceLocator.Get<IGameManager>()?.ResetCoins();
-            ServiceLocator.Get<IGameManager>()?.SaveGame(true);
+            var gameManager = ServiceLocator.Get<IGameManager>();
+            gameManager?.ResetCoins();
+            gameManager?.SaveGame(true);
             ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.FirstLevelSceneName);
         }
 
@@ -116,7 +115,7 @@ namespace UI.Managers
             bool pause = !pauseScreen.activeInHierarchy;
             pauseScreen.SetActive(pause);
             SetCursor(pause);
-            if (player != null) player.enabled = !pause;
+            if (ServiceLocator.Get<IPlayer>() is Behaviour playerBehaviour) playerBehaviour.enabled = !pause;
             EventBus.Raise(new GamePausedEvent(pause));
         }
 

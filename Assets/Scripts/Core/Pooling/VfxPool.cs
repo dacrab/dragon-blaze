@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -58,27 +59,44 @@ namespace Core.Pooling
 
     public sealed class VfxRecycler : MonoBehaviour
     {
+        const float PollInterval = 0.25f;
+
         GameObject prefab;
+        ParticleSystem particles;
         float duration;
-        float remaining;
+        CancellationTokenSource recycleCts;
 
         public void Init(GameObject prefab)
         {
             this.prefab = prefab;
-            var ps = GetComponent<ParticleSystem>();
-            duration = ps != null ? ps.main.duration : 1f;
+            particles = GetComponent<ParticleSystem>();
+            duration = particles != null
+                ? Mathf.Max(particles.main.duration, particles.main.startLifetime.constantMax)
+                : 1f;
         }
 
         void OnEnable()
         {
-            remaining = duration;
-            GetComponent<ParticleSystem>()?.Play();
+            if (particles != null) particles.Play();
+            recycleCts?.Cancel();
+            recycleCts = new CancellationTokenSource();
+            _ = ReleaseWhenDeadAsync(recycleCts.Token);
         }
 
-        void Update()
+        void OnDisable() => recycleCts?.Cancel();
+
+        async Awaitable ReleaseWhenDeadAsync(CancellationToken ct)
         {
-            remaining -= Time.deltaTime;
-            if (remaining <= 0) VfxPool.Release(prefab, gameObject);
+            try
+            {
+                float minEndTime = Time.time + duration;
+                while (Time.time < minEndTime)
+                    await Awaitable.WaitForSecondsAsync(PollInterval, ct);
+                while (particles != null && particles.IsAlive(true))
+                    await Awaitable.WaitForSecondsAsync(PollInterval, ct);
+                VfxPool.Release(prefab, gameObject);
+            }
+            catch (OperationCanceledException) { }
         }
     }
 }

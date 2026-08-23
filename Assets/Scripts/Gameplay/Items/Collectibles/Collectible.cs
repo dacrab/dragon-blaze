@@ -40,6 +40,7 @@ namespace Gameplay.Items.Collectibles
 
         void OnTriggerEnter2D(Collider2D other)
         {
+            if (!other.CompareTag(GameConstants.Tags.Player)) return;
             switch (type)
             {
                 case CollectibleType.Coin:
@@ -51,11 +52,8 @@ namespace Gameplay.Items.Collectibles
                     Despawn();
                     break;
                 case CollectibleType.MagicStone:
-                    if (other.CompareTag(GameConstants.Tags.Player))
-                    {
-                        playerInTrigger = true;
-                        SetIndicator(true);
-                    }
+                    playerInTrigger = true;
+                    SetIndicator(true);
                     break;
             }
         }
@@ -72,8 +70,8 @@ namespace Gameplay.Items.Collectibles
         void OnInteract()
         {
             if (!playerInTrigger) return;
-            ServiceLocator.Get<IGameManager>()?.SaveGame();
-            EventBus.Raise(new RequestNextLevelEvent());
+            playerInTrigger = false;
+            SetIndicator(false);
             EventBus.Raise(new LevelCompletedEvent());
         }
 

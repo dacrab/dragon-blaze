@@ -54,25 +54,4 @@ namespace Core.Events
             Duration = duration;
         }
     }
-
-    public readonly struct RequestNextLevelEvent { }
-
-    public readonly struct DamagedEvent
-    {
-        public readonly float Current;
-        public readonly float Max;
-
-        public DamagedEvent(float current, float max)
-        {
-            Current = current;
-            Max = max;
-        }
-    }
-
-    public readonly struct DiedEvent
-    {
-        public readonly GameObject Entity;
-
-        public DiedEvent(GameObject entity) => Entity = entity;
-    }
 }

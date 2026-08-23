@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Physics;
 using Core.Services;
 using Gameplay.Characters.Player;
 using Gameplay.Combat;
@@ -14,22 +15,29 @@ namespace Environment.Traps
         [SerializeField] float speed = 5f;
         [SerializeField] float range = 5f;
         [SerializeField] float checkDelay = 0.5f;
+        [SerializeField] float maxAttackDistance = 12f;
         [SerializeField] LayerMask playerLayer;
         [SerializeField] Vector3[] checkDirections = { Vector3.right, Vector3.left, Vector3.up, Vector3.down };
         [SerializeField] AudioClip impactSound;
 
         Vector3 moveDir;
-        float checkTimer;
+        float checkTimer, attackDistance;
         bool attacking;
+        Rigidbody2D body;
 
-        void Update()
+        void Awake() => body = KinematicBody.Prepare(this);
+
+        void FixedUpdate()
         {
             if (attacking)
             {
-                transform.Translate(moveDir * speed * Time.deltaTime);
+                float step = speed * Time.fixedDeltaTime;
+                KinematicBody.MoveTo(body, transform, transform.position + moveDir * step);
+                attackDistance += step;
+                if (attackDistance >= maxAttackDistance) StopAttack();
                 return;
             }
-            checkTimer += Time.deltaTime;
+            checkTimer += Time.fixedDeltaTime;
             if (checkTimer >= checkDelay) CheckForPlayer();
         }
 
@@ -37,6 +45,11 @@ namespace Environment.Traps
         {
             ServiceLocator.Get<IAudioManager>()?.PlaySound(impactSound);
             if (collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(damage);
+            StopAttack();
+        }
+
+        void StopAttack()
+        {
             attacking = false;
             moveDir = Vector3.zero;
         }
@@ -53,6 +66,7 @@ namespace Environment.Traps
                 {
                     attacking = true;
                     moveDir = worldDir;
+                    attackDistance = 0f;
                     return;
                 }
             }

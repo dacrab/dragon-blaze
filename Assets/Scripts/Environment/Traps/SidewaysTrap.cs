@@ -1,5 +1,6 @@
 using UnityEngine;
 using Core.Constants;
+using Core.Physics;
 using Gameplay.Combat;
 
 namespace Environment.Traps
@@ -11,13 +12,18 @@ namespace Environment.Traps
         [SerializeField] float movementDistance = 3f, speed = 2f;
 
         float startX;
+        Rigidbody2D body;
 
-        void Awake() => startX = transform.position.x;
+        void Awake()
+        {
+            startX = transform.position.x;
+            body = KinematicBody.Prepare(this);
+        }
 
-        void Update()
+        void FixedUpdate()
         {
             float offset = Mathf.PingPong(Time.time * speed, movementDistance * 2) - movementDistance;
-            transform.position = new(startX + offset, transform.position.y, transform.position.z);
+            KinematicBody.MoveTo(body, transform, new(startX + offset, transform.position.y, transform.position.z));
         }
 
         void OnTriggerEnter2D(Collider2D collision)

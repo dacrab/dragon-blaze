@@ -7,8 +7,6 @@ using Gameplay.Combat;
 
 namespace Gameplay.Characters.Enemies
 {
-    using Player = Gameplay.Characters.Player.Player;
-
     public sealed class RangedEnemy : EnemyBase
     {
         [Header("Projectiles")]
@@ -18,35 +16,21 @@ namespace Gameplay.Characters.Enemies
         [Header("Detection")]
         [SerializeField] LayerMask playerLayer;
 
-        [Header("Target")]
-        [SerializeField] Transform playerTransform;
-
         [Header("Sight")]
         [SerializeField] float detectionInterval = 0.2f;
 
         float cooldownTimer, detectionTimer;
         bool playerInSight;
-        PatrolMovement patrol;
-        Player player;
         int fireballIndex;
-
-        protected override void Awake()
-        {
-            base.Awake();
-            patrol = GetComponentInParent<PatrolMovement>();
-            if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
-            player = playerTransform?.GetComponent<Player>();
-        }
 
         void Update()
         {
             if (IsDead || !GameStateManager.IsCurrentlyPlaying) return;
             cooldownTimer += Time.deltaTime;
 
-            if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
-            if (player == null && playerTransform != null) player = playerTransform.GetComponent<Player>();
+            if (!TryResolveTarget()) return;
 
-            if (player is { IsInvisible: true })
+            if (!PlayerVisible)
             {
                 playerInSight = false;
                 SetPatrol(true);
@@ -66,11 +50,6 @@ namespace Gameplay.Characters.Enemies
                 cooldownTimer = 0f;
                 anim.SetTrigger(GameConstants.Anim.RangedAttack);
             }
-        }
-
-        void SetPatrol(bool enabled)
-        {
-            if (patrol != null) patrol.enabled = enabled;
         }
 
         void RangedAttack()

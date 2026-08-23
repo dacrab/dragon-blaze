@@ -5,6 +5,7 @@ using Core.Constants;
 using Core.Input;
 using Core.Managers;
 using Core.Services;
+using UI.Managers;
 
 namespace UI.Menus
 {
@@ -32,9 +33,18 @@ namespace UI.Menus
 
         int currentIndex;
         InputReader inputReader;
+        bool menuValid;
 
         void Awake()
         {
+            menuValid = buttons is { Length: > 0 } && menuActions is { Length: > 0 } &&
+                        menuActions.Length == buttons.Length;
+            if (!menuValid)
+            {
+                Debug.LogWarning($"[{nameof(MenuManager)}] 'buttons'/'menuActions' counts mismatch " +
+                                 $"({buttons?.Length ?? 0} vs {menuActions?.Length ?? 0}); menu navigation disabled.", this);
+                return;
+            }
             UpdateArrow();
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -82,6 +92,7 @@ namespace UI.Menus
 
         void ChangeIndex(int delta)
         {
+            if (!menuValid) return;
             currentIndex = (currentIndex + delta + buttons.Length) % buttons.Length;
             ServiceLocator.Get<IAudioManager>()?.PlaySound(changeSound);
             UpdateArrow();
@@ -94,16 +105,12 @@ namespace UI.Menus
 
         void OnSubmit()
         {
+            if (!menuValid) return;
             ServiceLocator.Get<IAudioManager>()?.PlaySound(interactSound);
             menuActions[currentIndex].action?.Invoke();
         }
 
-        public void StartNewGame()
-        {
-            ServiceLocator.Get<IGameManager>()?.ResetCoins();
-            ServiceLocator.Get<IGameManager>()?.SaveGame(true);
-            ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.FirstLevelSceneName);
-        }
+        public void StartNewGame() => UIManager.StartNewGame();
 
         public void QuitGame() => Application.Quit();
     }

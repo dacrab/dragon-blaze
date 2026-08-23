@@ -17,18 +17,9 @@ namespace Core.Debug
         Player player;
         Health playerHealth;
 
-        void Awake()
-        {
-            var playerTransform = GameConstants.FindPlayer();
-            if (playerTransform != null)
-            {
-                player = playerTransform.GetComponent<Player>();
-                playerHealth = playerTransform.GetComponent<Health>();
-            }
-        }
-
         void Update()
         {
+            if (playerHealth == null) ResolvePlayer();
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
             if (keyboard.f1Key.wasPressedThisFrame) playerHealth?.Heal(playerHealth.MaxHealth);
@@ -37,6 +28,14 @@ namespace Core.Debug
             if (keyboard.f4Key.wasPressedThisFrame) ToggleInvincibility();
             if (keyboard.f5Key.wasPressedThisFrame) ServiceLocator.Get<IGameManager>()?.SaveGame();
             if (keyboard.f9Key.wasPressedThisFrame) Time.timeScale = Time.timeScale > 1 ? 1 : 3;
+        }
+
+        void ResolvePlayer()
+        {
+            var playerTransform = GameConstants.FindPlayer();
+            if (playerTransform == null) return;
+            player = playerTransform.GetComponent<Player>();
+            playerHealth = playerTransform.GetComponent<Health>();
         }
 
         static void KillAllEnemies()

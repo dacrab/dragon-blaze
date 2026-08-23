@@ -6,6 +6,7 @@ namespace Environment.Rooms
     public sealed class Room : MonoBehaviour
     {
         [SerializeField] GameObject[] enemies;
+        [SerializeField] bool startActive;
         Vector3[] initialPositions;
 
         void Awake()
@@ -13,7 +14,7 @@ namespace Environment.Rooms
             initialPositions = new Vector3[enemies.Length];
             for (int i = 0; i < enemies.Length; i++)
                 initialPositions[i] = enemies[i] != null ? enemies[i].transform.position : Vector3.zero;
-            if (transform.GetSiblingIndex() != 0) ActivateRoom(false);
+            ActivateRoom(startActive);
         }
 
         void OnTriggerEnter2D(Collider2D collision)

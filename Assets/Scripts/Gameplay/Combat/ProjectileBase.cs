@@ -1,6 +1,7 @@
 using UnityEngine;
 using Core.Constants;
 using Core.Managers;
+using Core.Physics;
 using Core.Pooling;
 using Core.Services;
 
@@ -22,6 +23,7 @@ namespace Gameplay.Combat
         protected bool hit;
         protected Animator anim;
         protected Collider2D col;
+        protected Rigidbody2D body;
 
         bool IsPooled => !string.IsNullOrEmpty(poolKey);
 
@@ -29,6 +31,7 @@ namespace Gameplay.Combat
         {
             anim = GetComponent<Animator>();
             col = GetComponent<Collider2D>();
+            body = KinematicBody.Prepare(this);
         }
 
         protected virtual void OnEnable()
@@ -41,9 +44,15 @@ namespace Gameplay.Combat
         protected virtual void Update()
         {
             if (hit) return;
-            transform.Translate(speed * direction * Time.deltaTime, 0, 0);
             lifetime += Time.deltaTime;
             if (lifetime > maxLifetime) Deactivate();
+        }
+
+        protected virtual void FixedUpdate()
+        {
+            if (hit) return;
+            var step = new Vector3(speed * direction * Time.fixedDeltaTime, 0f, 0f);
+            KinematicBody.MoveTo(body, transform, transform.position + step);
         }
 
         protected virtual void OnTriggerEnter2D(Collider2D collision)
@@ -51,11 +60,7 @@ namespace Gameplay.Combat
             if (hit || collision.transform.root == transform.root) return;
 
             if (collision.CompareTag(targetTag))
-            {
-                if (checkInvisibility && collision.IsInvisiblePlayer()) return;
-                if (collision.TryGetComponent<Health>(out var target))
-                    target.TakeDamage(damage);
-            }
+                collision.DamagePlayer(damage, checkInvisibility);
 
             hit = true;
             if (col != null) col.enabled = false;
