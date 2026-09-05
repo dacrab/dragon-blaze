@@ -272,6 +272,8 @@ namespace Gameplay.Characters.Player
             _ = InvisibilityTimeoutAsync(duration, invisibilityCts.Token);
         }
 
+        public bool HasCheckpoint() => checkpoint != null;
+
         async Awaitable InvisibilityTimeoutAsync(float duration, CancellationToken ct)
         {
             try

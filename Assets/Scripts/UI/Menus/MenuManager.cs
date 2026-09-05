@@ -46,8 +46,6 @@ namespace UI.Menus
                 return;
             }
             UpdateArrow();
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
         }
 
         void OnEnable()

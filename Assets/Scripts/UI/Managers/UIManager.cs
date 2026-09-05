@@ -96,7 +96,19 @@ namespace UI.Managers
             ServiceLocator.Get<IAudioManager>()?.PlaySound(gameOverSound);
         }
 
-        public void Restart() => ServiceLocator.Get<ISceneLoader>()?.LoadScene(SceneManager.GetActiveScene().name);
+        public void Restart()
+        {
+            var player = ServiceLocator.Get<IPlayer>();
+            var stateManager = ServiceLocator.Get<IGameStateManager>();
+            if (player != null && player.HasCheckpoint() && stateManager != null && stateManager.CurrentState == GameState.GameOver)
+            {
+                EventBus.Raise(new PlayerRespawnEvent());
+                gameOverScreen.SetActive(false);
+                stateManager.ChangeState(GameState.Gameplay);
+                return;
+            }
+            ServiceLocator.Get<ISceneLoader>()?.LoadScene(SceneManager.GetActiveScene().name);
+        }
         public void MainMenu() { SetCursor(true); ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.MainMenuSceneName); }
 
         public void Quit()

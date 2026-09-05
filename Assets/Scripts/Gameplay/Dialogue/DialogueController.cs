@@ -28,7 +28,7 @@ namespace Gameplay.Dialogue
 
         float TypeDelay => baseTypeDelay / typeSpeed;
 
-        void OnEnable() => ServiceLocator.Register<IDialogueController>(this);
+        void Awake() => ServiceLocator.Register<IDialogueController>(this);
 
         void OnDisable() => typeCts?.Cancel();
 

@@ -10,6 +10,7 @@ namespace Core.Services
         float Damage { get; }
         void SetInvisibility(bool invisible);
         void SetInvisibilityFor(float duration);
+        bool HasCheckpoint();
         void AddModifier(PlayerStat stat, float factor, float duration);
     }
 }
