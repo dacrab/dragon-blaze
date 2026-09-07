@@ -8,8 +8,8 @@ namespace DragonBlaze.Tests
 {
     public class SaveServiceTests
     {
-        string path;
-        SaveService service;
+        string path = "";
+        SaveService service = null!;
 
         [SetUp]
         public void Setup()
@@ -37,7 +37,8 @@ namespace DragonBlaze.Tests
 
             Assert.IsTrue(service.SaveDataExists());
             var data = service.Load();
-            Assert.AreEqual(42, data.totalCoins);
+            Assert.IsNotNull(data);
+            Assert.AreEqual(42, data!.totalCoins);
             Assert.AreEqual("Level3", data.levelName);
             Assert.AreEqual(SaveService.CurrentVersion, data.version);
         }
@@ -48,7 +49,7 @@ namespace DragonBlaze.Tests
             File.WriteAllText(path, "{\"totalCoins\":7,\"levelName\":\"Level1\"}");
             var data = service.Load();
             Assert.IsNotNull(data);
-            Assert.AreEqual(7, data.totalCoins);
+            Assert.AreEqual(7, data!.totalCoins);
             Assert.AreEqual("Level1", data.levelName);
             Assert.AreEqual(SaveService.CurrentVersion, data.version);
         }

@@ -4,6 +4,6 @@ namespace UI.Menus
     public interface ISceneLoader
     {
         void LoadNextLevel();
-        void LoadScene(string sceneName);
+        void LoadScene(string? sceneName);
     }
 }

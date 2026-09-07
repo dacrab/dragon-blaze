@@ -12,7 +12,7 @@ namespace Environment.Traps
         [SerializeField] float movementDistance = 3f, speed = 2f;
 
         float startX;
-        Rigidbody2D body;
+        Rigidbody2D? body;
 
         void Awake()
         {

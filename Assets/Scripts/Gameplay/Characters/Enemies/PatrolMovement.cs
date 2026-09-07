@@ -13,8 +13,8 @@ namespace Gameplay.Characters.Enemies
         public Transform LeftEdge => leftEdge;
         public Transform RightEdge => rightEdge;
 
-        Animator anim;
-        Rigidbody2D enemyBody;
+        Animator? anim;
+        Rigidbody2D? enemyBody;
         Vector3 initScale;
         bool movingLeft;
         float idleTimer;

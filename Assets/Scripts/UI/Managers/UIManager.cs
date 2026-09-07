@@ -15,7 +15,7 @@ namespace UI.Managers
 {
     public sealed class UIManager : MonoBehaviour
     {
-        static UIManager instance;
+        static UIManager? instance;
 
         [Header("UI Screens")]
         [SerializeField] GameObject gameOverScreen, pauseScreen, loadingScreen;
@@ -30,7 +30,7 @@ namespace UI.Managers
         [SerializeField] GameObject indicatorPrefab;
         [SerializeField] Transform indicatorPanel;
 
-        InputReader inputReader;
+        InputReader? inputReader;
         readonly Dictionary<string, GameObject> indicators = new();
 
         void Awake()

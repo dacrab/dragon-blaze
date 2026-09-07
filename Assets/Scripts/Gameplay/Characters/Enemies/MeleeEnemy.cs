@@ -9,9 +9,9 @@ namespace Gameplay.Characters.Enemies
     public sealed class MeleeEnemy : EnemyBase
     {
         float cooldownTimer;
-        Health playerHealth;
+        Health? playerHealth;
         float attackRangeSqr;
-        Rigidbody2D body;
+        Rigidbody2D? body;
         bool chasing;
 
         protected override void Awake()
@@ -37,7 +37,7 @@ namespace Gameplay.Characters.Enemies
 
             SetPatrol(false);
             chasing = true;
-            if (cooldownTimer >= config.attackCooldown && InAttackRange()) Attack();
+            if (config != null && cooldownTimer >= config.attackCooldown && InAttackRange()) Attack();
         }
 
         void FixedUpdate()
@@ -45,27 +45,27 @@ namespace Gameplay.Characters.Enemies
             if (!chasing || IsDead || !GameStateManager.IsCurrentlyPlaying || playerTransform == null) return;
             float currentX = body != null ? body.position.x : transform.position.x;
             float dir = Mathf.Sign(playerTransform.position.x - currentX);
-            float newX = currentX + dir * config.chaseSpeed * Time.fixedDeltaTime;
+            float newX = currentX + dir * (config != null ? config.chaseSpeed : 0f) * Time.fixedDeltaTime;
             if (patrol == null || (newX >= patrol.LeftEdge.position.x && newX <= patrol.RightEdge.position.x))
             {
                 KinematicBody.MoveTo(body, transform, new(newX, transform.position.y, transform.position.z));
                 transform.localScale = new(dir * Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-                anim.SetBool(GameConstants.Anim.Moving, true);
+                anim?.SetBool(GameConstants.Anim.Moving, true);
             }
         }
 
         void Attack()
         {
             cooldownTimer = 0f;
-            anim.SetTrigger(GameConstants.Anim.MeleeAttack);
+            anim?.SetTrigger(GameConstants.Anim.MeleeAttack);
             playerHealth?.TakeDamage(Damage);
         }
 
         bool InPatrolBounds() =>
-            patrol == null || (playerTransform.position.x >= patrol.LeftEdge.position.x &&
+            patrol == null || (playerTransform != null && playerTransform.position.x >= patrol.LeftEdge.position.x &&
                               playerTransform.position.x <= patrol.RightEdge.position.x);
 
         bool InAttackRange() =>
-            (transform.position - playerTransform.position).sqrMagnitude <= attackRangeSqr;
+            playerTransform != null && (transform.position - playerTransform.position).sqrMagnitude <= attackRangeSqr;
     }
 }

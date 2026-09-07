@@ -10,7 +10,7 @@ namespace Environment.Platforms
         [SerializeField] bool loop = true, pingPong;
 
         int currentIndex, direction = 1;
-        Rigidbody2D body;
+        Rigidbody2D? body;
 
         void Awake() => body = KinematicBody.Prepare(this);
 

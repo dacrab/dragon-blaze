@@ -23,7 +23,7 @@ namespace Environment.Traps
         Vector3 moveDir;
         float checkTimer, attackDistance;
         bool attacking;
-        Rigidbody2D body;
+        Rigidbody2D? body;
 
         void Awake() => body = KinematicBody.Prepare(this);
 

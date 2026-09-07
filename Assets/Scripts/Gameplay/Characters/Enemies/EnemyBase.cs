@@ -9,19 +9,19 @@ namespace Gameplay.Characters.Enemies
     [RequireComponent(typeof(Animator), typeof(Health))]
     public abstract class EnemyBase : MonoBehaviour
     {
-        [SerializeField] protected EnemyConfigSO config;
-        [SerializeField] protected Transform playerTransform;
+        [SerializeField] protected EnemyConfigSO? config;
+        [SerializeField] protected Transform? playerTransform;
 
-        protected Animator anim;
-        protected Collider2D col;
-        protected Health health;
-        protected PatrolMovement patrol;
-        protected Player player;
-        protected bool IsDead => !health.IsAlive;
+        protected Animator? anim;
+        protected Collider2D? col;
+        protected Health? health;
+        protected PatrolMovement? patrol;
+        protected Player? player;
+        protected bool IsDead => health != null && !health.IsAlive;
         protected bool PlayerVisible => player == null || !player.IsInvisible;
 
-        protected float Damage => config.damage;
-        protected float Speed => config.speed;
+        protected float Damage => config != null ? config.damage : 0f;
+        protected float Speed => config != null ? config.speed : 0f;
 
         protected virtual void Awake()
         {
@@ -29,7 +29,9 @@ namespace Gameplay.Characters.Enemies
             col = GetComponent<Collider2D>();
             health = GetComponent<Health>();
             patrol = GetComponentInParent<PatrolMovement>();
-            if (config != null && config.animatorController != null)
+            if (anim == null || health == null)
+                Debug.LogError($"[{name}] EnemyBase requires an Animator and Health on the prefab.", this);
+            if (anim != null && config != null && config.animatorController != null)
                 anim.runtimeAnimatorController = config.animatorController;
             if (playerTransform == null) playerTransform = GameConstants.FindPlayer();
             player = playerTransform?.GetComponent<Player>();

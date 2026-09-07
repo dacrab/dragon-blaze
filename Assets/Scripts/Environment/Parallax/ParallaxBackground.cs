@@ -9,7 +9,7 @@ namespace Environment.Parallax
         [SerializeField] bool infiniteHorizontal, infiniteVertical;
         [SerializeField, Range(0.1f, 1f)] float wrapThreshold = 0.5f;
 
-        Transform cam;
+        Transform? cam;
         Vector3 lastCamPos;
         float texSizeX, texSizeY;
 
@@ -17,7 +17,13 @@ namespace Environment.Parallax
         {
             cam = Camera.main?.transform;
             if (cam != null) lastCamPos = cam.position;
-            var s = GetComponent<SpriteRenderer>().sprite;
+            var renderer = GetComponent<SpriteRenderer>();
+            if (renderer == null)
+            {
+                Debug.LogError($"[{name}] ParallaxBackground requires a SpriteRenderer.", this);
+                return;
+            }
+            var s = renderer.sprite;
             if (s != null)
             {
                 texSizeX = s.texture.width / s.pixelsPerUnit;

@@ -6,8 +6,8 @@ namespace DragonBlaze.Tests
 {
     public class HealthTests
     {
-        GameObject go;
-        Health health;
+        GameObject go = null!;
+        Health health = null!;
 
         [SetUp]
         public void Setup()

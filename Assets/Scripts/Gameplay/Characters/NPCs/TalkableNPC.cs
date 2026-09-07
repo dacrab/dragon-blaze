@@ -11,11 +11,11 @@ namespace Gameplay.Characters.NPCs
     {
         [SerializeField] float interactDistance = 5f;
         [SerializeField] SpriteRenderer interactSprite;
-        [SerializeField] Transform playerTransform;
+        [SerializeField] Transform? playerTransform;
         [SerializeField] DialogueData dialogueText;
         [SerializeField] AudioClip dialogueSound;
 
-        InputReader inputReader;
+        InputReader? inputReader;
 
         void Start() { if (playerTransform == null) playerTransform = GameConstants.FindPlayer(); }
         void OnEnable()

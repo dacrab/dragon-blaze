@@ -11,9 +11,9 @@ namespace Core.Managers
 {
     public sealed class GameManager : MonoBehaviour, IGameManager
     {
-        static GameManager instance;
+        static GameManager? instance;
 
-        SaveService saveService;
+        SaveService? saveService;
 
         public int TotalCoins { get; private set; }
 
@@ -65,21 +65,28 @@ namespace Core.Managers
                 totalCoins = TotalCoins,
                 levelName = isNewGame ? GameConfig.Default.FirstLevelSceneName : SceneManager.GetActiveScene().name
             };
-            saveService.Save(data);
+            saveService?.Save(data);
         }
 
-        public bool SaveDataExists() => saveService.SaveDataExists();
+        public bool SaveDataExists() => saveService != null && saveService.SaveDataExists();
 
-        public SaveData LoadGame()
+        public SaveData? LoadGame()
         {
+            if (saveService == null) return null;
             var data = saveService.Load();
             if (data == null) return null;
-            TotalCoins = data.totalCoins;
+            TotalCoins = Mathf.Max(0, data.totalCoins);
             EventBus.Raise(new ScoreChangedEvent(TotalCoins));
             return data;
         }
 
-        public string GetLastSavedLevelName() =>
-            saveService.Load()?.levelName ?? GameConfig.Default.FirstLevelSceneName;
+        public string GetLastSavedLevelName()
+        {
+            var levelName = saveService?.Load()?.levelName;
+            return !string.IsNullOrEmpty(levelName) &&
+                   Array.IndexOf(GameConfig.Default.levelOrder, levelName) >= 0
+                ? levelName
+                : GameConfig.Default.FirstLevelSceneName ?? string.Empty;
+        }
     }
 }

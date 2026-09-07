@@ -12,13 +12,13 @@ namespace Environment.Traps
     public sealed class ArrowTrap : MonoBehaviour
     {
         [SerializeField] float attackCooldown = 1f;
-        [SerializeField] Transform firePoint;
+        [SerializeField] Transform? firePoint;
         [SerializeField] GameObject[] arrows;
         [SerializeField] AudioClip arrowSound;
-        [SerializeField] Transform playerTransform;
+        [SerializeField] Transform? playerTransform;
 
         float cooldownTimer;
-        Player player;
+        Player? player;
         int arrowIndex;
 
         void Awake()
@@ -42,6 +42,7 @@ namespace Environment.Traps
         {
             cooldownTimer = 0;
             ServiceLocator.Get<IAudioManager>()?.PlaySound(arrowSound);
+            if (firePoint == null) return;
             ProjectileBase.Fire(arrows, ref arrowIndex, firePoint.position)?.ActivateProjectile();
         }
     }

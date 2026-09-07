@@ -20,13 +20,13 @@ namespace Core.Managers
         [SerializeField] AudioMixer mixer;
         [SerializeField] AudioMixerGroup musicGroup, soundGroup;
 
-        static AudioManager instance;
+        static AudioManager? instance;
 
-        AudioSource musicSource;
-        ObjectPool<AudioSource> soundSources;
+        AudioSource? musicSource;
+        ObjectPool<AudioSource>? soundSources;
 
-        public event Action<float> OnMusicVolumeChanged;
-        public event Action<float> OnSoundVolumeChanged;
+        public event Action<float>? OnMusicVolumeChanged;
+        public event Action<float>? OnSoundVolumeChanged;
 
         public float MusicVolume { get; private set; }
         public float SoundVolume { get; private set; }
@@ -78,7 +78,7 @@ namespace Core.Managers
             ServiceLocator.Unregister<IAudioManager>();
         }
 
-        public void PlayMusic(AudioClip clip)
+        public void PlayMusic(AudioClip? clip)
         {
             if (clip == null || musicSource == null) return;
             if (musicSource.isPlaying && musicSource.clip == clip) return;
@@ -86,7 +86,7 @@ namespace Core.Managers
             musicSource.Play();
         }
 
-        public void PlaySound(AudioClip clip)
+        public void PlaySound(AudioClip? clip)
         {
             if (clip == null || soundSources == null) return;
             var source = soundSources.Get();

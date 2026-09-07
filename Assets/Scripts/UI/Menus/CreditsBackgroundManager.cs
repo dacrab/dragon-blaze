@@ -15,8 +15,8 @@ namespace UI.Menus
 
         int currentIndex;
         Color[] baseColors;
-        InputReader inputReader;
-        CancellationTokenSource loopCts;
+        InputReader? inputReader;
+        CancellationTokenSource? loopCts;
 
         void Start()
         {

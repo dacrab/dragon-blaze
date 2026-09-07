@@ -16,7 +16,7 @@ namespace Core.Services
 
         public static void Unregister<T>() where T : class => services.Remove(typeof(T));
 
-        public static T Get<T>() where T : class =>
+        public static T? Get<T>() where T : class =>
             services.TryGetValue(typeof(T), out var service) ? (T)service : null;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

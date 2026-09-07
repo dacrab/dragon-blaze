@@ -1,3 +1,4 @@
+using UnityEngine;
 using Core.Services;
 
 namespace Gameplay.Items.PowerUps

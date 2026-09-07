@@ -20,7 +20,7 @@ namespace Gameplay.Items.Collectibles
         [SerializeField] AudioClip pickupSound;
         [SerializeField] ParticleSystem pickupEffect;
 
-        InputReader inputReader;
+        InputReader? inputReader;
         bool playerInTrigger;
 
         void Start() { if (type == CollectibleType.MagicStone) SetIndicator(false); }

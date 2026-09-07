@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -8,11 +9,11 @@ namespace Core.Pooling
     public static class VfxPool
     {
         static readonly Dictionary<int, ObjectPool<GameObject>> pools = new();
-        static Transform root;
+        static Transform? root;
 
         static Transform Root => root != null ? root : root = CreateRoot();
 
-        public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        public static GameObject? Spawn(GameObject? prefab, Vector3 position, Quaternion rotation)
         {
             if (prefab == null) return null;
             var obj = GetPool(prefab).Get();
@@ -30,7 +31,7 @@ namespace Core.Pooling
             pool = new ObjectPool<GameObject>(
                 createFunc: () =>
                 {
-                    var obj = Object.Instantiate(prefab, Root);
+                    var obj = UnityEngine.Object.Instantiate(prefab, Root);
                     var recycler = obj.GetComponent<VfxRecycler>();
                     if (recycler == null) recycler = obj.AddComponent<VfxRecycler>();
                     recycler.Init(prefab);
@@ -38,7 +39,7 @@ namespace Core.Pooling
                 },
                 actionOnGet: obj => obj.SetActive(true),
                 actionOnRelease: obj => obj.SetActive(false),
-                actionOnDestroy: Object.Destroy,
+                actionOnDestroy: UnityEngine.Object.Destroy,
                 defaultCapacity: 4,
                 maxSize: 32
             );
@@ -49,7 +50,7 @@ namespace Core.Pooling
         static Transform CreateRoot()
         {
             var go = new GameObject("VfxPool");
-            Object.DontDestroyOnLoad(go);
+            UnityEngine.Object.DontDestroyOnLoad(go);
             return go.transform;
         }
 
@@ -61,10 +62,10 @@ namespace Core.Pooling
     {
         const float PollInterval = 0.25f;
 
-        GameObject prefab;
-        ParticleSystem particles;
+        GameObject? prefab;
+        ParticleSystem? particles;
         float duration;
-        CancellationTokenSource recycleCts;
+        CancellationTokenSource? recycleCts;
 
         public void Init(GameObject prefab)
         {
@@ -94,7 +95,7 @@ namespace Core.Pooling
                     await Awaitable.WaitForSecondsAsync(PollInterval, ct);
                 while (particles != null && particles.IsAlive(true))
                     await Awaitable.WaitForSecondsAsync(PollInterval, ct);
-                VfxPool.Release(prefab, gameObject);
+                VfxPool.Release(prefab!, gameObject); // prefab set in Init() before pooling; never null here
             }
             catch (OperationCanceledException) { }
         }

@@ -12,7 +12,7 @@ namespace UI.Menus
         [SerializeField] float loadingProgressThreshold = 0.9f;
         [SerializeField] float minimumLoadingTime = 0.3f;
 
-        static LoadingManager instance;
+        static LoadingManager? instance;
         bool isLoading;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -43,7 +43,7 @@ namespace UI.Menus
         void OnLevelCompleted(LevelCompletedEvent _) => LoadNextLevel();
 
         void ISceneLoader.LoadNextLevel() => LoadNextLevel();
-        void ISceneLoader.LoadScene(string sceneName) => _ = LoadAsync(sceneName);
+        void ISceneLoader.LoadScene(string? sceneName) => _ = LoadAsync(sceneName);
 
         void LoadNextLevel()
         {
@@ -52,7 +52,7 @@ namespace UI.Menus
             else Debug.LogWarning($"[LoadingManager] No next level configured after '{active}'.");
         }
 
-        async Awaitable LoadAsync(string sceneName)
+        async Awaitable LoadAsync(string? sceneName)
         {
             if (isLoading) return;
             isLoading = true;
@@ -61,12 +61,27 @@ namespace UI.Menus
                 var ui = FindFirstObjectByType<UIManager>();
                 ui?.ShowLoadingScreen(true);
 
-                var op = SceneManager.LoadSceneAsync(sceneName);
+                if (string.IsNullOrEmpty(sceneName))
+                {
+                    Debug.LogWarning("[LoadingManager] No scene name provided; falling back to first level.");
+                    sceneName = GameConfig.Default.FirstLevelSceneName;
+                }
+                var op = string.IsNullOrEmpty(sceneName) ? null : SceneManager.LoadSceneAsync(sceneName);
                 if (op == null)
                 {
-                    Debug.LogWarning($"[LoadingManager] Scene '{sceneName}' is not in Build Settings.");
-                    ui?.ShowLoadingScreen(false);
-                    return;
+                    Debug.LogWarning($"[LoadingManager] Scene '{sceneName}' is not in Build Settings; falling back to first level.");
+                    var fallback = GameConfig.Default.FirstLevelSceneName;
+                    if (string.IsNullOrEmpty(fallback))
+                    {
+                        ui?.ShowLoadingScreen(false);
+                        return;
+                    }
+                    op = SceneManager.LoadSceneAsync(fallback);
+                    if (op == null)
+                    {
+                        ui?.ShowLoadingScreen(false);
+                        return;
+                    }
                 }
                 op.allowSceneActivation = false;
 

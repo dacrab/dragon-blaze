@@ -7,7 +7,7 @@ namespace Core.Constants
     {
         public const string DefaultResourcesPath = "GameConfig";
 
-        static GameConfig cached;
+        static GameConfig? cached;
 
         /// <summary>Singleton config asset loaded from Resources. Never null in play mode.</summary>
         public static GameConfig Default
@@ -45,12 +45,12 @@ namespace Core.Constants
 
         [Header("State")]
         [Tooltip("Optional per-state overrides. Any state missing here falls back to DefaultStateSettings.")]
-        public StateSettings[] stateSettings;
+        public StateSettings[]? stateSettings;
 
-        public string MainMenuSceneName => levelOrder.Length > 0 ? levelOrder[0] : null;
-        public string FirstLevelSceneName => levelOrder.Length > 1 ? levelOrder[1] : null;
+        public string? MainMenuSceneName => levelOrder.Length > 0 ? levelOrder[0] : null;
+        public string? FirstLevelSceneName => levelOrder.Length > 1 ? levelOrder[1] : null;
 
-        public bool TryGetNextLevel(string current, out string next)
+        public bool TryGetNextLevel(string current, out string? next)
         {
             int index = System.Array.IndexOf(levelOrder, current);
             if (index >= 0 && index + 1 < levelOrder.Length)

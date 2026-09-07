@@ -19,8 +19,8 @@ namespace DragonBlaze.Tests
         {
             var reader = InputReader.Instance;
             if (reader == null) Assert.Ignore("InputReader asset missing.");
-            Assert.DoesNotThrow(reader.EnableGameplayInput);
-            Assert.DoesNotThrow(reader.EnableUIInput);
+            Assert.DoesNotThrow(reader!.EnableGameplayInput); // null-checked above; Assert.Ignore ends the test
+            Assert.DoesNotThrow(reader!.EnableUIInput);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Core.State
 {
     public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     {
-        static GameStateManager instance;
+        static GameStateManager? instance;
 
         public GameState CurrentState { get; private set; } = GameState.MainMenu;
         public bool IsPlaying => CurrentState == GameState.Gameplay;

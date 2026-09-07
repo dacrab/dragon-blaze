@@ -12,8 +12,8 @@ namespace UI.Menus
     [System.Serializable]
     public class MenuAction
     {
-        public string name;
-        public UnityEvent action;
+        public string? name;
+        public UnityEvent? action;
     }
 
     public sealed class MenuManager : MonoBehaviour
@@ -32,7 +32,7 @@ namespace UI.Menus
         [SerializeField] MenuAction[] menuActions;
 
         int currentIndex;
-        InputReader inputReader;
+        InputReader? inputReader;
         bool menuValid;
 
         void Awake()

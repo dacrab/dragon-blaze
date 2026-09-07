@@ -7,6 +7,6 @@ namespace Core.Persistence
     {
         public int version = SaveService.CurrentVersion;
         public int totalCoins;
-        public string levelName;
+        public string? levelName;
     }
 }

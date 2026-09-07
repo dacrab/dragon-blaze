@@ -21,9 +21,9 @@ namespace Gameplay.Combat
 
         protected float lifetime, direction;
         protected bool hit;
-        protected Animator anim;
-        protected Collider2D col;
-        protected Rigidbody2D body;
+        protected Animator? anim;
+        protected Collider2D? col;
+        protected Rigidbody2D? body;
 
         bool IsPooled => !string.IsNullOrEmpty(poolKey);
 
@@ -81,7 +81,7 @@ namespace Gameplay.Combat
         public void OnExplosionComplete() => Deactivate();
 
         /// <summary>Cycles a shared projectile pool: takes the next entry, moves it to <paramref name="position"/>, and arms it.</summary>
-        public static ProjectileBase Fire(GameObject[] projectiles, ref int index, Vector3 position)
+        public static ProjectileBase? Fire(GameObject[] projectiles, ref int index, Vector3 position)
         {
             if (projectiles is not { Length: > 0 }) return null;
             var next = projectiles[index];

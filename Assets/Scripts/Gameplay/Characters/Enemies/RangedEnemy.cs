@@ -10,7 +10,7 @@ namespace Gameplay.Characters.Enemies
     public sealed class RangedEnemy : EnemyBase
     {
         [Header("Projectiles")]
-        [SerializeField] Transform firepoint;
+        [SerializeField] Transform? firepoint;
         [SerializeField] GameObject[] fireballs;
 
         [Header("Detection")]
@@ -45,26 +45,27 @@ namespace Gameplay.Characters.Enemies
             }
 
             SetPatrol(!playerInSight);
-            if (playerInSight && cooldownTimer >= config.attackCooldown)
+            if (playerInSight && config != null && cooldownTimer >= config.attackCooldown)
             {
                 cooldownTimer = 0f;
-                anim.SetTrigger(GameConstants.Anim.RangedAttack);
+                anim?.SetTrigger(GameConstants.Anim.RangedAttack);
             }
         }
 
         void RangedAttack()
         {
-            ServiceLocator.Get<IAudioManager>()?.PlaySound(config.attackSound);
+            ServiceLocator.Get<IAudioManager>()?.PlaySound(config?.attackSound);
+            if (firepoint == null) return;
             ProjectileBase.Fire(fireballs, ref fireballIndex, firepoint.position)?.ActivateProjectile();
         }
 
         bool PlayerInSight()
         {
+            if (col == null || config == null) return false;
             var bounds = col.bounds;
             var hit = Physics2D.BoxCast(
                 bounds.center + transform.right * config.detectionRange * 0.5f * transform.localScale.x,
-                new Vector3(config.detectionRange, bounds.size.y, 1f), 0, Vector2.zero, 0, playerLayer);
-            return hit.collider != null;
+                new Vector3(config.detectionRange, bounds.size.y, 1f), 0, Vector2.zero, 0, playerLayer);            return hit.collider != null;
         }
     }
 }

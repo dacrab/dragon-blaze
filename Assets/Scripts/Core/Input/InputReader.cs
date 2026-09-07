@@ -12,17 +12,19 @@ namespace Core.Input
 
         const string GameplayMap = "Gameplay";
         const string UIMap = "UI";
+        const string NavigateAction = "Navigate";
+        const string SubmitAction = "Submit";
 
         [SerializeField] InputActionAsset inputActions;
 
-        public event UnityAction<float> MoveEvent;
-        public event UnityAction JumpEvent, JumpCanceledEvent, DashEvent, AttackEvent, InteractEvent, PauseEvent, SubmitEvent;
-        public event UnityAction<Vector2> NavigateEvent;
+        public event UnityAction<float>? MoveEvent;
+        public event UnityAction? JumpEvent, JumpCanceledEvent, DashEvent, AttackEvent, InteractEvent, PauseEvent, SubmitEvent;
+        public event UnityAction<Vector2>? NavigateEvent;
 
-        InputActionMap gameplayMap, uiMap;
-        (string name, Action<InputAction.CallbackContext> performed, Action<InputAction.CallbackContext> canceled)[] gameplayActions;
+        InputActionMap? gameplayMap, uiMap;
+        (string name, Action<InputAction.CallbackContext> performed, Action<InputAction.CallbackContext>? canceled)[] gameplayActions;
 
-        static InputReader instance;
+        static InputReader? instance;
 
         /// <summary>Resolves the shared reader from Resources so no scene wiring is required.</summary>
         public static InputReader Instance => instance != null ? instance : instance = Resources.Load<InputReader>(ResourceKey);
@@ -49,15 +51,25 @@ namespace Core.Input
                 gameplayMap.Enable();
                 foreach (var (name, performed, canceled) in gameplayActions)
                 {
-                    gameplayMap[name].performed += performed;
-                    if (canceled != null) gameplayMap[name].canceled += canceled;
+                    var action = gameplayMap.FindAction(name);
+                    if (action == null)
+                    {
+                        Debug.LogError($"[InputReader] Missing action '{name}' in '{GameplayMap}' map.");
+                        continue;
+                    }
+                    action.performed += performed;
+                    if (canceled != null) action.canceled += canceled;
                 }
             }
 
             if (uiMap != null)
             {
-                uiMap["Navigate"].performed += OnNavigate;
-                uiMap["Submit"].performed += OnSubmit;
+                var navigate = uiMap.FindAction(NavigateAction);
+                if (navigate != null) navigate.performed += OnNavigate;
+                else Debug.LogError($"[InputReader] Missing action '{NavigateAction}' in '{UIMap}' map.");
+                var submit = uiMap.FindAction(SubmitAction);
+                if (submit != null) submit.performed += OnSubmit;
+                else Debug.LogError($"[InputReader] Missing action '{SubmitAction}' in '{UIMap}' map.");
             }
         }
 
@@ -68,13 +80,17 @@ namespace Core.Input
             if (gameplayMap != null)
                 foreach (var (name, performed, canceled) in gameplayActions)
                 {
-                    gameplayMap[name].performed -= performed;
-                    if (canceled != null) gameplayMap[name].canceled -= canceled;
+                    var action = gameplayMap.FindAction(name);
+                    if (action == null) continue;
+                    action.performed -= performed;
+                    if (canceled != null) action.canceled -= canceled;
                 }
             if (uiMap != null)
             {
-                uiMap["Navigate"].performed -= OnNavigate;
-                uiMap["Submit"].performed -= OnSubmit;
+                var navigate = uiMap.FindAction(NavigateAction);
+                if (navigate != null) navigate.performed -= OnNavigate;
+                var submit = uiMap.FindAction(SubmitAction);
+                if (submit != null) submit.performed -= OnSubmit;
             }
         }
 

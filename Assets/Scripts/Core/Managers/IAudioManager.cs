@@ -11,8 +11,8 @@ namespace Core.Managers
         event Action<float> OnMusicVolumeChanged;
         event Action<float> OnSoundVolumeChanged;
 
-        void PlayMusic(AudioClip clip);
-        void PlaySound(AudioClip clip);
+        void PlayMusic(AudioClip? clip);
+        void PlaySound(AudioClip? clip);
         void SetMusicVolume(float volume);
         void SetSoundVolume(float volume);
     }

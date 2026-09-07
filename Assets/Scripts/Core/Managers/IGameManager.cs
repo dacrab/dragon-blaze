@@ -11,7 +11,7 @@ namespace Core.Managers
         void ResetCoins();
         void SaveGame(bool isNewGame = false);
         bool SaveDataExists();
-        SaveData LoadGame();
+        SaveData? LoadGame();
         string GetLastSavedLevelName();
     }
 }

@@ -27,14 +27,14 @@ namespace Core.Persistence
             catch (Exception e) { Debug.LogError($"[SaveService] Save failed: {e.Message}"); }
         }
 
-        public SaveData Load()
+        public SaveData? Load()
         {
             if (!File.Exists(path)) return null;
             try { return Migrate(JsonUtility.FromJson<SaveData>(File.ReadAllText(path))); }
             catch (Exception e) { Debug.LogError($"[SaveService] Load failed: {e.Message}"); return null; }
         }
 
-        static SaveData Migrate(SaveData data)
+        static SaveData? Migrate(SaveData? data)
         {
             if (data == null) return null;
             if (data.version < CurrentVersion) data.version = CurrentVersion;

@@ -38,7 +38,7 @@ namespace Gameplay.Dialogue
                 ServiceLocator.Unregister<IDialogueController>();
         }
 
-        public void DisplayNextParagraph(DialogueData dialogue, AudioClip sound = null)
+        public void DisplayNextParagraph(DialogueData dialogue, AudioClip? sound = null)
         {
             if (paragraphs.Count == 0 && conversationEnded)
             {
@@ -67,7 +67,7 @@ namespace Gameplay.Dialogue
             if (paragraphs.Count == 0) conversationEnded = true;
         }
 
-        void StartConversation(DialogueData dialogue, AudioClip sound)
+        void StartConversation(DialogueData dialogue, AudioClip? sound)
         {
             EventBus.Raise(new DialogueStateChangedEvent(true));
             ServiceLocator.Get<IAudioManager>()?.PlaySound(sound);

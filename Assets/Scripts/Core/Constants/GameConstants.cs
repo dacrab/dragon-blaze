@@ -34,6 +34,6 @@ namespace Core.Constants
             public const string Enemy = "Enemy";
         }
 
-        public static Transform FindPlayer() => ServiceLocator.Get<IPlayer>()?.Transform;
+        public static Transform? FindPlayer() => ServiceLocator.Get<IPlayer>()?.Transform;
     }
 }
