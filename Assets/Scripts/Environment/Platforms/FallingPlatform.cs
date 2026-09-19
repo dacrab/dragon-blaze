@@ -20,6 +20,7 @@ namespace Environment.Platforms
         void Update()
         {
             if (!falling) return;
+            // Timer runs from first contact: drops after fallDelay, deactivates after a further destroyDelay of falling.
             timer += Time.deltaTime;
             if (timer >= fallDelay + destroyDelay)
             {

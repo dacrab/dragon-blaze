@@ -9,6 +9,10 @@ using Core.Services;
 
 namespace Core.Managers
 {
+    /// <summary>
+    /// Persistent cross-scene state: coins, saves, and last-level tracking.
+    /// Self-bootstraps before the first scene so no scene placement is required.
+    /// </summary>
     public sealed class GameManager : MonoBehaviour, IGameManager
     {
         static GameManager? instance;

@@ -22,6 +22,7 @@ namespace Environment.Traps
 
         void FixedUpdate()
         {
+            // PingPong sweeps [0, 2 * movementDistance]; the subtraction centers it to [-movementDistance, +movementDistance] around startX.
             float offset = Mathf.PingPong(Time.time * speed, movementDistance * 2) - movementDistance;
             KinematicBody.MoveTo(body, transform, new(startX + offset, transform.position.y, transform.position.z));
         }

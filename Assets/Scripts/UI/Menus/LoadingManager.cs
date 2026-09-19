@@ -83,6 +83,7 @@ namespace UI.Menus
                         return;
                     }
                 }
+                // Scenes in Build Settings cap async progress at 0.9 until allowSceneActivation, so that is "done".
                 op.allowSceneActivation = false;
 
                 while (op.progress < loadingProgressThreshold)

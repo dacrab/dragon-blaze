@@ -3,6 +3,7 @@ using Core.Services;
 
 namespace Core.Constants
 {
+    /// <summary>Single home for the magic strings (tags, layers, animator parameters) shared by scenes, prefabs, and code.</summary>
     public static class GameConstants
     {
         public static class Tags

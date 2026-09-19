@@ -3,8 +3,10 @@
 Guidance for AI coding agents and contributors working in this Unity 6 project.
 
 ## Project facts
-- Engine: **Unity 6000.3.22f1** (Unity 6), C# with modern syntax (target-typed `new`, switch
-  expressions, `Awaitable`, `linearVelocity`, built-in `UnityEngine.Pool.ObjectPool`).
+- Engine: **Unity 6000.3.24f1** (Unity 6), C# with modern syntax (target-typed `new`, switch
+  expressions, `Awaitable`, `linearVelocity`, built-in `UnityEngine.Pool.ObjectPool`). This is the
+  version pinned in `ProjectSettings/ProjectVersion.txt`; a Renovate bump moves it, so re-read that
+  file rather than trusting this line if the Unity CLI disagrees.
 - Local **Unity CLI** is available: `unity test --mode EditMode|PlayMode` (runs the editor in
   batch mode, requires the installed editor + sign-in). Use it to verify compilation and run
   tests; the user also compiles in the Unity editor.

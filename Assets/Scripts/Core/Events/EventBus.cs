@@ -33,6 +33,7 @@ namespace Core.Events
         public static void Raise<T>(T payload) where T : struct =>
             ((Action<T>?)handlers.GetValueOrDefault(typeof(T)))?.Invoke(payload);
 
+        /// <summary>Test hook for clearing subscriptions between tests; play sessions are handled by Reset().</summary>
         internal static void Clear() => handlers.Clear();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

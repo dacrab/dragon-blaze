@@ -29,7 +29,7 @@ A 2D action platformer with fluid movement, dynamic combat, and modular architec
 ## Setup
 
 1. Clone: `git clone https://github.com/dacrab/dragon-blaze.git`
-2. Open in Unity Hub (6000.3.22f1 or newer)
+2. Open in Unity Hub (6000.3.24f1 — see `ProjectSettings/ProjectVersion.txt`)
 3. Load `Assets/Scenes/MainMenu.unity` and press Play
 
 ## Tech

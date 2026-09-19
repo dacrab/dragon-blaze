@@ -95,6 +95,7 @@ namespace Core.Managers
             _ = ReleaseWhenDoneAsync(source, clip.length);
         }
 
+        /// <summary>Waits out the clip on unscaled time so pooled sources return even while paused.</summary>
         async Awaitable ReleaseWhenDoneAsync(AudioSource source, float duration)
         {
             float endTime = Time.unscaledTime + duration;

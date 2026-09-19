@@ -2,6 +2,11 @@ using UnityEngine;
 
 namespace Core.Physics
 {
+    /// <summary>
+    /// Helpers for trap/platform/enemy movers. Static bodies authored in scenes are switched
+    /// to Kinematic on prepare so MoveTo can drive them via the physics engine; a missing
+    /// Rigidbody2D falls back to direct transform movement.
+    /// </summary>
     public static class KinematicBody
     {
         public static Rigidbody2D? Prepare(Component owner)

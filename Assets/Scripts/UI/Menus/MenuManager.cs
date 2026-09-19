@@ -31,6 +31,7 @@ namespace UI.Menus
         [Header("Menu Actions")]
         [SerializeField] MenuAction[] menuActions;
 
+        // Navigation is disabled when the serialized buttons/actions arrays are unset or mismatched in length.
         int currentIndex;
         InputReader? inputReader;
         bool menuValid;
@@ -91,6 +92,7 @@ namespace UI.Menus
         void ChangeIndex(int delta)
         {
             if (!menuValid) return;
+            // + buttons.Length keeps the modulo positive for delta = -1 at index 0.
             currentIndex = (currentIndex + delta + buttons.Length) % buttons.Length;
             ServiceLocator.Get<IAudioManager>()?.PlaySound(changeSound);
             UpdateArrow();

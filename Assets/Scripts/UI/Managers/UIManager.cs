@@ -100,6 +100,7 @@ namespace UI.Managers
         {
             var player = ServiceLocator.Get<IPlayer>();
             var stateManager = ServiceLocator.Get<IGameStateManager>();
+            // Checkpoint respawn only applies from the game-over state; otherwise the scene reloads from scratch.
             if (player != null && player.HasCheckpoint() && stateManager != null && stateManager.CurrentState == GameState.GameOver)
             {
                 EventBus.Raise(new PlayerRespawnEvent());
@@ -109,6 +110,7 @@ namespace UI.Managers
             }
             ServiceLocator.Get<ISceneLoader>()?.LoadScene(SceneManager.GetActiveScene().name);
         }
+
         public void MainMenu() { SetCursor(true); ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.MainMenuSceneName); }
 
         public void Quit()
@@ -127,6 +129,7 @@ namespace UI.Managers
             bool pause = !pauseScreen.activeInHierarchy;
             pauseScreen.SetActive(pause);
             SetCursor(pause);
+            // Pause by disabling the player's Behaviour — the IPlayer interface can't be toggled directly.
             if (ServiceLocator.Get<IPlayer>() is Behaviour playerBehaviour) playerBehaviour.enabled = !pause;
             EventBus.Raise(new GamePausedEvent(pause));
         }
@@ -155,6 +158,7 @@ namespace UI.Managers
 
             for (float t = 0; t < duration; t += Time.deltaTime)
             {
+                // Null means a re-activation destroyed this indicator; return before the dict cleanup below so the fresh entry survives.
                 if (indicator == null) return;
                 if (img != null) img.color = new(img.color.r, img.color.g, img.color.b, Mathf.Lerp(startAlpha, 0, t / duration));
                 await Awaitable.NextFrameAsync();

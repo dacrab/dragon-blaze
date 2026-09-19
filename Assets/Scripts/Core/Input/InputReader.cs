@@ -105,7 +105,10 @@ namespace Core.Input
         void OnNavigate(InputAction.CallbackContext ctx) => NavigateEvent?.Invoke(ctx.ReadValue<Vector2>());
         void OnSubmit(InputAction.CallbackContext _) => SubmitEvent?.Invoke();
 
+        /// <summary>Menu/dialogue mode: gameplay actions off, UI navigation on.</summary>
         public void EnableUIInput() { gameplayMap?.Disable(); uiMap?.Enable(); }
+
+        /// <summary>Back to play mode. The UI map stays enabled so Navigate/Submit keep working during gameplay.</summary>
         public void EnableGameplayInput() { gameplayMap?.Enable(); uiMap?.Enable(); }
     }
 }

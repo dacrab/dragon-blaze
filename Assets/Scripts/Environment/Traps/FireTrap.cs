@@ -37,6 +37,7 @@ namespace Environment.Traps
 
         void OnTriggerEnter2D(Collider2D collision)
         {
+            // Runs a single warn-then-fire cycle per entry; the player must exit and re-enter to start another.
             if (!collision.CompareTag(GameConstants.Tags.Player) || collision.IsInvisiblePlayer()) return;
             if (active || activating) return;
             activating = true;

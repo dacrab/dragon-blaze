@@ -41,6 +41,7 @@ namespace Gameplay.Characters.Player
         readonly PlayerStats stats = new();
         InputReader inputReader;
         CancellationTokenSource dashCts, invisibilityCts;
+        float dashRestoreGravity;
 
         public bool IsInvisible { get; private set; }
         public bool IsGrounded { get; private set; }
@@ -91,8 +92,8 @@ namespace Gameplay.Characters.Player
                 inputReader.DashEvent -= OnDash;
                 inputReader.AttackEvent -= OnAttack;
             }
-            dashCts?.Cancel();
-            invisibilityCts?.Cancel();
+            StopDash();
+            StopInvisibility();
             EventBus.Unsubscribe<DialogueStateChangedEvent>(OnDialogueChanged);
             EventBus.Unsubscribe<PlayerDiedEvent>(OnDeath);
             EventBus.Unsubscribe<PlayerRespawnEvent>(OnRespawn);
@@ -144,24 +145,36 @@ namespace Gameplay.Characters.Player
         {
             if (interacting || dashing || Mathf.Abs(horizontalInput) < config.movementThreshold) return;
             dashing = true;
-            float gravity = rb.gravityScale;
+            dashRestoreGravity = rb.gravityScale;
             rb.gravityScale = 0;
             rb.linearVelocity = new(transform.localScale.x * config.dashSpeed, 0);
             SpawnVfx(dashVfx);
             dashCts?.Cancel();
             dashCts = new CancellationTokenSource();
-            _ = EndDashAsync(gravity, dashCts.Token);
+            _ = EndDashAsync(dashCts.Token);
         }
 
-        async Awaitable EndDashAsync(float gravity, CancellationToken ct)
+        /// <summary>Ends the dash and restores gravity. Called on every cancellation path, so a
+        /// pause mid-dash can't leave the player frozen with the dash's zero gravity.</summary>
+        void StopDash()
+        {
+            dashCts?.Cancel();
+            if (!dashing) return;
+            dashing = false;
+            rb.gravityScale = dashRestoreGravity;
+        }
+
+        async Awaitable EndDashAsync(CancellationToken ct)
         {
             try
             {
                 await Awaitable.WaitForSecondsAsync(config.dashDuration, ct);
-                rb.gravityScale = gravity;
-                dashing = false;
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            StopDash();
         }
 
         void OnAttack()
@@ -239,12 +252,10 @@ namespace Gameplay.Characters.Player
             if (checkpoint == null) return;
             transform.position = checkpoint.position;
             stats.Clear();
-            dashCts?.Cancel();
-            invisibilityCts?.Cancel();
-            SetInvisibility(false);
+            StopDash();
+            StopInvisibility();
             jumpCount = config.extraJumps;
             coyoteTimer = 0;
-            dashing = false;
             wallSliding = false;
             interacting = false;
             anim.SetTrigger(GameConstants.Anim.Respawn);
@@ -267,9 +278,16 @@ namespace Gameplay.Characters.Player
 
         public void SetInvisibilityFor(float duration)
         {
-            invisibilityCts?.Cancel();
+            StopInvisibility();
             invisibilityCts = new CancellationTokenSource();
             _ = InvisibilityTimeoutAsync(duration, invisibilityCts.Token);
+        }
+
+        /// <summary>Cancels any pending invisibility timer and restores visibility.</summary>
+        void StopInvisibility()
+        {
+            invisibilityCts?.Cancel();
+            if (IsInvisible) SetInvisibility(false);
         }
 
         public bool HasCheckpoint() => checkpoint != null;
@@ -280,9 +298,12 @@ namespace Gameplay.Characters.Player
             {
                 SetInvisibility(true);
                 await Awaitable.WaitForSecondsAsync(duration, ct);
-                SetInvisibility(false);
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            SetInvisibility(false);
         }
 
         public void AddModifier(PlayerStat stat, float factor, float duration) => stats.Add(stat, factor, duration);

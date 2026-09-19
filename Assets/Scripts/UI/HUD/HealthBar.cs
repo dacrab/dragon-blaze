@@ -8,6 +8,7 @@ namespace UI.HUD
     {
         [SerializeField] Image currentHealthBar;
 
+        // Push-based: the player raises HealthChangedEvent, so no polling or player reference is needed here.
         void OnEnable() => EventBus.Subscribe<HealthChangedEvent>(UpdateHealthUI);
         void OnDisable() => EventBus.Unsubscribe<HealthChangedEvent>(UpdateHealthUI);
 

@@ -24,6 +24,7 @@ namespace Environment.Platforms
             if ((next - (Vector2)target).sqrMagnitude < 0.01f) AdvanceWaypoint();
         }
 
+        // pingPong bounces between the endpoints (wins over loop), loop wraps to the first waypoint, otherwise halts at the last.
         void AdvanceWaypoint()
         {
             if (pingPong)

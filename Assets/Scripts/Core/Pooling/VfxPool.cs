@@ -6,6 +6,10 @@ using UnityEngine.Pool;
 
 namespace Core.Pooling
 {
+    /// <summary>
+    /// Keyless auto-recycling VFX pool: one pool per prefab, instances return themselves
+    /// via VfxRecycler once their particles finish, so callers never need to release.
+    /// </summary>
     public static class VfxPool
     {
         static readonly Dictionary<int, ObjectPool<GameObject>> pools = new();

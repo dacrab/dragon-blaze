@@ -38,6 +38,8 @@ namespace Environment.Parallax
             var pos = transform.position + new Vector3(delta.x * parallaxMultiplier.x, delta.y * parallaxMultiplier.y);
             lastCamPos = cam.position;
 
+            // Infinite tiling: once the layer drifts more than wrapThreshold of a texture span from the camera,
+            // shift it back by whole spans so the tiling hides the jump.
             if (infiniteHorizontal)
             {
                 float ox = (cam.position.x - pos.x) % texSizeX;

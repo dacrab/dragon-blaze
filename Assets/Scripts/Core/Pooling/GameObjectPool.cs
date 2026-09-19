@@ -45,6 +45,7 @@ namespace Core.Pooling
         public static void Register(string key, GameObjectPool pool) => pools[key] = pool;
         public static void Unregister(string key) => pools.Remove(key);
 
+        /// <summary>Releases by pool key; objects released under an unknown key are just deactivated rather than destroyed.</summary>
         public static void Release(string key, GameObject obj)
         {
             if (pools.TryGetValue(key, out var pool)) pool.Release(obj);

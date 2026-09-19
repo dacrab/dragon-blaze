@@ -15,12 +15,14 @@ namespace Environment.Platforms
         void OnDisable()
         {
             EventBus.Unsubscribe<PlayerRespawnEvent>(DetachAll);
+            // Riders must not remain children of a platform that is being disabled or destroyed.
             DetachAll(default);
         }
 
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.CompareTag(GameConstants.Tags.Player) || !HasUniformScale()) return;
+            // Parent the rider to the platform so it inherits the platform's motion.
             if (riders.Add(collision.transform)) collision.transform.SetParent(transform);
         }
 
@@ -41,6 +43,7 @@ namespace Environment.Platforms
             riders.Clear();
         }
 
+        // A rider parented to a non-uniformly scaled platform would inherit a distorted scale.
         bool HasUniformScale() =>
             Mathf.Approximately(Mathf.Abs(transform.localScale.x), Mathf.Abs(transform.localScale.y));
     }

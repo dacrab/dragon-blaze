@@ -45,6 +45,7 @@ namespace Environment.Traps
         {
             ServiceLocator.Get<IAudioManager>()?.PlaySound(impactSound);
             if (collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePlayer(damage);
+            // Any contact ends the attack, not just hitting the player.
             StopAttack();
         }
 
