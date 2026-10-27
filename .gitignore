@@ -48,3 +48,6 @@ crashlytics-build.properties
 
 # IDE
 .vscode/
+
+# Unity CLI test artifacts
+/test-results.xml

@@ -96,7 +96,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1306215291345243355}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 163ddd19cfceeba40abaee8ee9166187, type: 3}
+  m_Script: {fileID: 11500000, guid: bfb597799c6b5ef1587af5f86a65f806, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   speedBoostImage: {fileID: 7293598183456022363, guid: 1ddc9afd21fec77489b1248d18f31b68, type: 3}

@@ -16,7 +16,7 @@ namespace UI.Menus
         int currentIndex;
         Color[] baseColors;
         InputReader? inputReader;
-        CancellationTokenSource? loopCts;
+        CancellationTokenSource loopCts = new();
 
         void Start()
         {
@@ -29,8 +29,7 @@ namespace UI.Menus
             }
             backgrounds[0].color = baseColors[0];
             loopCts = new CancellationTokenSource();
-            _ = TransitionLoop(loopCts.Token);
-        }
+            _ = TransitionLoop(loopCts.Token);        }
 
         void OnEnable()
         {
@@ -43,7 +42,7 @@ namespace UI.Menus
             if (inputReader != null) inputReader.InteractEvent -= LoadMainMenu;
         }
 
-        void OnDestroy() => loopCts?.Cancel();
+        void OnDestroy() => loopCts.Cancel();
 
         void LoadMainMenu() => ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.MainMenuSceneName);
 

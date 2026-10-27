@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Core.Managers
@@ -8,8 +7,6 @@ namespace Core.Managers
     {
         float MusicVolume { get; }
         float SoundVolume { get; }
-        event Action<float> OnMusicVolumeChanged;
-        event Action<float> OnSoundVolumeChanged;
 
         void PlayMusic(AudioClip? clip);
         void PlaySound(AudioClip? clip);

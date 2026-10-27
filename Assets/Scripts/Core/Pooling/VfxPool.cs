@@ -83,12 +83,21 @@ namespace Core.Pooling
         void OnEnable()
         {
             if (particles != null) particles.Play();
-            recycleCts?.Cancel();
+            DisposeCts();
             recycleCts = new CancellationTokenSource();
             _ = ReleaseWhenDeadAsync(recycleCts.Token);
         }
 
-        void OnDisable() => recycleCts?.Cancel();
+        void OnDisable() => DisposeCts();
+
+        void OnDestroy() => DisposeCts();
+
+        void DisposeCts()
+        {
+            recycleCts?.Cancel();
+            recycleCts?.Dispose();
+            recycleCts = null;
+        }
 
         async Awaitable ReleaseWhenDeadAsync(CancellationToken ct)
         {

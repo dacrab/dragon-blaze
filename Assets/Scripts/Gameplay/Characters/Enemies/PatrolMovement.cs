@@ -15,14 +15,14 @@ namespace Gameplay.Characters.Enemies
 
         Animator? anim;
         Rigidbody2D? enemyBody;
-        Vector3 initScale;
+        SpriteFacing facing;
         bool movingLeft;
         float idleTimer;
 
         void Awake()
         {
             anim = enemy.GetComponent<Animator>();
-            initScale = enemy.localScale;
+            facing = new(enemy.localScale);
             enemyBody = KinematicBody.Prepare(enemy);
         }
 
@@ -32,7 +32,9 @@ namespace Gameplay.Characters.Enemies
         {
             float dir = movingLeft ? -1f : 1f;
             Transform target = movingLeft ? leftEdge : rightEdge;
-            bool reached = Mathf.Sign(target.position.x - enemy.position.x) != dir;
+            float delta = target.position.x - enemy.position.x;
+            // Overlap-tolerant arrival test: comparing signs fails when the enemy sits past the edge.
+            bool reached = movingLeft ? delta >= 0f : delta <= 0f;
 
             if (reached)
             {
@@ -46,7 +48,7 @@ namespace Gameplay.Characters.Enemies
             else
             {
                 anim?.SetBool(GameConstants.Anim.Moving, true);
-                enemy.localScale = new(Mathf.Abs(initScale.x) * dir, initScale.y, initScale.z);
+                facing.Apply(enemy, dir);
                 var next = enemy.position + Vector3.right * (dir * speed * Time.fixedDeltaTime);
                 KinematicBody.MoveTo(enemyBody, enemy, next);
             }

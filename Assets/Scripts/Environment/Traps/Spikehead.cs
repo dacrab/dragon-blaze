@@ -60,7 +60,7 @@ namespace Environment.Traps
             checkTimer = 0;
             foreach (var dir in checkDirections)
             {
-                var worldDir = transform.TransformDirection(dir);
+                var worldDir = transform.TransformDirection(dir).normalized;
                 var hit = Physics2D.Raycast(transform.position, worldDir, range, playerLayer);
                 if (hit.collider == null) continue;
                 if (hit.collider.TryGetComponent<Player>(out var player) && !player.IsInvisible)

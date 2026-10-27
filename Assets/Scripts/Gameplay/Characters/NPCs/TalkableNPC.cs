@@ -18,25 +18,29 @@ namespace Gameplay.Characters.NPCs
         InputReader? inputReader;
 
         void Start() { if (playerTransform == null) playerTransform = GameConstants.FindPlayer(); }
+
         void OnEnable()
         {
             inputReader = InputReader.Instance;
             if (inputReader != null) inputReader.InteractEvent += OnInteract;
         }
+
         void OnDisable() { if (inputReader != null) inputReader.InteractEvent -= OnInteract; }
 
         void Update()
         {
-            if (!GameStateManager.IsCurrentlyPlaying) return;
-            bool show = IsWithinRange();
-            if (interactSprite.gameObject.activeSelf != show)
-                interactSprite.gameObject.SetActive(show);
+            // The prompt stays visible during dialogue so the same key can advance it.
+            if (interactSprite == null) return;
+            bool show = IsWithinRange() &&
+                        ServiceLocator.Get<IGameStateManager>() is { CurrentState: GameState.Gameplay or GameState.Dialogue };
+            if (interactSprite.gameObject.activeSelf != show) interactSprite.gameObject.SetActive(show);
         }
 
         void OnInteract()
         {
-            if (IsWithinRange())
-                ServiceLocator.Get<IDialogueController>()?.DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
+            if (dialogueText == null || !IsWithinRange()) return;
+            ServiceLocator.Get<IDialogueController>()?
+                .DisplayNextParagraph(dialogueText, dialogueSound ?? dialogueText.dialogueSound);
         }
 
         bool IsWithinRange() =>

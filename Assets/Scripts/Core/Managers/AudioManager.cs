@@ -1,32 +1,22 @@
-using System;
 using UnityEngine;
-using UnityEngine.Audio;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 using Core.Constants;
 using Core.Services;
 
 namespace Core.Managers
 {
     /// <summary>
-    /// Built-in-driven audio: routes music/SFX through an optional AudioMixer with exposed
-    /// volume parameters, falls back to per-source volumes when no mixer is wired, and pools
-    /// one-shot SFX AudioSources. Register a mixer in a scene instance for full control.
+    /// Persistent audio: music playback follows the active scene (menu track in the menu, level
+    /// track otherwise) and one-shot SFX come from a pooled source. Volumes persist via PlayerPrefs.
     /// </summary>
     public sealed class AudioManager : MonoBehaviour, IAudioManager
     {
-        const string MusicVolumeParam = "MusicVolume";
-        const string SoundVolumeParam = "SoundVolume";
-
-        [SerializeField] AudioMixer mixer;
-        [SerializeField] AudioMixerGroup musicGroup, soundGroup;
-
         static AudioManager? instance;
 
         AudioSource? musicSource;
         ObjectPool<AudioSource>? soundSources;
-
-        public event Action<float>? OnMusicVolumeChanged;
-        public event Action<float>? OnSoundVolumeChanged;
+        AudioClip? currentMusic;
 
         public float MusicVolume { get; private set; }
         public float SoundVolume { get; private set; }
@@ -48,7 +38,6 @@ namespace Core.Managers
             musicSource = gameObject.AddComponent<AudioSource>();
             musicSource.playOnAwake = false;
             musicSource.loop = true;
-            if (musicGroup != null) musicSource.outputAudioMixerGroup = musicGroup;
 
             var poolRoot = new GameObject("SoundSources");
             poolRoot.transform.SetParent(transform);
@@ -58,7 +47,6 @@ namespace Core.Managers
                     var source = new GameObject("OneShotSource").AddComponent<AudioSource>();
                     source.transform.SetParent(poolRoot.transform);
                     source.playOnAwake = false;
-                    if (soundGroup != null) source.outputAudioMixerGroup = soundGroup;
                     return source;
                 },
                 actionOnGet: source => source.gameObject.SetActive(true),
@@ -66,23 +54,38 @@ namespace Core.Managers
                 actionOnDestroy: source => Destroy(source.gameObject));
 
             var config = GameConfig.Default;
-            MusicVolume = PlayerPrefs.GetFloat(config.musicVolumeKey, config.defaultMusicVolume);
-            SoundVolume = PlayerPrefs.GetFloat(config.soundVolumeKey, config.defaultSoundVolume);
-            ApplyVolumes();
+            MusicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(config.musicVolumeKey, config.defaultMusicVolume));
+            SoundVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(config.soundVolumeKey, config.defaultSoundVolume));
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            PlaySceneMusic(SceneManager.GetActiveScene().name);
         }
 
         void OnDestroy()
         {
             if (instance != this) return;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
             instance = null;
             ServiceLocator.Unregister<IAudioManager>();
         }
 
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (mode == LoadSceneMode.Single) PlaySceneMusic(scene.name);
+        }
+
+        void PlaySceneMusic(string sceneName)
+        {
+            var config = GameConfig.Default;
+            PlayMusic(sceneName == config.MainMenuSceneName ? config.menuMusic : config.levelMusic);
+        }
+
         public void PlayMusic(AudioClip? clip)
         {
-            if (clip == null || musicSource == null) return;
-            if (musicSource.isPlaying && musicSource.clip == clip) return;
+            if (musicSource == null || clip == currentMusic) return;
+            currentMusic = clip;
+            if (clip == null) { musicSource.Stop(); return; }
             musicSource.clip = clip;
+            musicSource.volume = MusicVolume;
             musicSource.Play();
         }
 
@@ -90,47 +93,49 @@ namespace Core.Managers
         {
             if (clip == null || soundSources == null) return;
             var source = soundSources.Get();
-            if (mixer == null) source.volume = SoundVolume;
-            source.PlayOneShot(clip);
-            _ = ReleaseWhenDoneAsync(source, clip.length);
+
+            // Play rather than PlayOneShot: one clip per pooled source, so a reused source can
+            // never have a second clip layered on top of one that is still ringing.
+            source.clip = clip;
+            source.volume = SoundVolume;
+            source.Play();
+            _ = ReleaseWhenDoneAsync(source);
         }
 
-        /// <summary>Waits out the clip on unscaled time so pooled sources return even while paused.</summary>
-        async Awaitable ReleaseWhenDoneAsync(AudioSource source, float duration)
+        /// <summary>Returns the source to the pool once playback really finishes, on unscaled time so it returns while paused.</summary>
+        async Awaitable ReleaseWhenDoneAsync(AudioSource source)
         {
-            float endTime = Time.unscaledTime + duration;
-            while (Time.unscaledTime < endTime)
+            // isPlaying goes false when the clip ends; NextFrameAsync polls every frame, so this
+            // also terminates if the source is deactivated underneath us.
+            while (source != null && source.isPlaying)
                 await Awaitable.NextFrameAsync();
-            if (soundSources != null && source != null) soundSources.Release(source);
+            if (soundSources != null && source != null)
+            {
+                source.clip = null;
+                soundSources.Release(source);
+            }
         }
 
         public void SetMusicVolume(float volume)
         {
             MusicVolume = Mathf.Clamp01(volume);
-            PlayerPrefs.SetFloat(GameConfig.Default.musicVolumeKey, MusicVolume);
-            ApplyVolumes();
-            OnMusicVolumeChanged?.Invoke(MusicVolume);
+            if (musicSource != null) musicSource.volume = MusicVolume;
+            SaveVolumes();
         }
 
         public void SetSoundVolume(float volume)
         {
             SoundVolume = Mathf.Clamp01(volume);
-            PlayerPrefs.SetFloat(GameConfig.Default.soundVolumeKey, SoundVolume);
-            ApplyVolumes();
-            OnSoundVolumeChanged?.Invoke(SoundVolume);
+            SaveVolumes();
         }
 
-        void ApplyVolumes()
+        // PlayerPrefs only writes to disk on Save(); without it the sliders reset on every quit.
+        void SaveVolumes()
         {
-            if (mixer == null)
-            {
-                if (musicSource != null) musicSource.volume = MusicVolume;
-                return;
-            }
-            mixer.SetFloat(MusicVolumeParam, ToDecibels(MusicVolume));
-            mixer.SetFloat(SoundVolumeParam, ToDecibels(SoundVolume));
+            var config = GameConfig.Default;
+            PlayerPrefs.SetFloat(config.musicVolumeKey, MusicVolume);
+            PlayerPrefs.SetFloat(config.soundVolumeKey, SoundVolume);
+            PlayerPrefs.Save();
         }
-
-        static float ToDecibels(float linear) => linear <= 0f ? -80f : Mathf.Log10(linear) * 20f;
     }
 }

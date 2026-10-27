@@ -17,15 +17,12 @@ namespace Gameplay.Combat
         [SerializeField] protected AudioClip hitSound;
         [SerializeField] protected string targetTag = GameConstants.Tags.Enemy;
         [SerializeField] protected bool checkInvisibility;
-        [SerializeField] protected string poolKey;
 
         protected float lifetime, direction;
         protected bool hit;
         protected Animator? anim;
         protected Collider2D? col;
         protected Rigidbody2D? body;
-
-        bool IsPooled => !string.IsNullOrEmpty(poolKey);
 
         protected virtual void Awake()
         {
@@ -58,7 +55,6 @@ namespace Gameplay.Combat
         protected virtual void OnTriggerEnter2D(Collider2D collision)
         {
             if (hit || collision.transform.root == transform.root) return;
-
             if (collision.CompareTag(targetTag))
                 collision.DamagePlayer(damage, checkInvisibility);
 
@@ -80,20 +76,25 @@ namespace Gameplay.Combat
         public void ActivateProjectile() => SetDirection(transform.lossyScale.x > 0 ? 1 : -1);
         public void OnExplosionComplete() => Deactivate();
 
-        /// <summary>Cycles a shared projectile pool: takes the next entry, moves it to <paramref name="position"/>, and arms it.</summary>
+        /// <summary>Cycles a shared projectile pool: takes the next live entry and moves it to <paramref name="position"/>.
+        /// Callers arm it afterwards via SetDirection.</summary>
         public static ProjectileBase? Fire(GameObject[] projectiles, ref int index, Vector3 position)
         {
             if (projectiles is not { Length: > 0 }) return null;
-            var next = projectiles[index];
-            index = (index + 1) % projectiles.Length;
-            next.transform.position = position;
-            return next.TryGetComponent<ProjectileBase>(out var proj) ? proj : null;
+            // Advance only past entries that actually yielded a projectile, so an empty/placeholder slot
+            // cannot burn a turn or throw on a missing transform.
+            for (int i = 0; i < projectiles.Length; i++)
+            {
+                int slot = (index + i) % projectiles.Length;
+                if (projectiles[slot] is not { } candidate) continue;
+                if (!candidate.TryGetComponent<ProjectileBase>(out var proj)) continue;
+                index = (slot + 1) % projectiles.Length;
+                candidate.transform.position = position;
+                return proj;
+            }
+            return null;
         }
 
-        protected void Deactivate()
-        {
-            if (IsPooled) PoolRegistry.Release(poolKey, gameObject);
-            else gameObject.SetActive(false);
-        }
+        protected void Deactivate() => gameObject.SetActive(false);
     }
 }

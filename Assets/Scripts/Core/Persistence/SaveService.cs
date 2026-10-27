@@ -5,14 +5,12 @@ using UnityEngine;
 namespace Core.Persistence
 {
     /// <summary>
-    /// Versioned JSON save file. Saves are written to a single path; Load() returns null when
-    /// the file is missing or unreadable. Bump CurrentVersion and extend Migrate() when the
-    /// save shape evolves.
+    /// JSON save file. Writes go to a temp file and are then moved into place, so a crash mid-write can
+    /// never leave a truncated save that still looks valid to <see cref="SaveDataExists"/>.
+    /// Load() returns null when the file is missing or unreadable.
     /// </summary>
     public sealed class SaveService
     {
-        public const int CurrentVersion = 1;
-
         readonly string path;
 
         public SaveService(string filePath) => path = filePath;
@@ -22,24 +20,32 @@ namespace Core.Persistence
         public void Save(SaveData data)
         {
             if (data == null) return;
-            data.version = CurrentVersion;
-            try { File.WriteAllText(path, JsonUtility.ToJson(data)); }
-            catch (Exception e) { Debug.LogError($"[SaveService] Save failed: {e.Message}"); }
+            string temp = path + ".tmp";
+            try
+            {
+                File.WriteAllText(temp, JsonUtility.ToJson(data));
+                // Replace is not atomic-cross-platform; delete-then-move keeps the steady state consistent.
+                if (File.Exists(path)) File.Delete(path);
+                File.Move(temp, path);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[SaveService] Save failed: {e.Message}");
+                TryDelete(temp);
+            }
         }
 
         public SaveData? Load()
         {
             if (!File.Exists(path)) return null;
-            try { return Migrate(JsonUtility.FromJson<SaveData>(File.ReadAllText(path))); }
+            try { return JsonUtility.FromJson<SaveData>(File.ReadAllText(path)); }
             catch (Exception e) { Debug.LogError($"[SaveService] Load failed: {e.Message}"); return null; }
         }
 
-        static SaveData? Migrate(SaveData? data)
+        static void TryDelete(string file)
         {
-            if (data == null) return null;
-            if (data.version < CurrentVersion) data.version = CurrentVersion;
-            // Future migrations: chain per-version upgrades here before returning.
-            return data;
+            try { if (File.Exists(file)) File.Delete(file); }
+            catch (Exception e) { Debug.LogWarning($"[SaveService] Could not remove temp file: {e.Message}"); }
         }
     }
 }

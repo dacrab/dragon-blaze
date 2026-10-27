@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Events;
 
 namespace Core.Input
 {
@@ -17,23 +16,35 @@ namespace Core.Input
 
         [SerializeField] InputActionAsset inputActions;
 
-        public event UnityAction<float>? MoveEvent;
-        public event UnityAction? JumpEvent, JumpCanceledEvent, DashEvent, AttackEvent, InteractEvent, PauseEvent, SubmitEvent;
-        public event UnityAction<Vector2>? NavigateEvent;
+        public event Action<float>? MoveEvent;
+        public event Action? JumpEvent, JumpCanceledEvent, DashEvent, AttackEvent, InteractEvent, PauseEvent, SubmitEvent;
+        public event Action<Vector2>? NavigateEvent;
 
         InputActionMap? gameplayMap, uiMap;
         (string name, Action<InputAction.CallbackContext> performed, Action<InputAction.CallbackContext>? canceled)[] gameplayActions;
 
         static InputReader? instance;
 
-        /// <summary>Resolves the shared reader from Resources so no scene wiring is required.</summary>
-        public static InputReader Instance => instance != null ? instance : instance = Resources.Load<InputReader>(ResourceKey);
+        /// <summary>Resolves the shared reader from Resources so no scene wiring is required. Null when the asset is missing.</summary>
+        public static InputReader? Instance
+        {
+            get
+            {
+                if (instance != null) return instance;
+                instance = Resources.Load<InputReader>(ResourceKey);
+                // A loaded ScriptableObject may not have had OnEnable run, so bind explicitly.
+                if (instance != null && !instance.HasActionMaps) instance.Bind();
+                return instance;
+            }
+        }
 
         internal bool HasActionMaps => gameplayMap != null && uiMap != null;
 
-        void OnEnable()
+        void OnEnable() => Bind();
+
+        void Bind()
         {
-            if (inputActions == null) return;
+            if (inputActions == null || HasActionMaps) return;
             gameplayMap = inputActions.FindActionMap(GameplayMap);
             uiMap = inputActions.FindActionMap(UIMap);
             gameplayActions ??= new[]
@@ -106,9 +117,9 @@ namespace Core.Input
         void OnSubmit(InputAction.CallbackContext _) => SubmitEvent?.Invoke();
 
         /// <summary>Menu/dialogue mode: gameplay actions off, UI navigation on.</summary>
-        public void EnableUIInput() { gameplayMap?.Disable(); uiMap?.Enable(); }
+        public void EnableUIInput() => gameplayMap?.Disable();
 
         /// <summary>Back to play mode. The UI map stays enabled so Navigate/Submit keep working during gameplay.</summary>
-        public void EnableGameplayInput() { gameplayMap?.Enable(); uiMap?.Enable(); }
+        public void EnableGameplayInput() => gameplayMap?.Enable();
     }
 }

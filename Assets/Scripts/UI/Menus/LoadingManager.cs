@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Core.Constants;
@@ -48,17 +49,17 @@ namespace UI.Menus
         void LoadNextLevel()
         {
             string active = SceneManager.GetActiveScene().name;
+            // The last scene in levelOrder (the credits roll) has no successor and navigates itself.
             if (GameConfig.Default.TryGetNextLevel(active, out var next)) _ = LoadAsync(next);
-            else Debug.LogWarning($"[LoadingManager] No next level configured after '{active}'.");
         }
 
         async Awaitable LoadAsync(string? sceneName)
         {
             if (isLoading) return;
             isLoading = true;
+            var ui = ServiceLocator.Get<UIManager>();
             try
             {
-                var ui = FindFirstObjectByType<UIManager>();
                 ui?.ShowLoadingScreen(true);
 
                 if (string.IsNullOrEmpty(sceneName))
@@ -71,33 +72,37 @@ namespace UI.Menus
                 {
                     Debug.LogWarning($"[LoadingManager] Scene '{sceneName}' is not in Build Settings; falling back to first level.");
                     var fallback = GameConfig.Default.FirstLevelSceneName;
-                    if (string.IsNullOrEmpty(fallback))
-                    {
-                        ui?.ShowLoadingScreen(false);
-                        return;
-                    }
+                    if (string.IsNullOrEmpty(fallback)) return;
                     op = SceneManager.LoadSceneAsync(fallback);
-                    if (op == null)
-                    {
-                        ui?.ShowLoadingScreen(false);
-                        return;
-                    }
+                    if (op == null) return;
                 }
                 // Scenes in Build Settings cap async progress at 0.9 until allowSceneActivation, so that is "done".
                 op.allowSceneActivation = false;
 
-                while (op.progress < loadingProgressThreshold)
+                // Guard a misconfigured threshold: 0 would divide by zero, >=1 would never be reached.
+                float threshold = Mathf.Clamp(loadingProgressThreshold, 0.01f, 0.9f);
+                while (op.progress < threshold)
                 {
-                    ui?.UpdateLoadingImage(op.progress / loadingProgressThreshold);
+                    ui?.UpdateLoadingImage(op.progress / threshold);
                     await Awaitable.NextFrameAsync();
                 }
 
                 ui?.UpdateLoadingImage(1f);
-                await Awaitable.WaitForSecondsAsync(minimumLoadingTime);
+                // Unscaled: a load requested from the game-over or menu state may run with timeScale 0.
+                float end = Time.unscaledTime + minimumLoadingTime;
+                while (Time.unscaledTime < end) await Awaitable.NextFrameAsync();
                 op.allowSceneActivation = true;
-                ui?.ShowLoadingScreen(false);
             }
-            finally { isLoading = false; }
+            catch (Exception e)
+            {
+                Debug.LogError($"[LoadingManager] Load of '{sceneName}' failed: {e.Message}");
+            }
+            finally
+            {
+                // Always drop the overlay and unlock the loader, or the game is stuck behind a loading screen.
+                ui?.ShowLoadingScreen(false);
+                isLoading = false;
+            }
         }
     }
 }

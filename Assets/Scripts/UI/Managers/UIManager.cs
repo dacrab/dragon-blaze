@@ -9,11 +9,10 @@ using Core.Input;
 using Core.Managers;
 using Core.Services;
 using Core.State;
-using UI.Menus;
 
 namespace UI.Managers
 {
-    public sealed class UIManager : MonoBehaviour
+    public sealed partial class UIManager : MonoBehaviour
     {
         static UIManager? instance;
 
@@ -31,6 +30,7 @@ namespace UI.Managers
         [SerializeField] Transform indicatorPanel;
 
         InputReader? inputReader;
+        Transform? indicatorPanelHost;
         readonly Dictionary<string, GameObject> indicators = new();
 
         void Awake()
@@ -38,7 +38,14 @@ namespace UI.Managers
             if (instance != null) { Destroy(gameObject); return; }
             instance = this;
             DontDestroyOnLoad(gameObject);
-            CheckSaveData();
+            // LoadingManager resolves the UI through the locator; without this the loading screen never shows.
+            ServiceLocator.Register<UIManager>(this);
+        }
+
+        void OnDestroy()
+        {
+            if (ReferenceEquals(ServiceLocator.Get<UIManager>(), this)) ServiceLocator.Unregister<UIManager>();
+            if (instance == this) instance = null;
         }
 
         void OnEnable()
@@ -49,6 +56,8 @@ namespace UI.Managers
             inputReader = InputReader.Instance;
             if (inputReader != null) inputReader.PauseEvent += TogglePause;
             SceneManager.sceneLoaded += OnSceneLoaded;
+            // The scene is already loaded when a persistent UI first enables.
+            if (gameObject.scene.isLoaded) OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
         }
 
         void OnDisable()
@@ -62,110 +71,22 @@ namespace UI.Managers
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (mode != LoadSceneMode.Single || inputReader == null) return;
-            if (scene.name == GameConfig.Default.MainMenuSceneName) inputReader.EnableUIInput();
-            else inputReader.EnableGameplayInput();
-        }
-
-        void CheckSaveData()
-        {
-            if (SceneManager.GetActiveScene().name != GameConfig.Default.MainMenuSceneName) return;
-            continueButton.gameObject.SetActive(ServiceLocator.Get<IGameManager>()?.SaveDataExists() ?? false);
-        }
-
-        public void NewGame() => StartNewGame();
-
-        public static void StartNewGame()
-        {
-            var gameManager = ServiceLocator.Get<IGameManager>();
-            gameManager?.ResetCoins();
-            gameManager?.SaveGame(true);
-            ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.FirstLevelSceneName);
-        }
-
-        public void ContinueGame() =>
-            ServiceLocator.Get<ISceneLoader>()?.LoadScene(
-                ServiceLocator.Get<IGameManager>()?.GetLastSavedLevelName() ?? GameConfig.Default.FirstLevelSceneName);
-
-        public void GameOver(PlayerDiedEvent _)
-        {
-            if (gameOverScreen.activeInHierarchy) return;
-            gameOverScreen.SetActive(true);
-            SetCursor(true);
-            ServiceLocator.Get<IGameStateManager>()?.ChangeState(GameState.GameOver);
-            ServiceLocator.Get<IAudioManager>()?.PlaySound(gameOverSound);
-        }
-
-        public void Restart()
-        {
-            var player = ServiceLocator.Get<IPlayer>();
-            var stateManager = ServiceLocator.Get<IGameStateManager>();
-            // Checkpoint respawn only applies from the game-over state; otherwise the scene reloads from scratch.
-            if (player != null && player.HasCheckpoint() && stateManager != null && stateManager.CurrentState == GameState.GameOver)
+            if (mode != LoadSceneMode.Single) return;
+            // A scene can be started directly (play from any scene, editor restart); never leave the overlay stuck on.
+            ShowLoadingScreen(false);
+            // Scene change owns the screen: a stale overlay from the previous scene must not survive it.
+            DismissPause();
+            if (gameOverScreen != null) gameOverScreen.SetActive(false);
+            bool menu = GameConfig.Default.IsMenuScene(scene.name);
+            if (inputReader != null)
             {
-                EventBus.Raise(new PlayerRespawnEvent());
-                gameOverScreen.SetActive(false);
-                stateManager.ChangeState(GameState.Gameplay);
-                return;
-            }
-            ServiceLocator.Get<ISceneLoader>()?.LoadScene(SceneManager.GetActiveScene().name);
-        }
-
-        public void MainMenu() { SetCursor(true); ServiceLocator.Get<ISceneLoader>()?.LoadScene(GameConfig.Default.MainMenuSceneName); }
-
-        public void Quit()
-        {
-            ServiceLocator.Get<IGameManager>()?.SaveGame();
-            SetCursor(true);
-            Application.Quit();
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
-        }
-
-        public void TogglePause()
-        {
-            if (gameOverScreen.activeInHierarchy) return;
-            bool pause = !pauseScreen.activeInHierarchy;
-            pauseScreen.SetActive(pause);
-            SetCursor(pause);
-            // Pause by disabling the player's Behaviour — the IPlayer interface can't be toggled directly.
-            if (ServiceLocator.Get<IPlayer>() is Behaviour playerBehaviour) playerBehaviour.enabled = !pause;
-            EventBus.Raise(new GamePausedEvent(pause));
-        }
-
-        public void ShowLoadingScreen(bool show) => loadingScreen.SetActive(show);
-        public void UpdateLoadingImage(float progress) => loadingImage.fillAmount = progress;
-        void UpdateCoinDisplay(ScoreChangedEvent e) => coinText.SetText("{0}", e.Score);
-        void SetCursor(bool visible) { Cursor.visible = visible; Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked; }
-
-        void ActivateIndicator(PowerUpActivatedEvent e)
-        {
-            if (indicators.TryGetValue(e.Name, out var existing)) Destroy(existing);
-
-            var indicator = Instantiate(indicatorPrefab, indicatorPanel);
-            if (indicator.GetComponentInChildren<Image>() is { } img) img.sprite = e.Icon;
-            if (indicator.GetComponentInChildren<TMP_Text>() is { } txt) txt.text = e.Name;
-            indicators[e.Name] = indicator;
-
-            _ = FadeOutAsync(e.Name, indicator, e.Duration);
-        }
-
-        async Awaitable FadeOutAsync(string name, GameObject indicator, float duration)
-        {
-            var img = indicator.GetComponentInChildren<Image>();
-            float startAlpha = img != null ? img.color.a : 1f;
-
-            for (float t = 0; t < duration; t += Time.deltaTime)
-            {
-                // Null means a re-activation destroyed this indicator; return before the dict cleanup below so the fresh entry survives.
-                if (indicator == null) return;
-                if (img != null) img.color = new(img.color.r, img.color.g, img.color.b, Mathf.Lerp(startAlpha, 0, t / duration));
-                await Awaitable.NextFrameAsync();
+                if (menu) inputReader.EnableUIInput();
+                else inputReader.EnableGameplayInput();
             }
 
-            indicators.Remove(name);
-            if (indicator != null) Destroy(indicator);
+            // The main menu is the only place "Continue" belongs.
+            if (continueButton != null)
+                continueButton.gameObject.SetActive(menu && (ServiceLocator.Get<IGameManager>()?.SaveDataExists() ?? false));
         }
     }
 }

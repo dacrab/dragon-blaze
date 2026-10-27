@@ -29,6 +29,9 @@ namespace Environment.Parallax
                 texSizeX = s.texture.width / s.pixelsPerUnit;
                 texSizeY = s.texture.height / s.pixelsPerUnit;
             }
+            // Without a sprite the tiling maths would divide by zero and produce a NaN transform.
+            if (texSizeX <= 0f) infiniteHorizontal = false;
+            if (texSizeY <= 0f) infiniteVertical = false;
         }
 
         void LateUpdate()

@@ -84,10 +84,14 @@ To add content: add the scene to `levelOrder` + Build Settings; `TryGetNextLevel
 - Player power-ups apply timed stat modifiers (`IPlayer.AddModifier`) or cancellable timed invisibility (`IPlayer.SetInvisibilityFor`); both revert on respawn/scene change.
 - Room activation is data-driven: `Room.startActive` flags initially live rooms; all other rooms spawn enemies on player entry.
 - `Spikehead.maxAttackDistance` bounds each lunge so the trap can never fly off-level.
+- Contact hazards pick a class by intent: `ContactDamage` hits once on entry, `ContactDamagePerSecond` multiplies by `Time.deltaTime` in `OnTriggerStay2D`. Never apply a raw damage value per physics step — that scales with framerate.
+- Enemy facing has one owner: `SpriteFacing` writes `localScale` for both patrol and chase, so they cannot fight over it.
+- Menu-type scenes (main menu, credits) are listed in `GameConfig.menuScenes`; they get the free-cursor/UI-input state instead of gameplay state, so adding a non-level scene is data, not a code branch.
 
 ## Testing
 - `Assets/Tests/EditMode` — pure logic: `EventBus`, `ServiceLocator`, `PlayerStats`,
-  `GameConfig`, `SaveService`. Run headless with the Unity CLI
+  `GameConfig` (state settings, `levelOrder` navigation, `menuScenes`), `SaveService`
+  (round-trip, corrupt file, no temp-file leftovers). Run headless with the Unity CLI
   (`unity test --mode EditMode|PlayMode`).
 - Add tests for any new pure logic in `Core` (persistence, config, math) so it stays
   editor-independent.

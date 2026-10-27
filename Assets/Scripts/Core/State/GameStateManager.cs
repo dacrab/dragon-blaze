@@ -10,6 +10,8 @@ namespace Core.State
     {
         static GameStateManager? instance;
 
+        bool dialogueOpen;
+
         public GameState CurrentState { get; private set; } = GameState.MainMenu;
         public bool IsPlaying => CurrentState == GameState.Gameplay;
         public static bool IsCurrentlyPlaying => instance is { IsPlaying: true };
@@ -50,10 +52,17 @@ namespace Core.State
 
         void OnPlayerDied(PlayerDiedEvent _) => ChangeState(GameState.GameOver);
         void OnPlayerRespawn(PlayerRespawnEvent _) => ChangeState(GameState.Gameplay);
-        void OnPaused(GamePausedEvent e) => ChangeState(e.Paused ? GameState.Paused : GameState.Gameplay);
+
+        void OnPaused(GamePausedEvent e)
+        {
+            // Unpausing while a dialogue is open returns to the dialogue, not to play.
+            if (e.Paused) ChangeState(GameState.Paused);
+            else ChangeState(dialogueOpen ? GameState.Dialogue : GameState.Gameplay);
+        }
 
         void OnDialogue(DialogueStateChangedEvent e)
         {
+            dialogueOpen = e.Open;
             if (CurrentState is GameState.Gameplay or GameState.Dialogue)
                 ChangeState(e.Open ? GameState.Dialogue : GameState.Gameplay);
         }
@@ -61,6 +70,7 @@ namespace Core.State
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (mode != LoadSceneMode.Single) return;
+            dialogueOpen = false;
             ChangeState(GetStateForScene(scene.name));
         }
 
@@ -79,7 +89,8 @@ namespace Core.State
             Cursor.lockState = settings.cursorLocked ? CursorLockMode.Locked : CursorLockMode.None;
         }
 
-        GameState GetStateForScene(string sceneName) =>
-            sceneName == GameConfig.Default.MainMenuSceneName ? GameState.MainMenu : GameState.Gameplay;
+        GameState GetStateForScene(string sceneName) => GameConfig.Default.IsMenuScene(sceneName)
+            ? GameState.MainMenu
+            : GameState.Gameplay;
     }
 }

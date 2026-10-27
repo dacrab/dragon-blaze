@@ -19,7 +19,7 @@ namespace Core.Constants
                 if (cached == null)
                 {
                     Debug.LogWarning($"[GameConfig] No '{DefaultResourcesPath}' asset in Resources; using code defaults.");
-                    cached = CreateInstance<GameConfig>();
+                    cached = ScriptableObject.CreateInstance<GameConfig>()!;
                 }
                 return cached;
             }
@@ -28,20 +28,27 @@ namespace Core.Constants
         [Tooltip("Scene names in play order. Level order drives next-level navigation; entry 0 is the main menu.")]
         public string[] levelOrder =
         {
-            "MainMenu", "Level1", "Level2", "Level3", "Level4", "CREDITS"
+            "MainMenu", "Level1", "Level2", "Level3", "Level4", "Credits"
         };
+
+        [Tooltip("Scenes that behave like menus (cursor free, UI input) rather than playable levels. Menu scenes and any credits/outro screens go here.")]
+        public string[] menuScenes = { "MainMenu", "Credits" };
 
         [Header("Audio")]
         [Range(0, 1)] public float defaultSoundVolume = 0.5f;
         [Range(0, 1)] public float defaultMusicVolume = 0.5f;
+        [Tooltip("Track played in the main menu scene; levels play levelMusic.")]
+        public AudioClip? menuMusic;
+        [Tooltip("Track played in every scene except the main menu.")]
+        public AudioClip? levelMusic;
+
+        [Header("UI")]
+        public float navigationThreshold = 0.5f;
 
         [Header("Save")]
         public string saveFileName = "savefile.json";
         public string musicVolumeKey = "musicVolume";
         public string soundVolumeKey = "soundVolume";
-
-        [Header("UI")]
-        public float navigationThreshold = 0.5f;
 
         [Header("State")]
         [Tooltip("Optional per-state overrides. Any state missing here falls back to DefaultStateSettings.")]
@@ -49,6 +56,16 @@ namespace Core.Constants
 
         public string? MainMenuSceneName => levelOrder.Length > 0 ? levelOrder[0] : null;
         public string? FirstLevelSceneName => levelOrder.Length > 1 ? levelOrder[1] : null;
+
+        /// <summary>True for menu-type scenes (see <see cref="menuScenes"/>): free cursor, UI input, no gameplay state.</summary>
+        public bool IsMenuScene(string? sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneName)) return false;
+            if (menuScenes != null)
+                foreach (var name in menuScenes)
+                    if (name == sceneName) return true;
+            return false;
+        }
 
         public bool TryGetNextLevel(string current, out string? next)
         {

@@ -5,6 +5,7 @@ using Core.Input;
 using Core.Managers;
 using Core.Pooling;
 using Core.Services;
+using Core.State;
 using Gameplay.Combat;
 
 namespace Gameplay.Items.Collectibles
@@ -21,7 +22,7 @@ namespace Gameplay.Items.Collectibles
         [SerializeField] ParticleSystem pickupEffect;
 
         InputReader? inputReader;
-        bool playerInTrigger;
+        bool playerInTrigger, collected;
 
         void Start() { if (type == CollectibleType.MagicStone) SetIndicator(false); }
 
@@ -48,7 +49,10 @@ namespace Gameplay.Items.Collectibles
                     Despawn();
                     break;
                 case CollectibleType.Health:
-                    other.GetComponent<Health>()?.Heal(healthValue);
+                    // Leave the pickup in place when it would heal nothing.
+                    var health = other.GetComponent<Health>();
+                    if (health == null || health.CurrentHealth >= health.MaxHealth) break;
+                    health.Heal(healthValue);
                     Despawn();
                     break;
                 case CollectibleType.MagicStone:
@@ -69,7 +73,8 @@ namespace Gameplay.Items.Collectibles
 
         void OnInteract()
         {
-            if (!playerInTrigger) return;
+            if (!playerInTrigger || collected || !GameStateManager.IsCurrentlyPlaying) return;
+            collected = true;
             playerInTrigger = false;
             SetIndicator(false);
             EventBus.Raise(new LevelCompletedEvent());

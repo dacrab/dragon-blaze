@@ -84,7 +84,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.burst": {
-      "version": "1.8.30",
+      "version": "1.8.31",
       "depth": 2,
       "source": "registry",
       "dependencies": {
@@ -104,7 +104,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collections": {
-      "version": "2.6.8",
+      "version": "2.7.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -173,7 +173,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.splines": {
-      "version": "2.9.0",
+      "version": "2.9.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {

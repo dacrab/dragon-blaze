@@ -13,11 +13,13 @@ namespace Gameplay.Characters.Enemies
         float attackRangeSqr;
         Rigidbody2D? body;
         bool chasing;
+        SpriteFacing facing;
 
         protected override void Awake()
         {
             base.Awake();
             body = KinematicBody.Prepare(this);
+            facing = new(transform.localScale);
             if (config != null) attackRangeSqr = config.attackRange * config.attackRange;
         }
 
@@ -49,7 +51,7 @@ namespace Gameplay.Characters.Enemies
             if (patrol == null || (newX >= patrol.LeftEdge.position.x && newX <= patrol.RightEdge.position.x))
             {
                 KinematicBody.MoveTo(body, transform, new(newX, transform.position.y, transform.position.z));
-                transform.localScale = new(dir * Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+                facing.Apply(transform, playerTransform.position.x - currentX);
                 anim?.SetBool(GameConstants.Anim.Moving, true);
             }
         }

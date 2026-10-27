@@ -40,18 +40,6 @@ namespace DragonBlaze.Tests
             Assert.IsNotNull(data);
             Assert.AreEqual(42, data!.totalCoins);
             Assert.AreEqual("Level3", data.levelName);
-            Assert.AreEqual(SaveService.CurrentVersion, data.version);
-        }
-
-        [Test]
-        public void Load_MigratesLegacySaves_ToCurrentVersion()
-        {
-            File.WriteAllText(path, "{\"totalCoins\":7,\"levelName\":\"Level1\"}");
-            var data = service.Load();
-            Assert.IsNotNull(data);
-            Assert.AreEqual(7, data!.totalCoins);
-            Assert.AreEqual("Level1", data.levelName);
-            Assert.AreEqual(SaveService.CurrentVersion, data.version);
         }
 
         [Test]
@@ -61,6 +49,24 @@ namespace DragonBlaze.Tests
             File.WriteAllText(path, "not json {{{");
             Assert.IsNull(service.Load());
             LogAssert.ignoreFailingMessages = false;
+        }
+
+        [Test]
+        public void Save_LeavesNoTempFileBehind()
+        {
+            service.Save(new SaveData { totalCoins = 1, levelName = "Level1" });
+            Assert.IsFalse(File.Exists(path + ".tmp"), "temp file should be moved into place, not left behind");
+        }
+
+        [Test]
+        public void Save_OverwritesExistingSave()
+        {
+            service.Save(new SaveData { totalCoins = 5, levelName = "Level1" });
+            service.Save(new SaveData { totalCoins = 9, levelName = "Level2" });
+
+            var data = service.Load();
+            Assert.AreEqual(9, data!.totalCoins);
+            Assert.AreEqual("Level2", data.levelName);
         }
     }
 }

@@ -19,6 +19,9 @@ namespace Core.Managers
 
         SaveService? saveService;
 
+        /// <summary>Level to resume from "Continue"; excludes the menu and the credits roll.</summary>
+        string? lastLevel;
+
         public int TotalCoins { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -47,7 +50,17 @@ namespace Core.Managers
             instance = null;
         }
 
-        void OnLevelCompleted(LevelCompletedEvent _) => SaveGame(false);
+        void OnApplicationQuit()
+        {
+            if (instance == this) SaveGame();
+        }
+
+        void OnLevelCompleted(LevelCompletedEvent _)
+        {
+            // Remember the level just finished before the credits take over the active scene.
+            lastLevel = SceneManager.GetActiveScene().name;
+            SaveGame(false);
+        }
 
         public void AddCoins(int value)
         {
@@ -64,12 +77,11 @@ namespace Core.Managers
 
         public void SaveGame(bool isNewGame = false)
         {
-            var data = new SaveData
-            {
-                totalCoins = TotalCoins,
-                levelName = isNewGame ? GameConfig.Default.FirstLevelSceneName : SceneManager.GetActiveScene().name
-            };
-            saveService?.Save(data);
+            // Keep the last real level: quitting from the menu or credits must not break "Continue".
+            if (isNewGame) lastLevel = GameConfig.Default.FirstLevelSceneName;
+            else lastLevel = PlayableLevelOr(SceneManager.GetActiveScene().name) ?? lastLevel;
+
+            saveService?.Save(new SaveData { totalCoins = TotalCoins, levelName = lastLevel });
         }
 
         public bool SaveDataExists() => saveService != null && saveService.SaveDataExists();
@@ -80,17 +92,27 @@ namespace Core.Managers
             var data = saveService.Load();
             if (data == null) return null;
             TotalCoins = Mathf.Max(0, data.totalCoins);
+            lastLevel = data.levelName;
             EventBus.Raise(new ScoreChangedEvent(TotalCoins));
             return data;
         }
 
         public string GetLastSavedLevelName()
         {
-            var levelName = saveService?.Load()?.levelName;
-            return !string.IsNullOrEmpty(levelName) &&
-                   Array.IndexOf(GameConfig.Default.levelOrder, levelName) >= 0
-                ? levelName
-                : GameConfig.Default.FirstLevelSceneName ?? string.Empty;
+            return PlayableLevelOr(lastLevel) ?? GameConfig.Default.FirstLevelSceneName ?? string.Empty;
+        }
+
+        /// <summary>Returns <paramref name="levelName"/> when it is a real playable level, otherwise null.</summary>
+        static string? PlayableLevelOr(string? levelName)
+        {
+            if (string.IsNullOrEmpty(levelName)) return null;
+            var config = GameConfig.Default;
+            var order = config.levelOrder;
+            // Index 0 is the main menu; resuming into it would be useless.
+            int index = Array.IndexOf(order, levelName);
+            if (index <= 0) return null;
+            // Credits/outro scenes sort after the levels but are not resumable.
+            return config.IsMenuScene(levelName) ? null : levelName;
         }
     }
 }

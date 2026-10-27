@@ -8,7 +8,6 @@ using Gameplay.Characters.Player;
 
 namespace Environment.Traps
 {
-    [RequireComponent(typeof(Collider2D))]
     public sealed class ArrowTrap : MonoBehaviour
     {
         [SerializeField] float attackCooldown = 1f;

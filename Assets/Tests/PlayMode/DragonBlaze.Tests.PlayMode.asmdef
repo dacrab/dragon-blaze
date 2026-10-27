@@ -5,7 +5,9 @@
         "DragonBlaze.Core",
         "DragonBlaze.Gameplay",
         "DragonBlaze.Environment",
-        "DragonBlaze.UI"
+        "DragonBlaze.UI",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,7 +17,9 @@
         "nunit.framework.dll"
     ],
     "autoReferenced": false,
-    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

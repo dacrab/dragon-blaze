@@ -43,8 +43,12 @@ namespace Environment.Platforms
             riders.Clear();
         }
 
-        // A rider parented to a non-uniformly scaled platform would inherit a distorted scale.
-        bool HasUniformScale() =>
-            Mathf.Approximately(Mathf.Abs(transform.localScale.x), Mathf.Abs(transform.localScale.y));
+        // A rider parented under a scaled platform inherits that scale, distorting its collider and ground checks.
+        // Only an identity scale is safe.
+        bool HasUniformScale()
+        {
+            var s = transform.localScale;
+            return Mathf.Approximately(s.x, 1f) && Mathf.Approximately(s.y, 1f) && Mathf.Approximately(s.z, 1f);
+        }
     }
 }

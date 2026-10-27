@@ -44,7 +44,7 @@ namespace Gameplay.Combat
         ContactFilter2D contactFilter;
         readonly List<Collider2D> ignoredColliders = new();
         readonly List<Collider2D> overlapResults = new();
-        CancellationTokenSource iframesCts;
+        CancellationTokenSource? iframesCts;
 
         void Awake()
         {
@@ -61,15 +61,21 @@ namespace Gameplay.Combat
 
         void OnEnable()
         {
-            // Re-enabled dead entities (e.g. room re-entry) come back at full strength.
-            if (!isPlayer && (dead || currentHealth <= 0)) ResetState(true);
+            // Death is sticky: only a respawn revives, so re-entering a room can't resurrect cleared enemies.
             if (isPlayer) EventBus.Subscribe<PlayerRespawnEvent>(OnRespawn);
         }
 
         void OnDisable()
         {
             if (isPlayer) EventBus.Unsubscribe<PlayerRespawnEvent>(OnRespawn);
+            CancelIFrames();
+        }
+
+        void CancelIFrames()
+        {
             iframesCts?.Cancel();
+            iframesCts?.Dispose();
+            iframesCts = null;
         }
 
         void OnRespawn(PlayerRespawnEvent _) => ResetState(true);
@@ -81,11 +87,16 @@ namespace Gameplay.Combat
             dead = false;
             invulnerable = false;
             IgnoreOverlappingColliders(false);
-            if (clearIFrames) iframesCts?.Cancel();
+            if (clearIFrames) CancelIFrames();
             sprite.color = normalColor;
             SetComponentsEnabled(true);
+            foreach (var col in ownColliders)
+                if (col != null) col.enabled = true;
             NotifyHealthChanged();
         }
+
+        /// <summary>Debug/cheat hook: makes this health immune to damage until switched back off.</summary>
+        public void SetInvulnerable(bool value) => invulnerable = value;
 
         public void TakeDamage(float damage)
         {
@@ -99,7 +110,7 @@ namespace Gameplay.Combat
             }
 
             anim.SetTrigger(GameConstants.Anim.Hurt);
-            iframesCts?.Cancel();
+            CancelIFrames();
             iframesCts = new CancellationTokenSource();
             _ = IFramesAsync(iframesCts.Token);
             ServiceLocator.Get<IAudioManager>()?.PlaySound(hurtSound);
@@ -123,10 +134,14 @@ namespace Gameplay.Combat
 
         void Die()
         {
+            if (dead) return;
+            dead = true;
             SetComponentsEnabled(false);
+            // A corpse must not keep blocking or damaging anything; a respawn re-enables these.
+            foreach (var col in ownColliders)
+                if (col != null) col.enabled = false;
             anim.SetBool(GameConstants.Anim.Grounded, true);
             anim.SetTrigger(GameConstants.Anim.Die);
-            dead = true;
             ServiceLocator.Get<IAudioManager>()?.PlaySound(deathSound);
             VfxPool.Spawn(deathParticles, transform.position, Quaternion.identity);
             if (isPlayer) EventBus.Raise(new PlayerDiedEvent());
@@ -201,7 +216,7 @@ namespace Gameplay.Combat
 
         void OnDestroy()
         {
-            iframesCts?.Cancel();
+            CancelIFrames();
             IgnoreOverlappingColliders(false);
         }
 

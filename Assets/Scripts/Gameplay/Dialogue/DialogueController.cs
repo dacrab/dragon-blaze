@@ -7,17 +7,11 @@ using Core.Services;
 
 namespace Gameplay.Dialogue
 {
-    [CreateAssetMenu(fileName = "DialogueData", menuName = "DragonBlaze/Dialogue Data")]
-    public class DialogueData : ScriptableObject
-    {
-        public string speakerName;
-        public AudioClip dialogueSound;
-        [TextArea(5, 10)] public string[] paragraphs;
-    }
-
     public sealed class DialogueController : MonoBehaviour, IDialogueController
     {
         [SerializeField] TextMeshProUGUI nameText, dialogueText;
+        [Tooltip("The visual dialogue box root. Toggled instead of this GameObject so the controller stays alive to reopen it.")]
+        [SerializeField] GameObject dialogueBox;
         [SerializeField] float typeSpeed = 10f;
         [SerializeField] float baseTypeDelay = 0.1f;
 
@@ -30,10 +24,20 @@ namespace Gameplay.Dialogue
 
         void Awake() => ServiceLocator.Register<IDialogueController>(this);
 
+        void OnEnable()
+        {
+            // A re-enabled controller must not resume in a half-finished skip state.
+            typing = false;
+            conversationEnded = false;
+        }
+
         void OnDisable() => typeCts?.Cancel();
 
         void OnDestroy()
         {
+            typeCts?.Cancel();
+            typeCts?.Dispose();
+            typeCts = null;
             if (ReferenceEquals(ServiceLocator.Get<IDialogueController>(), this))
                 ServiceLocator.Unregister<IDialogueController>();
         }
@@ -69,10 +73,10 @@ namespace Gameplay.Dialogue
 
         void StartConversation(DialogueData dialogue, AudioClip? sound)
         {
+            if (dialogueBox != null) dialogueBox.SetActive(true);
             EventBus.Raise(new DialogueStateChangedEvent(true));
             ServiceLocator.Get<IAudioManager>()?.PlaySound(sound);
-            gameObject.SetActive(true);
-            nameText.text = dialogue.speakerName;
+            if (nameText != null) nameText.text = dialogue.speakerName;
             foreach (var p in dialogue.paragraphs) paragraphs.Enqueue(p);
         }
 
@@ -81,24 +85,35 @@ namespace Gameplay.Dialogue
             EventBus.Raise(new DialogueStateChangedEvent(false));
             paragraphs.Clear();
             conversationEnded = false;
-            gameObject.SetActive(false);
+            typing = false;
+            currentText = string.Empty;
+            if (dialogueBox != null) dialogueBox.SetActive(false);
         }
 
         async Awaitable TypeTextAsync(string text)
         {
             typeCts?.Cancel();
             typeCts = new();
+            var token = typeCts.Token;
             typing = true;
             dialogueText.text = text;
             dialogueText.maxVisibleCharacters = 0;
 
-            for (int i = 1; i <= text.Length; i++)
+            try
             {
-                if (typeCts.Token.IsCancellationRequested) break;
-                dialogueText.maxVisibleCharacters = i;
-                await Awaitable.WaitForSecondsAsync(TypeDelay);
+                for (int i = 1; i <= text.Length; i++)
+                {
+                    if (token.IsCancellationRequested) return;
+                    dialogueText.maxVisibleCharacters = i;
+                    await Awaitable.WaitForSecondsAsync(TypeDelay, token);
+                }
             }
-            typing = false;
+            catch (System.OperationCanceledException)
+            {
+                return;
+            }
+            // Only the newest task clears the flag; a skipped line restarts typing immediately.
+            if (!token.IsCancellationRequested) typing = false;
         }
     }
 }

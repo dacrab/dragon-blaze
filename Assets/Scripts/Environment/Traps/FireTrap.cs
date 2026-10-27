@@ -29,20 +29,18 @@ namespace Environment.Traps
             sprite = GetComponent<SpriteRenderer>();
         }
 
-        void OnDestroy()
-        {
-            cycleCts?.Cancel();
-            cycleCts?.Dispose();
-        }
+        void OnDestroy() => CancelCycle();
+
+        void OnDisable() => CancelCycle();
 
         void OnTriggerEnter2D(Collider2D collision)
         {
             // Runs a single warn-then-fire cycle per entry; the player must exit and re-enter to start another.
             if (!collision.CompareTag(GameConstants.Tags.Player) || collision.IsInvisiblePlayer()) return;
             if (active || activating) return;
-            activating = true;
-            cycleCts?.Cancel();
+            CancelCycle();
             cycleCts = new CancellationTokenSource();
+            activating = true;
             _ = ActivateAsync(cycleCts.Token);
         }
 
@@ -51,25 +49,44 @@ namespace Environment.Traps
             if (active && collision.CompareTag(GameConstants.Tags.Player)) collision.DamagePerSecond(damage * Time.deltaTime);
         }
 
+        void CancelCycle()
+        {
+            cycleCts?.Cancel();
+            cycleCts?.Dispose();
+            cycleCts = null;
+            ResetCycleState();
+        }
+
+        void ResetCycleState()
+        {
+            active = false;
+            activating = false;
+            if (anim != null) anim.SetBool(GameConstants.Anim.Activated, false);
+        }
+
         async Awaitable ActivateAsync(CancellationToken ct)
         {
-            sprite.color = warningColor;
+            bool completed = false;
             try
             {
+                sprite.color = warningColor;
                 await Awaitable.WaitForSecondsAsync(activationDelay, ct);
                 ServiceLocator.Get<IAudioManager>()?.PlaySound(firetrapSound);
                 sprite.color = activeColor;
                 active = true;
                 anim.SetBool(GameConstants.Anim.Activated, true);
                 await Awaitable.WaitForSecondsAsync(activeTime, ct);
+                completed = true;
             }
             catch (OperationCanceledException)
             {
-                return;
+                // Cancelled by disable/destroy: CancelCycle has already restored the state.
             }
-            active = false;
-            activating = false;
-            anim.SetBool(GameConstants.Anim.Activated, false);
+            finally
+            {
+                // Any other fault must not strand the trap mid-cycle with activating left set.
+                if (completed) ResetCycleState();
+            }
         }
     }
 }

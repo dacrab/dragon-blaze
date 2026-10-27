@@ -18,9 +18,14 @@ MonoBehaviour:
   - Level2
   - Level3
   - Level4
-  - CREDITS
+  - Credits
+  menuScenes:
+  - MainMenu
+  - Credits
   defaultSoundVolume: 0.5
   defaultMusicVolume: 0.5
+  menuMusic: {fileID: 8300000, guid: 3d4f9020160ce2b28b8b753a866703e2, type: 3}
+  levelMusic: {fileID: 8300000, guid: 06bbee867c4cda34c9a65ca6a3f86b10, type: 3}
   saveFileName: savefile.json
   musicVolumeKey: musicVolume
   soundVolumeKey: soundVolume
