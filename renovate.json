@@ -3,5 +3,17 @@
   "extends": [
     "github>dacrab/renovate-config"
   ],
-  "automerge": false
+  "packageRules": [
+    {
+      "description": "This repo has no pull_request CI; never automerge. Package rules win over top-level automerge:false.",
+      "matchPackageNames": ["*"],
+      "automerge": false
+    }
+  ],
+  "lockFileMaintenance": {
+    "automerge": false
+  },
+  "vulnerabilityAlerts": {
+    "automerge": false
+  }
 }
