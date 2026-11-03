@@ -1,40 +1,39 @@
 # Dragon Blaze
 
-A 2D action platformer with fluid movement, dynamic combat, and modular architecture built in Unity.
+A small 2D action platformer for desktop, built in Unity.
 
-[![Play on itch.io](https://img.shields.io/badge/Play-itch.io-FA5C5C?style=flat-square)](https://dacrab.itch.io/unity-2d-platformer)
-[![Gameplay Video](https://img.shields.io/badge/Gameplay-Video-4285F4?style=flat-square)](https://drive.google.com/file/d/1A_-qFr5LuwZUnVla1aqEab6fWn9i16fv/view)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+Haven't played it yet? There's a build on [itch.io](https://dacrab.itch.io/unity-2d-platformer).
 
-## Gameplay
-
-- Multi-jump, wall slide, wall jump, dash with coyote time
-- Melee and ranged combat with hit feedback
-- Enemy AI with patrol/chase states (data-driven via ScriptableObjects)
-- Traps, moving platforms, parallax backgrounds
-- Checkpoint saves with JSON persistence
-- 4 levels with difficulty scaling
+You get a nimble hero, four levels, and plenty of ways to stay in the air — wall slides, wall jumps, a dash, and a couple of extra jumps. Enemies patrol until they spot you, then give chase. Power-ups change how you fight, dialogue moves the story along, and checkpoints keep your progress.
 
 ## Controls
 
 | Action | Key |
-|--------|-----|
-| Move | `A/D` or Arrows |
+| --- | --- |
+| Move | `A` / `D` or arrow keys |
 | Jump | `Space` |
-| Attack | `Left Click` |
+| Attack | Left click |
 | Dash | `Shift` |
 | Interact | `E` |
 | Pause | `Esc` |
 
-## Setup
+## Playing it locally
 
-1. Clone: `git clone https://github.com/dacrab/dragon-blaze.git`
-2. Open in Unity Hub (6000.3.24f1 — see `ProjectSettings/ProjectVersion.txt`)
-3. Load `Assets/Scenes/MainMenu.unity` and press Play
+Install Unity 6 (6000.3.27f1) through Unity Hub, then grab the project:
 
-## Tech
+```bash
+git clone https://github.com/dacrab/dragon-blaze.git
+```
 
-Unity 6 · New Input System · Object Pooling · Assembly Definitions · TextMeshPro
+Open the folder in Unity Hub, load `Assets/Scenes/MainMenu.unity`, and press Play. If Unity asks about the version, `ProjectSettings/ProjectVersion.txt` has the exact one.
+
+## Worth knowing
+
+- Keyboard and mouse only.
+- Saves are local JSON files, so nothing leaves your machine.
+- Levels, enemies, and how the hero feels are tuned in data assets rather than hard-coded, which makes the game easy to tweak.
+
+Made with Unity 6, the New Input System, and TextMeshPro.
 
 ## License
 
