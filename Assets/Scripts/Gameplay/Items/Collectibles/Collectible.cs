@@ -7,16 +7,25 @@ using Core.Pooling;
 using Core.Services;
 using Core.State;
 using Gameplay.Combat;
+using Gameplay.Items.PowerUps;
 
 namespace Gameplay.Items.Collectibles
 {
-    public enum CollectibleType { Coin, Health, MagicStone }
+    public enum CollectibleType { Coin, Health, PowerUp, MagicStone }
 
+    /// <summary>Single pickup component: coins, health, timed power-ups, and the level-exit magic stone.</summary>
     public sealed class Collectible : MonoBehaviour
     {
         [SerializeField] CollectibleType type;
         [SerializeField] int coinValue = 1;
         [SerializeField] float healthValue = 25f;
+
+        [Header("Power Up (PowerUp type only)")]
+        [SerializeField] PowerUpSO powerUp;
+        [SerializeField] float powerUpDuration = 5f;
+        [SerializeField] Sprite powerUpIcon;
+
+        [Header("Presentation")]
         [SerializeField] SpriteRenderer indicator;
         [SerializeField] AudioClip pickupSound;
         [SerializeField] ParticleSystem pickupEffect;
@@ -41,7 +50,7 @@ namespace Gameplay.Items.Collectibles
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (!other.CompareTag(GameConstants.Tags.Player)) return;
+            if (collected || !other.CompareTag(GameConstants.Tags.Player)) return;
             switch (type)
             {
                 case CollectibleType.Coin:
@@ -53,6 +62,15 @@ namespace Gameplay.Items.Collectibles
                     var health = other.GetComponent<Health>();
                     if (health == null || health.CurrentHealth >= health.MaxHealth) break;
                     health.Heal(healthValue);
+                    Despawn();
+                    break;
+                case CollectibleType.PowerUp:
+                    // Misconfigured pickups must not silently consume themselves.
+                    if (powerUp == null
+                        || !other.TryGetComponent<IPlayer>(out var player)) break;
+                    collected = true;
+                    powerUp.Apply(player, powerUpDuration);
+                    EventBus.Raise(new PowerUpActivatedEvent(powerUp.name, powerUpIcon, powerUpDuration));
                     Despawn();
                     break;
                 case CollectibleType.MagicStone:
